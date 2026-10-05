@@ -1,0 +1,46 @@
+# Local development services. Free / open source only.
+# Module 0 does not use these yet; they are ready for Module 1 (PostgreSQL),
+# Module 11 (Redis + BullMQ, Mailpit) and later.
+name: ukride
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ukride
+      POSTGRES_PASSWORD: ukride
+      POSTGRES_DB: ukride
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ukride -d ukride']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - '8025:8025' # web UI
+      - '1025:1025' # SMTP
+
+volumes:
+  pgdata:
+  redisdata:

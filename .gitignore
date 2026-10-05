@@ -24,6 +24,10 @@ npm-debug.log*
 # local uploads (later modules)
 backend/uploads/
 
+# Claude Code: per-machine settings and the downloaded Impeccable engine binary
+.claude/settings.local.json
+.claude/skills/impeccable/scripts/bin/
+
 # OS / editor
 .DS_Store
 Thumbs.db

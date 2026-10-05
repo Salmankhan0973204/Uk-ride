@@ -1,9 +1,13 @@
 # UkRide product and design context
 
-This file is the durable design context for every UI module. Read it before building or
-reviewing a screen. It is the document `/impeccable init` would produce; it was written by
-hand because the Impeccable engine could not run on the development machine yet
-(see docs/PROGRESS.md, Module 0 notes).
+<!-- impeccable:product-schema 1 -->
+
+This file is the durable product context for every UI module. Read it before building or
+reviewing a screen. It is maintained with `/impeccable init`.
+
+## Platform
+
+web
 
 ## Product
 
@@ -11,7 +15,7 @@ UkRide is a booking platform for taxis, chauffeurs and private-hire vehicles in 
 Customers get a price, book a trip, pay and follow the trip. Drivers work through their
 assigned jobs. Dispatchers and admins run the operation.
 
-## Who uses it
+## Users
 
 | Role       | Device and situation                             | What they need most                             |
 | ---------- | ------------------------------------------------ | ----------------------------------------------- |
@@ -20,7 +24,43 @@ assigned jobs. Dispatchers and admins run the operation.
 | Dispatcher | Desktop, many bookings at once, long sessions    | Density, scanning speed, clear exceptions       |
 | Admin      | Desktop, occasional, careful work                | Accuracy, audit trail, safe destructive actions |
 
-## Principles
+## Product Purpose
+
+Let a customer get an exact price, book, pay and follow a trip, and let the operator's staff
+assign and run those trips. UkRide is also a learning project built module by module
+(see docs/PROGRESS.md); a module succeeds when its flow works end to end.
+
+## Positioning
+
+UkRide is one private-hire operator's own platform, not a marketplace. A single firm runs its
+own fleet, drivers, dispatchers and pricing, and customers book directly with that firm.
+Screens never ask a customer to compare or choose between operators.
+
+## Operating Context
+
+- Customer: quote, book, pay, then follow the trip, mostly on a phone.
+- Driver: receives assigned jobs and works through them on a phone in the vehicle.
+- Dispatcher: assigns and monitors many bookings at once on a desktop, in long sessions.
+- Admin: maintains vehicle types, fleet vehicles and pricing rules, and reviews reports.
+
+## Capabilities and Constraints
+
+- Built so far: the app shell and the `/system-status` screen (Module 0).
+- Planned, in order: authentication, profiles, vehicle types, fleet, pricing and quotes,
+  bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
+  real-time status and driver location, document uploads, reviews, admin reporting.
+- Prices, payment state and booking status always come from the server.
+- Customer-facing copy uses British English.
+- Undecided: the operator's trading name and licensing details, service area, and the actual
+  fare rules.
+
+## Evidence on Hand
+
+Nothing real exists yet: no logo, photographs, prices, fleet data, reviews or customers.
+Future work must use clearly marked placeholders and must not invent testimonials, customer
+names, ratings, fares, licence numbers or coverage claims.
+
+## Product Principles
 
 1. **One primary action per screen.** Everything else is visibly secondary.
 2. **Money is always exact and always from the server.** Show the breakdown, never a guess.
@@ -36,7 +76,12 @@ Plain, short, specific. Say what happened and what to do next.
 "We could not reach the server. Try again." Not "Oops! Something went wrong."
 British English spelling in customer-facing copy. No exclamation marks, no jokes in errors.
 
-## Visual direction
+## Brand Commitments
+
+The name is UkRide. The visual direction and the avoid list below are binding until a
+DESIGN.md replaces them.
+
+### Visual direction
 
 - Warm off-white canvas, white surfaces, near-black ink. One accent: taxi amber, used sparingly
   (brand mark, focus ring). Amber is not a button colour on light backgrounds; contrast is too low.
@@ -48,7 +93,7 @@ British English spelling in customer-facing copy. No exclamation marks, no jokes
 - Motion is functional and short, and is removed under `prefers-reduced-motion`.
 - Light and dark themes come from the same tokens in `frontend/src/app/globals.css`.
 
-## Avoid
+### Avoid
 
 - Gradient hero sections, glass effects, decorative blobs and generic card grids.
 - Dashboards full of numbers that drive no decision.
@@ -56,7 +101,7 @@ British English spelling in customer-facing copy. No exclamation marks, no jokes
 - Modals for content that deserves a page; toasts for errors the user must act on.
 - Emoji as icons.
 
-## Accessibility baseline
+## Accessibility & Inclusion
 
 WCAG 2.2 AA. Every screen works by keyboard, has a visible focus style, keeps 4.5:1 text
 contrast, announces async results (`role="status"` / `role="alert"`), and fits a 360px wide

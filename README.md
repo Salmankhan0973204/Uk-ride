@@ -117,10 +117,11 @@ Copy-Item frontend/.env.local.example frontend/.env.local
 npm run dev
 ```
 
-| App | URL                          |
-| --- | ---------------------------- |
-| Web | http://localhost:3000        |
-| API | http://localhost:4000/api/v1 |
+| App      | URL                               |
+| -------- | --------------------------------- |
+| Web      | http://localhost:3000             |
+| API      | http://localhost:4000/api/v1      |
+| API docs | http://localhost:4000/api/v1/docs |
 
 Open http://localhost:3000/system-status. Stop the API to see the offline state. Start it again
 and the page recovers by itself.
@@ -172,6 +173,10 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/health`       | Service name, version, environment, uptime        |
 | GET    | `/health/live`  | The process is alive                              |
 | GET    | `/health/ready` | Dependencies are ready (grows with later modules) |
+
+Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
+OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is
+`production`. The document lives in `backend/src/docs/openapi.ts`; add each module's paths there.
 
 Every success response has the same shape:
 

@@ -2,8 +2,9 @@ import cors from 'cors';
 import express from 'express';
 import type { Response } from 'express';
 import { pinoHttp } from 'pino-http';
-import { env } from './config/env.js';
+import { env, isProd } from './config/env.js';
 import { logger } from './config/logger.js';
+import { docsRouter } from './docs/docs.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 import { requestId } from './middleware/requestId.js';
@@ -45,6 +46,10 @@ app.use(express.json({ limit: '1mb' }));
 
 const api = express.Router();
 api.use('/health', healthRouter);
+// Swagger UI is a development tool; it is not exposed in production.
+if (!isProd) {
+  api.use('/docs', docsRouter);
+}
 
 app.use('/api/v1', api);
 

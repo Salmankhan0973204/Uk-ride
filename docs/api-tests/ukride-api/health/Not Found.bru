@@ -1,0 +1,18 @@
+meta {
+  name: Not Found
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/does-not-exist
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+  res.body.success: eq false
+  res.body.error.code: eq NOT_FOUND
+  res.body.requestId: isString
+}

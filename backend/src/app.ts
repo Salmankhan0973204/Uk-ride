@@ -25,6 +25,13 @@ app.use(
   pinoHttp({
     logger,
     genReqId: (_req, res) => String((res as Response).locals.requestId),
+    // Keep request logs short: method, path, status and duration are enough.
+    serializers: {
+      req: (req: { method: string; url: string }) => ({ method: req.method, url: req.url }),
+      res: (res: { statusCode: number }) => ({ statusCode: res.statusCode }),
+    },
+    customSuccessMessage: (req, res) => `${req.method} ${req.url} ${res.statusCode}`,
+    customErrorMessage: (req, res) => `${req.method} ${req.url} ${res.statusCode}`,
   }),
 );
 app.use(

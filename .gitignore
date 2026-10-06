@@ -21,6 +21,9 @@ npm-debug.log*
 !.env.example
 !.env.local.example
 
+# Prisma client, generated from backend/prisma/schema.prisma
+backend/src/generated/
+
 # local uploads (later modules)
 backend/uploads/
 

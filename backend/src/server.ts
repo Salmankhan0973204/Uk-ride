@@ -1,4 +1,5 @@
 import { app } from './app.js';
+import { prisma } from './config/db.js';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 
@@ -20,9 +21,9 @@ function shutdown(signal: string) {
   server.close((error) => {
     if (error) {
       logger.error({ err: error }, 'Error while closing the server');
-      process.exit(1);
     }
-    process.exit(0);
+    // Close the database connections after the last request has finished.
+    void prisma.$disconnect().finally(() => process.exit(error ? 1 : 0));
   });
   // Do not hang forever if a connection refuses to close.
   setTimeout(() => process.exit(1), 10_000).unref();

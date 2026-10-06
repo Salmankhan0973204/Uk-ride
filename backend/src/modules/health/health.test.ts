@@ -1,6 +1,14 @@
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { app } from '../../app.js';
+
+// The database is replaced by a fake, so these tests run without PostgreSQL.
+const queryRaw = vi.hoisted(() => vi.fn());
+vi.mock('../../config/db.js', () => ({ prisma: { $queryRaw: queryRaw } }));
+
+beforeEach(() => {
+  queryRaw.mockReset().mockResolvedValue([{ '?column?': 1 }]);
+});
 
 describe('GET /api/v1/health', () => {
   it('returns the success envelope with service info', async () => {
@@ -21,6 +29,21 @@ describe('GET /api/v1/health', () => {
     expect(live.body.data.status).toBe('live');
     expect(ready.status).toBe(200);
     expect(ready.body.data.status).toBe('ready');
+    expect(ready.body.data.checks.database.status).toBe('up');
+  });
+
+  it('answers 503 on readiness when the database is down, while liveness stays 200', async () => {
+    queryRaw.mockRejectedValue(new Error('connect ECONNREFUSED 127.0.0.1:5432'));
+
+    const ready = await request(app).get('/api/v1/health/ready');
+    const live = await request(app).get('/api/v1/health/live');
+
+    expect(ready.status).toBe(503);
+    expect(ready.body.success).toBe(false);
+    expect(ready.body.error.code).toBe('SERVICE_UNAVAILABLE');
+    expect(ready.body.error.details.checks.database.status).toBe('down');
+    expect(JSON.stringify(ready.body)).not.toContain('ECONNREFUSED');
+    expect(live.status).toBe(200);
   });
 
   it('reuses a safe caller-supplied request id', async () => {

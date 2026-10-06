@@ -3,6 +3,8 @@ dist
 .next
 out
 coverage
+backend/src/generated
+backend/prisma/migrations
 package-lock.json
 .claude
 *.bru

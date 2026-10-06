@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** none in progress
+- **Current module:** Module 1 - Authentication
 - **Last completed:** Module 0 - Foundation
-- **Next step:** 1.1 - PostgreSQL + Prisma, `User` model, first migration
-- **Steps done:** 6 of 113
+- **Next step:** 1.2 - `POST /auth/register`
+- **Steps done:** 7 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 1   | Authentication: Register + Login + Current User    | 0/8   | -       | -          | -           | -              | -                            | Next     |
-| 2   | Profile Management                                 | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
+| --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
+| 1   | Authentication: Register + Login + Current User    | 1/8   | In progress | In progress | -           | -              | -                            | In progress |
+| 2   | Profile Management                                 | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
+| 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -           | -           | -              | -                            | -           |
+| 6   | Booking Creation                                   | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 7   | My Bookings: List + Detail                         | 0/5   | -           | -           | -           | -              | -                            | -           |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -           | -           | -              | -                            | -           |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -           | -           | -              | -                            | -           |
+| 11  | Notifications + Email                              | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -           | -           | -              | -                            | -           |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -           | -           | -              | -                            | -           |
 
 ## Steps
 
@@ -57,7 +57,7 @@ runs.
 
 ### Module 1 - Authentication
 
-- [ ] 1.1 PostgreSQL + Prisma, `User` model, first migration, database readiness check.
+- [x] 1.1 PostgreSQL + Prisma, `User` model, first migration, database readiness check.
       _Learn: ORM, schema, migrations._
 - [ ] 1.2 `POST /auth/register`. _Learn: Zod request validation, password hashing._
 - [ ] 1.3 `POST /auth/login`. _Learn: JWT access tokens, safe error messages._
@@ -249,7 +249,7 @@ Open items
 - Impeccable was installed on 2026-10-05 after adding the Visual C++ Redistributable, and
   `/impeccable init` updated `PRODUCT.md`. There is no `DESIGN.md` yet; `/impeccable document`
   creates it from the existing frontend code.
-- Readiness does not check the database or Redis yet. Database check arrives with step 1.1.
+- Readiness does not check Redis yet. That check arrives with step 11.2.
 - TanStack Query Devtools are wired in; open them from the floating button in development.
 
 Learning notes
@@ -259,3 +259,46 @@ Learning notes
 - `NEXT_PUBLIC_` values are inlined at build time; restart `next dev` after changing them.
 - An interrupted `npm install` can leave a broken lockfile. Delete `node_modules` and
   `package-lock.json` and install again.
+
+### Module 1 - Authentication (in progress)
+
+#### Step 1.1 - PostgreSQL + Prisma (done 2026-10-06)
+
+Built
+
+- PostgreSQL 16 from Docker Compose, reached through `DATABASE_URL` (validated at boot).
+- Prisma 7: `backend/prisma/schema.prisma`, `backend/prisma.config.ts`, the client generated
+  into `backend/src/generated/prisma` (not committed).
+- `User` model, table `users`: `id` (uuid), `email` (unique), `password_hash`, `created_at`,
+  `updated_at`. First migration `20261006063037_init`.
+- One shared client in `backend/src/config/db.ts`, disconnected on shutdown.
+- `GET /health/ready` runs `SELECT 1`: 200 with `database: up`, or 503 `SERVICE_UNAVAILABLE`.
+
+Verified
+
+- Typecheck, lint and 9 automated tests pass. The tests replace the database with a fake.
+- `prisma migrate status` reports the database is up to date; `\d users` shows the five
+  columns, the primary key and the unique index on `email`.
+- Against the real database: readiness 200; with PostgreSQL stopped, readiness 503 and liveness
+  200; after PostgreSQL started again, readiness 200 without an API restart.
+
+Open items
+
+- `npm install prisma` currently resolves to a release candidate (8.0.0-rc). The CLI is pinned
+  to 7.10.0 to match `@prisma/client`. Upgrade both together when version 8 is stable.
+- The generated client is not committed. Run `npm run db:generate -w backend` on a fresh clone.
+- No test talks to a real database yet. That is step 16.2.
+
+Learning notes
+
+- The schema file is the source of truth. A migration is the SQL that moves the database to
+  it, and the migration files are committed so every machine gets the same tables.
+- `prisma migrate dev` writes and applies a migration. It does not regenerate the client in
+  Prisma 7; run `prisma generate` after it.
+- Prisma 7 needs a driver adapter (`@prisma/adapter-pg`) and reads the CLI connection string
+  from `prisma.config.ts`, not from the schema file.
+- `@map` and `@@map` keep camelCase in TypeScript and snake_case in the database.
+- The client connects on the first query, so the API still starts when the database is down.
+  That is why readiness, not startup, reports the problem.
+- Liveness must not touch the database: a database outage should not make the platform
+  restart a healthy process.

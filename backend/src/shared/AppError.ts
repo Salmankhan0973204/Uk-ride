@@ -6,7 +6,8 @@ export type ErrorCode =
   | 'NOT_FOUND'
   | 'CONFLICT'
   | 'RATE_LIMITED'
-  | 'INTERNAL_ERROR';
+  | 'INTERNAL_ERROR'
+  | 'SERVICE_UNAVAILABLE';
 
 /**
  * An error the application raised on purpose.

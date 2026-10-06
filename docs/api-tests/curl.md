@@ -78,3 +78,46 @@ curl.exe -i -X OPTIONS -H "Origin: http://evil.test" -H "Access-Control-Request-
 
 The first response contains `Access-Control-Allow-Origin: http://localhost:3000`.
 The second has no `Access-Control-Allow-Origin` header.
+
+## Module 1 - Authentication
+
+### 1.1 Database readiness
+
+With PostgreSQL running (`npm run docker:up`):
+
+```bash
+curl.exe -i http://localhost:4000/api/v1/health/ready
+```
+
+Expect `200` and `data.checks.database.status` = `up`.
+
+Stop the database and ask again:
+
+```bash
+docker compose stop postgres
+curl.exe -i http://localhost:4000/api/v1/health/ready
+curl.exe -i http://localhost:4000/api/v1/health/live
+docker compose start postgres
+```
+
+Readiness answers `503`, liveness still answers `200`:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "SERVICE_UNAVAILABLE",
+    "message": "Service is not ready",
+    "details": { "checks": { "database": { "status": "down" }, "redis": { "status": "skipped" } } }
+  },
+  "requestId": "..."
+}
+```
+
+After the database starts again, readiness returns to `200` without restarting the API.
+
+### 1.1 Look at the table
+
+```bash
+docker compose exec postgres psql -U ukride -d ukride -c "\d users"
+```

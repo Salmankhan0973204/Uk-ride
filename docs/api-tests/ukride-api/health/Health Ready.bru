@@ -13,4 +13,5 @@ get {
 assert {
   res.status: eq 200
   res.body.data.status: eq ready
+  res.body.data.checks.database.status: eq up
 }

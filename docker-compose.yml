@@ -1,6 +1,6 @@
 # Local development services. Free / open source only.
-# Module 0 does not use these yet; they are ready for Module 1 (PostgreSQL),
-# Module 11 (Redis + BullMQ, Mailpit) and later.
+# PostgreSQL is used from Module 1. Redis and Mailpit are ready for
+# Module 11 (Redis + BullMQ, email) and later.
 name: ukride
 
 services:

@@ -12,12 +12,13 @@ and runs on a local machine.
 ## Status
 
 **Module 0 of 17 is complete.** The web app and the API are connected and tested.
-Authentication is next. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
+Authentication is in progress: the database and the `User` model are in place. The full tracker
+is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                                        | Status   |
 | --- | --------------------------------------------- | -------- |
 | 0   | Foundation: health check + first screen       | Complete |
-| 1   | Authentication: register, login, current user | Next     |
+| 1   | Authentication: register, login, current user | Started  |
 | 2   | Profile management                            | Planned  |
 | 3   | Vehicle types: admin CRUD + customer catalog  | Planned  |
 | 4   | Fleet vehicles                                | Planned  |
@@ -37,28 +38,33 @@ Authentication is next. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.
 
 ## Tech stack
 
-| Area           | Technology                                                        |
-| -------------- | ----------------------------------------------------------------- |
-| Backend        | Node.js 24, Express 5, TypeScript (ESM)                           |
-| Validation     | Zod                                                               |
-| Logging        | Pino, with a request ID on every request                          |
-| Frontend       | Next.js 16 (App Router), React 19, TypeScript                     |
-| Styling        | Tailwind CSS 4                                                    |
-| Server state   | TanStack Query 5                                                  |
-| Testing        | Vitest, Supertest                                                 |
-| API testing    | Bruno, curl                                                       |
-| Local services | Docker Compose: PostgreSQL 16, Redis 7, Mailpit                   |
-| Planned        | Prisma, JWT auth, BullMQ, Stripe test mode, Socket.IO, Playwright |
+| Area           | Technology                                                |
+| -------------- | --------------------------------------------------------- |
+| Backend        | Node.js 24, Express 5, TypeScript (ESM)                   |
+| Database       | PostgreSQL 16, Prisma 7                                   |
+| Validation     | Zod                                                       |
+| Logging        | Pino, with a request ID on every request                  |
+| Frontend       | Next.js 16 (App Router), React 19, TypeScript             |
+| Styling        | Tailwind CSS 4                                            |
+| Server state   | TanStack Query 5                                          |
+| Testing        | Vitest, Supertest                                         |
+| API testing    | Bruno, curl                                               |
+| Local services | Docker Compose: PostgreSQL 16, Redis 7, Mailpit           |
+| Planned        | JWT auth, BullMQ, Stripe test mode, Socket.IO, Playwright |
 
 ## Project structure
 
 ```
 .
 ├── backend/                 Express API
+│   ├── prisma/
+│   │   ├── schema.prisma    Database models
+│   │   └── migrations/      SQL history of the database, kept in git
 │   └── src/
 │       ├── app.ts           Middleware and routes (no listen, so tests can import it)
 │       ├── server.ts        Starts the HTTP server, graceful shutdown
-│       ├── config/          Environment validation, logger
+│       ├── config/          Environment validation, logger, database client
+│       ├── generated/       Prisma client, generated and not committed
 │       ├── middleware/      Request ID, 404, central error handler
 │       ├── modules/         One folder per feature (routes, controller, tests)
 │       └── shared/          AppError, response helpers
@@ -85,7 +91,7 @@ The root is an npm workspace, so one install covers both apps.
 
 - [Node.js](https://nodejs.org) 24 or newer
 - [Git](https://git-scm.com)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (needed from Module 1 onward)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/), for PostgreSQL
 
 ### Install
 
@@ -110,6 +116,19 @@ On Windows PowerShell:
 Copy-Item backend/.env.example backend/.env
 Copy-Item frontend/.env.local.example frontend/.env.local
 ```
+
+### Database
+
+Start PostgreSQL, create the tables from the migrations, and generate the Prisma client.
+
+```bash
+npm run docker:up
+npm run db:migrate -w backend
+npm run db:generate -w backend
+```
+
+Run `db:generate` again after every `npm install` on a fresh clone, and after every change to
+`backend/prisma/schema.prisma`.
 
 ### Run
 
@@ -143,6 +162,15 @@ Run these from the repository root.
 | `npm run docker:up`   | Start PostgreSQL, Redis and Mailpit    |
 | `npm run docker:down` | Stop them                              |
 
+Database commands belong to the backend workspace.
+
+| Command                                         | What it does                                       |
+| ----------------------------------------------- | -------------------------------------------------- |
+| `npm run db:migrate -w backend`                 | Apply migrations to the local database             |
+| `npm run db:migrate -w backend -- --name <why>` | Create a migration after a schema change, apply it |
+| `npm run db:generate -w backend`                | Regenerate the typed Prisma client                 |
+| `npm run db:studio -w backend`                  | Browse the data in Prisma Studio                   |
+
 ## Environment variables
 
 ### Backend (`backend/.env`)
@@ -153,6 +181,7 @@ Run these from the repository root.
 | `PORT`         | `4000`                  | API port                                        |
 | `LOG_LEVEL`    | `debug`                 | Pino log level                                  |
 | `CORS_ORIGINS` | `http://localhost:3000` | Comma-separated origins allowed to call the API |
+| `DATABASE_URL` | none, required          | PostgreSQL connection string                    |
 
 The API refuses to start if a value is invalid.
 
@@ -168,11 +197,11 @@ Never commit `.env` or `.env.local`. Only the example files are tracked.
 
 Base URL: `http://localhost:4000/api/v1`
 
-| Method | Path            | Purpose                                           |
-| ------ | --------------- | ------------------------------------------------- |
-| GET    | `/health`       | Service name, version, environment, uptime        |
-| GET    | `/health/live`  | The process is alive                              |
-| GET    | `/health/ready` | Dependencies are ready (grows with later modules) |
+| Method | Path            | Purpose                                               |
+| ------ | --------------- | ----------------------------------------------------- |
+| GET    | `/health`       | Service name, version, environment, uptime            |
+| GET    | `/health/live`  | The process is alive                                  |
+| GET    | `/health/ready` | The database answers; `503` when it cannot be reached |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is
@@ -210,7 +239,7 @@ npm run docker:up
 
 | Service    | Address                                                  | Used from |
 | ---------- | -------------------------------------------------------- | --------- |
-| PostgreSQL | `localhost:5432` (user, password and database: `ukride`) | Module 1  |
+| PostgreSQL | `localhost:5432` (user, password and database: `ukride`) | Now       |
 | Redis      | `localhost:6379`                                         | Module 11 |
 | Mailpit    | http://localhost:8025 (SMTP on 1025)                     | Module 11 |
 

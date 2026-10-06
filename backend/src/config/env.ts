@@ -20,6 +20,7 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     ),
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -1,5 +1,7 @@
 import type { RequestHandler } from 'express';
+import { prisma } from '../../config/db.js';
 import { APP_VERSION, SERVICE_NAME, env } from '../../config/env.js';
+import { AppError } from '../../shared/AppError.js';
 import { sendSuccess } from '../../shared/response.js';
 
 /** General service information. Used by the frontend system-status screen. */
@@ -24,18 +26,24 @@ export const getLive: RequestHandler = (_req, res) => {
 
 /**
  * Readiness: dependencies are reachable.
- * The database and Redis checks are added when those services arrive
- * (Module 1 and Module 11).
+ * Answers 503 when the database cannot be queried, so a load balancer can
+ * stop sending traffic. The Redis check is added in Module 11.
  */
-export const getReady: RequestHandler = (_req, res) => {
+export const getReady: RequestHandler = async (req, res) => {
+  const redis = { status: 'skipped', note: 'Added in Module 11 (Redis + BullMQ)' };
+
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch (err) {
+    // The reason stays in the log; connection details do not belong in a response.
+    req.log?.error({ err }, 'Database readiness check failed');
+    throw new AppError(503, 'SERVICE_UNAVAILABLE', 'Service is not ready', {
+      checks: { database: { status: 'down' }, redis },
+    });
+  }
+
   sendSuccess(res, {
     message: 'Service is ready',
-    data: {
-      status: 'ready',
-      checks: {
-        database: { status: 'skipped', note: 'Added in Module 1 (PostgreSQL + Prisma)' },
-        redis: { status: 'skipped', note: 'Added in Module 11 (Redis + BullMQ)' },
-      },
-    },
+    data: { status: 'ready', checks: { database: { status: 'up' }, redis } },
   });
 };

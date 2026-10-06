@@ -9,6 +9,7 @@ const errorCodes = [
   'CONFLICT',
   'RATE_LIMITED',
   'INTERNAL_ERROR',
+  'SERVICE_UNAVAILABLE',
 ];
 
 /** Wraps a `data` schema in the standard success envelope. */
@@ -85,6 +86,9 @@ export const openApiDocument = {
             successEnvelope({ $ref: '#/components/schemas/Readiness' }),
           ),
           500: { $ref: '#/components/responses/Error' },
+          503: jsonResponse('A dependency is down. `error.details.checks` shows which one.', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
         },
       },
     },
@@ -118,7 +122,7 @@ export const openApiDocument = {
         type: 'object',
         required: ['status'],
         properties: {
-          status: { type: 'string', example: 'skipped' },
+          status: { type: 'string', enum: ['up', 'down', 'skipped'] },
           note: { type: 'string' },
         },
       },

@@ -8,6 +8,7 @@ import { docsRouter } from './docs/docs.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 import { requestId } from './middleware/requestId.js';
+import { authRouter } from './modules/auth/auth.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
 
 /**
@@ -46,6 +47,7 @@ app.use(express.json({ limit: '1mb' }));
 
 const api = express.Router();
 api.use('/health', healthRouter);
+api.use('/auth', authRouter);
 // Swagger UI is a development tool; it is not exposed in production.
 if (!isProd) {
   api.use('/docs', docsRouter);

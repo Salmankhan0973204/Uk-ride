@@ -8,7 +8,12 @@ describe('API docs', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.openapi).toBe('3.0.3');
-    expect(Object.keys(res.body.paths)).toEqual(['/health', '/health/live', '/health/ready']);
+    expect(Object.keys(res.body.paths)).toEqual([
+      '/health',
+      '/health/live',
+      '/health/ready',
+      '/auth/register',
+    ]);
   });
 
   it('serves the Swagger UI page', async () => {

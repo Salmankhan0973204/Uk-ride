@@ -44,7 +44,10 @@ export const openApiDocument = {
       'Every response carries an `x-request-id` header.',
   },
   servers: [{ url: '/api/v1' }],
-  tags: [{ name: 'Health', description: 'Service status checks' }],
+  tags: [
+    { name: 'Health', description: 'Service status checks' },
+    { name: 'Auth', description: 'Accounts and sign-in' },
+  ],
   paths: {
     '/health': {
       get: {
@@ -92,9 +95,59 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/register': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Create an account',
+        description:
+          'The email is trimmed and lower-cased. The password is stored as a bcrypt hash ' +
+          'and is never returned. No token is issued here; sign in with `/auth/login`.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/RegisterRequest' } },
+          },
+        },
+        responses: {
+          201: jsonResponse(
+            'Account created',
+            successEnvelope({
+              type: 'object',
+              required: ['user'],
+              properties: { user: { $ref: '#/components/schemas/User' } },
+            }),
+          ),
+          400: jsonResponse(
+            'Validation failed. `error.details` lists the messages for each field.',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
+          409: jsonResponse('An account with this email already exists', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     schemas: {
+      RegisterRequest: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email', example: 'sara@example.com' },
+          password: { type: 'string', minLength: 8, maxLength: 72, example: 'secret-pass-1' },
+        },
+      },
+      User: {
+        type: 'object',
+        required: ['id', 'email', 'createdAt'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          email: { type: 'string', format: 'email', example: 'sara@example.com' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
       HealthInfo: {
         type: 'object',
         required: ['status', 'service', 'version', 'env', 'uptimeSeconds', 'timestamp'],

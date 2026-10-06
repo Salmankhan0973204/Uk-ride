@@ -121,3 +121,64 @@ After the database starts again, readiness returns to `200` without restarting t
 ```bash
 docker compose exec postgres psql -U ukride -d ukride -c "\d users"
 ```
+
+### 1.2 Register
+
+In PowerShell, JSON is easier to send with `Invoke-RestMethod` than with `curl.exe`:
+
+```powershell
+$body = '{"email":"sara@example.com","password":"secret-pass-1"}'
+Invoke-RestMethod http://localhost:4000/api/v1/auth/register -Method Post -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 5
+```
+
+Expect `201`. The password and its hash are not in the answer:
+
+```json
+{
+  "success": true,
+  "message": "Account created",
+  "data": {
+    "user": { "id": "...", "email": "sara@example.com", "createdAt": "2026-10-06T10:05:46.873Z" }
+  }
+}
+```
+
+Run the same command again. Expect `409`:
+
+```json
+{
+  "success": false,
+  "error": { "code": "CONFLICT", "message": "An account with this email already exists" },
+  "requestId": "..."
+}
+```
+
+Send a bad email and a short password:
+
+```powershell
+$body = '{"email":"not-an-email","password":"abc"}'
+Invoke-RestMethod http://localhost:4000/api/v1/auth/register -Method Post -ContentType 'application/json' -Body $body
+```
+
+Expect `400` with one list of messages per field:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": {
+      "email": ["Enter a valid email address"],
+      "password": ["Password must be at least 8 characters"]
+    }
+  },
+  "requestId": "..."
+}
+```
+
+Look at what was stored. The hash starts with `$2b$12$`:
+
+```bash
+docker compose exec postgres psql -U ukride -d ukride -c "select email, password_hash from users"
+```

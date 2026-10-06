@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 1 - Authentication
 - **Last completed:** Module 0 - Foundation
-- **Next step:** 1.2 - `POST /auth/register`
-- **Steps done:** 7 of 113
+- **Next step:** 1.3 - `POST /auth/login`
+- **Steps done:** 8 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -15,7 +15,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
 | --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 1/8   | In progress | In progress | -           | -              | -                            | In progress |
+| 1   | Authentication: Register + Login + Current User    | 2/8   | In progress | In progress | -           | -              | -                            | In progress |
 | 2   | Profile Management                                 | 0/6   | -           | -           | -           | -              | -                            | -           |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
 | 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
@@ -59,7 +59,7 @@ runs.
 
 - [x] 1.1 PostgreSQL + Prisma, `User` model, first migration, database readiness check.
       _Learn: ORM, schema, migrations._
-- [ ] 1.2 `POST /auth/register`. _Learn: Zod request validation, password hashing._
+- [x] 1.2 `POST /auth/register`. _Learn: Zod request validation, password hashing._
 - [ ] 1.3 `POST /auth/login`. _Learn: JWT access tokens, safe error messages._
 - [ ] 1.4 Auth middleware and `GET /auth/me`. _Learn: protecting routes._
 - [ ] 1.5 Refresh token and logout. _Learn: httpOnly cookies, token rotation._
@@ -302,3 +302,45 @@ Learning notes
   That is why readiness, not startup, reports the problem.
 - Liveness must not touch the database: a database outage should not make the platform
   restart a healthy process.
+
+#### Step 1.2 - `POST /auth/register` (done 2026-10-06)
+
+Built
+
+- `POST /api/v1/auth/register`: takes an email and a password, answers 201 with `id`,
+  `email` and `createdAt`. No token yet; that is step 1.3.
+- `validate(schema)` middleware in `backend/src/middleware/validate.ts`, reusable by every
+  later endpoint. It answers 400 `VALIDATION_ERROR` with one list of messages per field.
+- Auth module in `backend/src/modules/auth/`: schemas (Zod), service (rules), controller
+  (HTTP), routes.
+- Passwords hashed with bcrypt (`bcryptjs`, cost 12). A taken email answers 409 `CONFLICT`.
+
+Verified
+
+- Typecheck, lint and 16 automated tests pass. The tests replace the database with a fake.
+- Against the real database: new email 201; same email again 409; an email with capitals and
+  spaces stored trimmed and lower-cased; bad email with a short password 400 with both field
+  messages; broken JSON 400 `BAD_REQUEST`.
+- Stored `password_hash` values start with `$2b$12$` and are 60 characters long.
+- The OpenAPI document lists `/auth/register`.
+
+Open items
+
+- The 409 answer tells a visitor that an email is registered. That is normal for a sign-up
+  form, but it needs rate limiting, which is step 16.1.
+- Passwords are limited to 72 characters. bcrypt counts bytes, so a password with many
+  non-English characters can pass the check and still be cut at 72 bytes.
+
+Learning notes
+
+- Validation is a separate middleware in front of the controller. The controller only ever
+  sees data that passed the schema, already trimmed and typed.
+- `z.infer<typeof schema>` gives the TypeScript type of the request, so the rule and the
+  type cannot drift apart.
+- Routes map URLs, controllers speak HTTP, services hold the rules. A service never touches
+  `req` or `res`, so it can be tested and reused without a web request.
+- A bcrypt hash holds the algorithm, the cost and a random salt (`$2b$12$...`). Hashing the
+  same password twice gives two different hashes; `bcrypt.compare` is the only way to check.
+- Check-then-insert is not safe on its own: two requests can both pass the check. The unique
+  index in the database is the real guard, and Prisma reports it as error `P2002`.
+- Prisma `select` returns only the listed columns, so the hash never leaves the service.

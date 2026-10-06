@@ -12,7 +12,7 @@ and runs on a local machine.
 ## Status
 
 **Module 0 of 17 is complete.** The web app and the API are connected and tested.
-Authentication is in progress: the database and the `User` model are in place. The full tracker
+Authentication is in progress: the database is in place and accounts can be registered. The full tracker
 is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                                        | Status   |
@@ -197,11 +197,12 @@ Never commit `.env` or `.env.local`. Only the example files are tracked.
 
 Base URL: `http://localhost:4000/api/v1`
 
-| Method | Path            | Purpose                                               |
-| ------ | --------------- | ----------------------------------------------------- |
-| GET    | `/health`       | Service name, version, environment, uptime            |
-| GET    | `/health/live`  | The process is alive                                  |
-| GET    | `/health/ready` | The database answers; `503` when it cannot be reached |
+| Method | Path             | Purpose                                               |
+| ------ | ---------------- | ----------------------------------------------------- |
+| GET    | `/health`        | Service name, version, environment, uptime            |
+| GET    | `/health/live`   | The process is alive                                  |
+| GET    | `/health/ready`  | The database answers; `503` when it cannot be reached |
+| POST   | `/auth/register` | Create an account from an email and a password        |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

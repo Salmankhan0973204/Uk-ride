@@ -31,8 +31,17 @@ export class AppError extends Error {
     return new AppError(400, 'BAD_REQUEST', message, details);
   }
 
+  /** `details` maps each field name to its messages. */
+  static validation(details: unknown, message = 'Request validation failed') {
+    return new AppError(400, 'VALIDATION_ERROR', message, details);
+  }
+
   static notFound(message = 'Resource not found') {
     return new AppError(404, 'NOT_FOUND', message);
+  }
+
+  static conflict(message = 'Resource already exists') {
+    return new AppError(409, 'CONFLICT', message);
   }
 
   static internal(message = 'Internal server error') {

@@ -303,6 +303,18 @@ Learning notes
 - Liveness must not touch the database: a database outage should not make the platform
   restart a healthy process.
 
+#### Step 1.1 UI - database status on the System Status page (added 2026-10-06)
+
+- `/system-status` has a second card, Dependencies, fed by `GET /health/ready`: Database
+  "Up" or "Down", Redis "Not used yet", and "Unknown" when the API cannot be reached.
+- New in the health feature: `getReadiness()`, `useReadiness()`, `DependencyStatus`.
+- Learning note: a 503 from readiness is an answer, not a failure. `getReadiness()` turns it
+  into normal data (`status: 'not_ready'`), so the query's error state means only "the API
+  cannot be reached".
+- Checked in a browser at desktop width: database up (light and dark) and database stopped.
+  Not captured in a browser: the "Unknown" state with the API stopped, and the new card at
+  375px and 360px.
+
 #### Step 1.2 - `POST /auth/register` (done 2026-10-06)
 
 Built

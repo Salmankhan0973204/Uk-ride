@@ -26,7 +26,7 @@ function formatTime(value: number | string) {
   });
 }
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+export function Detail({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-3">
       <dt className="text-sm text-ink-muted">{label}</dt>

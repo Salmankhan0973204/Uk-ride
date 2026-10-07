@@ -45,7 +45,8 @@ Screens never ask a customer to compare or choose between operators.
 
 ## Capabilities and Constraints
 
-- Built so far: the app shell and the `/system-status` screen (Module 0).
+- Built so far: the app shell, the `/system-status` screen (Module 0) and the `/register`
+  screen (Module 1).
 - Planned, in order: authentication, profiles, vehicle types, fleet, pricing and quotes,
   bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
   real-time status and driver location, document uploads, reviews, admin reporting.
@@ -83,8 +84,10 @@ DESIGN.md replaces them.
 
 ### Visual direction
 
-- Warm off-white canvas, white surfaces, near-black ink. One accent: taxi amber, used sparingly
-  (brand mark, focus ring). Amber is not a button colour on light backgrounds; contrast is too low.
+- Cool slate canvas, white surfaces, navy ink. One action colour: blue (`#0369a1` on light,
+  `#38bdf8` on dark), used for the primary button, the focus ring and the brand mark. The
+  palette comes from the ui-ux-pro-max design system ("Trust & Authority, minimal"), adopted on
+  2026-10-07 in place of the earlier warm off-white and amber.
 - Semantic colours for status only: success, danger, warning, neutral, each with a soft
   background and a strong foreground.
 - Geist Sans for interface text, Geist Mono for references, codes and technical values.

@@ -1,4 +1,5 @@
 import { APP_VERSION } from '../config/env.js';
+import { GENDERS } from '../modules/auth/auth.schemas.js';
 
 const errorCodes = [
   'BAD_REQUEST',
@@ -100,8 +101,10 @@ export const openApiDocument = {
         tags: ['Auth'],
         summary: 'Create an account',
         description:
-          'The email is trimmed and lower-cased. The password is stored as a bcrypt hash ' +
-          'and is never returned. No token is issued here; sign in with `/auth/login`.',
+          'The email is trimmed and lower-cased. The mobile number may come from any country ' +
+          'and is stored in international form (+447400123456). The password is stored as a ' +
+          'bcrypt hash and is never returned. No token is issued here; sign in with ' +
+          '`/auth/login`.',
         requestBody: {
           required: true,
           content: {
@@ -121,9 +124,11 @@ export const openApiDocument = {
             'Validation failed. `error.details` lists the messages for each field.',
             { $ref: '#/components/schemas/ApiFailure' },
           ),
-          409: jsonResponse('An account with this email already exists', {
-            $ref: '#/components/schemas/ApiFailure',
-          }),
+          409: jsonResponse(
+            'The email or the mobile number already has an account. ' +
+              '`error.details.field` is `email` or `mobile`.',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
           500: { $ref: '#/components/responses/Error' },
         },
       },
@@ -131,20 +136,37 @@ export const openApiDocument = {
   },
   components: {
     schemas: {
+      Gender: { type: 'string', enum: GENDERS },
       RegisterRequest: {
         type: 'object',
-        required: ['email', 'password'],
+        required: ['firstName', 'lastName', 'email', 'mobile', 'password'],
         properties: {
+          firstName: { type: 'string', minLength: 1, maxLength: 50, example: 'Sara' },
+          lastName: { type: 'string', minLength: 1, maxLength: 50, example: 'Khan' },
           email: { type: 'string', format: 'email', example: 'sara@example.com' },
+          mobile: {
+            type: 'string',
+            description: 'With the country code. Spaces, dashes and brackets are allowed.',
+            example: '+44 7400 123456',
+          },
+          gender: { $ref: '#/components/schemas/Gender' },
           password: { type: 'string', minLength: 8, maxLength: 72, example: 'secret-pass-1' },
         },
       },
       User: {
         type: 'object',
-        required: ['id', 'email', 'createdAt'],
+        required: ['id', 'firstName', 'lastName', 'email', 'mobile', 'gender', 'createdAt'],
         properties: {
           id: { type: 'string', format: 'uuid' },
+          firstName: { type: 'string', example: 'Sara' },
+          lastName: { type: 'string', example: 'Khan' },
           email: { type: 'string', format: 'email', example: 'sara@example.com' },
+          mobile: { type: 'string', example: '+447400123456' },
+          gender: {
+            allOf: [{ $ref: '#/components/schemas/Gender' }],
+            nullable: true,
+            description: 'null when the customer left it out',
+          },
           createdAt: { type: 'string', format: 'date-time' },
         },
       },

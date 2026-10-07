@@ -24,6 +24,9 @@ npm-debug.log*
 # Prisma client, generated from backend/prisma/schema.prisma
 backend/src/generated/
 
+# Python cache of the ui-ux-pro-max skill
+__pycache__/
+
 # local uploads (later modules)
 backend/uploads/
 

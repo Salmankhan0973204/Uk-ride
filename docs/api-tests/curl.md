@@ -127,7 +127,7 @@ docker compose exec postgres psql -U ukride -d ukride -c "\d users"
 In PowerShell, JSON is easier to send with `Invoke-RestMethod` than with `curl.exe`:
 
 ```powershell
-$body = '{"email":"sara@example.com","password":"secret-pass-1"}'
+$body = '{"firstName":"Sara","lastName":"Khan","email":"sara@example.com","mobile":"+44 7400 123456","gender":"FEMALE","password":"secret-pass-1"}'
 Invoke-RestMethod http://localhost:4000/api/v1/auth/register -Method Post -ContentType 'application/json' -Body $body | ConvertTo-Json -Depth 5
 ```
 
@@ -138,7 +138,15 @@ Expect `201`. The password and its hash are not in the answer:
   "success": true,
   "message": "Account created",
   "data": {
-    "user": { "id": "...", "email": "sara@example.com", "createdAt": "2026-10-06T10:05:46.873Z" }
+    "user": {
+      "id": "...",
+      "firstName": "Sara",
+      "lastName": "Khan",
+      "email": "sara@example.com",
+      "mobile": "+447400123456",
+      "gender": "FEMALE",
+      "createdAt": "2026-10-06T10:05:46.873Z"
+    }
   }
 }
 ```
@@ -148,15 +156,23 @@ Run the same command again. Expect `409`:
 ```json
 {
   "success": false,
-  "error": { "code": "CONFLICT", "message": "An account with this email already exists" },
+  "error": {
+    "code": "CONFLICT",
+    "message": "An account with this email already exists",
+    "details": { "field": "email" }
+  },
   "requestId": "..."
 }
 ```
 
-Send a bad email and a short password:
+`gender` is optional (`MALE`, `FEMALE`, `OTHER`, `PREFER_NOT_TO_SAY`). The mobile number may come
+from any country and must include the country code; a second account with the same mobile
+number gets `409` with `"details": { "field": "mobile" }`.
+
+Send a bad email, a mobile number without a country code and a short password:
 
 ```powershell
-$body = '{"email":"not-an-email","password":"abc"}'
+$body = '{"firstName":"Sara","lastName":"Khan","email":"not-an-email","mobile":"07400 123456","password":"abc"}'
 Invoke-RestMethod http://localhost:4000/api/v1/auth/register -Method Post -ContentType 'application/json' -Body $body
 ```
 
@@ -170,6 +186,7 @@ Expect `400` with one list of messages per field:
     "message": "Request validation failed",
     "details": {
       "email": ["Enter a valid email address"],
+      "mobile": ["Enter a mobile number with its country code, like +44 7400 123456"],
       "password": ["Password must be at least 8 characters"]
     }
   },

@@ -69,7 +69,8 @@ runs.
 
 ### Module 2 - Profile Management
 
-- [ ] 2.1 Add name and phone to `User`, return them from `GET /users/me`.
+- [ ] 2.1 Return the profile from `GET /users/me`. (Name and mobile were added to `User` early,
+      with registration, on 2026-10-07.)
       _Learn: changing a schema with a migration._
 - [ ] 2.2 `PATCH /users/me`. _Learn: partial updates._
 - [ ] 2.3 Change password endpoint. _Learn: re-checking the current password._
@@ -393,3 +394,46 @@ Learning notes
 - A field error needs three things: `aria-invalid`, `aria-describedby` pointing at the
   message, and focus moved to the first wrong field.
 - `noValidate` turns off the browser's own bubbles so every message uses our wording.
+
+#### Registration profile fields and new UI palette (2026-10-07)
+
+Built
+
+- `User` gained `first_name`, `last_name`, `mobile` (unique) and `gender` (optional enum:
+  `MALE`, `FEMALE`, `OTHER`, `PREFER_NOT_TO_SAY`). Migration `20261007095941_add_profile_fields`.
+- `POST /auth/register` takes and returns the new fields. Names allow letters from any
+  alphabet with spaces, hyphens and apostrophes. A mobile number from any country is accepted
+  and stored in international form (`+447400123456`).
+- A taken email or mobile number answers 409 with `details.field`, so the form marks the
+  right input.
+- The register form shows the new fields, checks each one when the user leaves it, and lists
+  the saved details on the confirmation. A reusable `Field` component holds label, hint and
+  error.
+- The ui-ux-pro-max skill is installed in `.claude/skills/ui-ux-pro-max` (it needs Python 3,
+  installed with winget). Its design system for UkRide replaced the colour tokens: navy ink,
+  one blue action colour, cool slate neutrals. Impeccable stays installed.
+
+Verified
+
+- Backend typecheck, lint and 19 tests pass. Frontend lint, typecheck and build pass.
+- In a real browser: every field error, Show / Hide, a full registration with a Pakistani
+  number, the mobile conflict (same number typed in another format) and the email conflict.
+- No horizontal scrolling at 1280px, 375px and 360px. Checked in light and dark mode.
+
+Open items
+
+- The skill suggested EB Garamond and Lato; Geist was kept because that pairing is aimed at
+  legal and formal sites.
+- Mobile numbers are checked for shape only (country code and 8 to 15 digits), not that the
+  number exists. Verifying by SMS would be a later step.
+- Gender is personal data that a booking does not need; it stays optional for that reason.
+
+Learning notes
+
+- `prisma migrate dev` stops in a non-interactive shell when a migration carries a warning.
+  `prisma migrate diff --from-config-datasource --to-schema ... --script` writes the same SQL,
+  and `prisma migrate deploy` applies it.
+- Adding a required column only works without a default while the table is empty. With real
+  rows it needs a default or a two-step migration.
+- Normalise before you compare: "0044 (7400) 123-456" and "+447400123456" are one number, so
+  the unique index only works on the cleaned form.

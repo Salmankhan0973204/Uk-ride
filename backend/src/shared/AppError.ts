@@ -40,8 +40,8 @@ export class AppError extends Error {
     return new AppError(404, 'NOT_FOUND', message);
   }
 
-  static conflict(message = 'Resource already exists') {
-    return new AppError(409, 'CONFLICT', message);
+  static conflict(message = 'Resource already exists', details?: unknown) {
+    return new AppError(409, 'CONFLICT', message, details);
   }
 
   static internal(message = 'Internal server error') {

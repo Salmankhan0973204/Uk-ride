@@ -11,6 +11,8 @@
   --ink: #16181d;
   --ink-muted: #5b616e;
   --line: #e2dfd6;
+  /* Edge of a form control. Stronger than --line: a field must be findable (3:1). */
+  --control: #858a95;
   --brand: #16181d;
   --brand-ink: #ffffff;
   --accent: #f2b600;
@@ -31,6 +33,7 @@
     --ink: #f1f1ee;
     --ink-muted: #a3a8b3;
     --line: #2a2e37;
+    --control: #747a87;
     --brand: #f2b600;
     --brand-ink: #16181d;
     --accent: #f2b600;
@@ -51,6 +54,7 @@
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-line: var(--line);
+  --color-control: var(--control);
   --color-brand: var(--brand);
   --color-brand-ink: var(--brand-ink);
   --color-accent: var(--accent);
@@ -74,6 +78,29 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* The parts of a form the browser draws take their colour from the palette. */
+::selection {
+  background: color-mix(in oklab, var(--accent) 40%, transparent);
+  color: var(--ink);
+}
+
+input {
+  caret-color: var(--ink);
+  accent-color: var(--brand);
+}
+
+/* The one authored moment on the register page: the confirmation settles in. */
+.register-done {
+  animation: settle 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

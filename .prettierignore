@@ -8,3 +8,4 @@ backend/prisma/migrations
 package-lock.json
 .claude
 *.bru
+frontend/.impeccable

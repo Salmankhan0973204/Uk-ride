@@ -5,7 +5,7 @@ Update this file after every coding session.
 - **Current module:** Module 1 - Authentication
 - **Last completed:** Module 0 - Foundation
 - **Next step:** 1.3 - `POST /auth/login`
-- **Steps done:** 8 of 113
+- **Steps done:** 9 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -15,7 +15,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
 | --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 2/8   | In progress | In progress | -           | -              | -                            | In progress |
+| 1   | Authentication: Register + Login + Current User    | 3/8   | In progress | In progress | In progress | In progress    | -                            | In progress |
 | 2   | Profile Management                                 | 0/6   | -           | -           | -           | -              | -                            | -           |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
 | 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
@@ -63,7 +63,7 @@ runs.
 - [ ] 1.3 `POST /auth/login`. _Learn: JWT access tokens, safe error messages._
 - [ ] 1.4 Auth middleware and `GET /auth/me`. _Learn: protecting routes._
 - [ ] 1.5 Refresh token and logout. _Learn: httpOnly cookies, token rotation._
-- [ ] 1.6 Register page. _Learn: forms, field errors, mutations._
+- [x] 1.6 Register page. _Learn: forms, field errors, mutations._
 - [ ] 1.7 Login page and `useMe()`. _Learn: auth state with TanStack Query._
 - [ ] 1.8 Protected page, logout button, design pass. _Learn: route guards._
 
@@ -356,3 +356,40 @@ Learning notes
 - Check-then-insert is not safe on its own: two requests can both pass the check. The unique
   index in the database is the real guard, and Prisma reports it as error `P2002`.
 - Prisma `select` returns only the listed columns, so the hash never leaves the service.
+
+#### Step 1.6 - Register page (done 2026-10-07, built ahead of 1.3 to 1.5)
+
+Built
+
+- `/register`: email and password form that calls `POST /auth/register`. One password field
+  with a Show / Hide button. The home page links to it as its primary action.
+- New `auth` feature in the web app: `authApi.register()`, `useRegister()` (a TanStack
+  Query mutation) and `RegisterForm`.
+- States: empty, field errors, sending, server errors, success. After success the form is
+  replaced by a confirmation that names the email and says sign-in is not built yet.
+- A `--control` colour token for the edge of form fields, stronger than `--line`.
+
+Verified
+
+- Frontend lint, typecheck and production build pass.
+- Driven in a real browser (headless Edge): a bad email with a 3-character password shows both
+  messages and focuses the email field; Show / Hide switches the field type; a valid form
+  creates the account and focus moves to the confirmation; the same email again shows the
+  "already has an account" message on the email field.
+- No horizontal scrolling at 1280px, 375px and 360px. Checked in light and dark mode.
+
+Open items
+
+- The full Impeccable finish review and `DESIGN.md` are left for the design pass in step 1.8.
+- The "could not reach the server" message was not triggered in a browser.
+- The confirmation cannot offer a sign-in link until steps 1.3 and 1.7 exist.
+
+Learning notes
+
+- A query reads data and runs on its own; a mutation changes data and runs when you call
+  `mutate()`. `isPending`, `isSuccess` and `data` drive the three screens of the form.
+- Check in the browser first for speed, but treat the server as the judge: its 400 and 409
+  answers are mapped onto the same field messages.
+- A field error needs three things: `aria-invalid`, `aria-describedby` pointing at the
+  message, and focus moved to the first wrong field.
+- `noValidate` turns off the browser's own bubbles so every message uses our wording.

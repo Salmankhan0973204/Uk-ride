@@ -143,7 +143,7 @@ npm run dev
 | API docs | http://localhost:4000/api/v1/docs |
 
 Open http://localhost:3000/system-status. Stop the API to see the offline state. Start it again
-and the page recovers by itself.
+and the page recovers by itself. Create an account at http://localhost:3000/register.
 
 ## Scripts
 

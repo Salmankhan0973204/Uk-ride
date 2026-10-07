@@ -1,0 +1,31 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "sara@example.com",
+    "password": "secret-pass-1"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.tokenType: eq Bearer
+  res.body.data.expiresIn: eq 900
+  res.body.data.accessToken: isString
+  res.body.data.user.passwordHash: isUndefined
+}
+
+docs {
+  Run Register first so the account exists.
+  Change the password to see 401. An unknown email gets the same 401 on purpose.
+}

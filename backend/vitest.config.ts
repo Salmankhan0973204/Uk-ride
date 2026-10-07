@@ -5,6 +5,9 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     // Tests mock the database, so this URL only has to pass env validation.
-    env: { DATABASE_URL: 'postgresql://test:test@localhost:5432/ukride_test' },
+    env: {
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/ukride_test',
+      JWT_ACCESS_SECRET: 'test-only-secret-never-used-outside-the-test-run',
+    },
   },
 });

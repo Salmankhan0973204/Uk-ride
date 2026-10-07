@@ -175,13 +175,15 @@ Database commands belong to the backend workspace.
 
 ### Backend (`backend/.env`)
 
-| Variable       | Default                 | Purpose                                         |
-| -------------- | ----------------------- | ----------------------------------------------- |
-| `NODE_ENV`     | `development`           | `development`, `test` or `production`           |
-| `PORT`         | `4000`                  | API port                                        |
-| `LOG_LEVEL`    | `debug`                 | Pino log level                                  |
-| `CORS_ORIGINS` | `http://localhost:3000` | Comma-separated origins allowed to call the API |
-| `DATABASE_URL` | none, required          | PostgreSQL connection string                    |
+| Variable                 | Default                 | Purpose                                         |
+| ------------------------ | ----------------------- | ----------------------------------------------- |
+| `NODE_ENV`               | `development`           | `development`, `test` or `production`           |
+| `PORT`                   | `4000`                  | API port                                        |
+| `LOG_LEVEL`              | `debug`                 | Pino log level                                  |
+| `CORS_ORIGINS`           | `http://localhost:3000` | Comma-separated origins allowed to call the API |
+| `DATABASE_URL`           | none, required          | PostgreSQL connection string                    |
+| `JWT_ACCESS_SECRET`      | none, required          | Signs login tokens; 32 characters or more       |
+| `JWT_ACCESS_TTL_SECONDS` | `900`                   | Lifetime of an access token                     |
 
 The API refuses to start if a value is invalid.
 
@@ -203,6 +205,7 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/health/live`   | The process is alive                                    |
 | GET    | `/health/ready`  | The database answers; `503` when it cannot be reached   |
 | POST   | `/auth/register` | Create an account: name, email, mobile number, password |
+| POST   | `/auth/login`    | Sign in and receive an access token                     |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

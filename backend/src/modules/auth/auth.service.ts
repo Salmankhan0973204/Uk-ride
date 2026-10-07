@@ -3,7 +3,8 @@ import { prisma } from '../../config/db.js';
 import { isTest } from '../../config/env.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
-import type { RegisterInput } from './auth.schemas.js';
+import type { LoginInput, RegisterInput } from './auth.schemas.js';
+import { signAccessToken } from './auth.tokens.js';
 
 /**
  * bcrypt work factor: each step up doubles the time one hash takes.
@@ -61,4 +62,38 @@ export async function registerUser({ password, gender, ...profile }: RegisterInp
     }
     throw err;
   }
+}
+
+/**
+ * A hash of a throwaway value, made once. When no account matches the email,
+ * the password is still compared against this, so "unknown email" takes as
+ * long as "wrong password" and timing does not reveal which emails exist.
+ */
+let decoyHash: Promise<string> | undefined;
+const getDecoyHash = () => (decoyHash ??= bcrypt.hash('no-such-account', HASH_COST));
+
+/**
+ * Checks an email and password and issues an access token.
+ * Both ways of failing give the same answer: saying "no such email" would let
+ * anyone test which addresses have accounts.
+ */
+export async function loginUser({ email, password }: LoginInput) {
+  const found = await prisma.user.findUnique({
+    where: { email },
+    select: { ...publicUser, passwordHash: true },
+  });
+
+  const passwordMatches = await bcrypt.compare(
+    password,
+    found?.passwordHash ?? (await getDecoyHash()),
+  );
+
+  if (!found || !passwordMatches) {
+    throw AppError.unauthenticated('Email or password is incorrect');
+  }
+
+  // The hash was needed for the check only. It never leaves this function.
+  const { passwordHash: _passwordHash, ...user } = found;
+
+  return { user, ...signAccessToken(user.id) };
 }

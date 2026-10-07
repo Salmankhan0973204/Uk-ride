@@ -13,6 +13,7 @@ describe('API docs', () => {
       '/health/live',
       '/health/ready',
       '/auth/register',
+      '/auth/login',
     ]);
   });
 

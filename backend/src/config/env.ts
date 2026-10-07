@@ -21,6 +21,11 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+  // Signs access tokens. Anyone who knows it can forge a login, so it must be
+  // long, random and different in every environment.
+  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
+  // How long an access token is valid. Short on purpose: 15 minutes.
+  JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(86_400).default(900),
 });
 
 const parsed = envSchema.safeParse(process.env);

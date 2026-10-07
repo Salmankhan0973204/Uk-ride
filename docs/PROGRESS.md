@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 1 - Authentication
 - **Last completed:** Module 0 - Foundation
-- **Next step:** 1.3 - `POST /auth/login`
-- **Steps done:** 9 of 113
+- **Next step:** 1.4 - Auth middleware and `GET /auth/me`
+- **Steps done:** 10 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -15,7 +15,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
 | --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 3/8   | In progress | In progress | In progress | In progress    | -                            | In progress |
+| 1   | Authentication: Register + Login + Current User    | 4/8   | In progress | In progress | In progress | In progress    | -                            | In progress |
 | 2   | Profile Management                                 | 0/6   | -           | -           | -           | -              | -                            | -           |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
 | 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
@@ -60,7 +60,7 @@ runs.
 - [x] 1.1 PostgreSQL + Prisma, `User` model, first migration, database readiness check.
       _Learn: ORM, schema, migrations._
 - [x] 1.2 `POST /auth/register`. _Learn: Zod request validation, password hashing._
-- [ ] 1.3 `POST /auth/login`. _Learn: JWT access tokens, safe error messages._
+- [x] 1.3 `POST /auth/login`. _Learn: JWT access tokens, safe error messages._
 - [ ] 1.4 Auth middleware and `GET /auth/me`. _Learn: protecting routes._
 - [ ] 1.5 Refresh token and logout. _Learn: httpOnly cookies, token rotation._
 - [x] 1.6 Register page. _Learn: forms, field errors, mutations._
@@ -477,3 +477,45 @@ Learning notes
   an active option, and every key a native select answers to.
 - After changing the root layout or global CSS heavily, restart `next dev`. A stale server
   render causes hydration warnings that are not real bugs.
+
+#### Step 1.3 - `POST /auth/login` (done 2026-10-07)
+
+Built
+
+- `POST /api/v1/auth/login`: takes an email and a password, answers 200 with the user, an
+  `accessToken`, `tokenType: "Bearer"` and `expiresIn: 900`.
+- The access token is a JWT signed with HS256. It carries only the user id (`sub`) and lives
+  for 15 minutes. `backend/src/modules/auth/auth.tokens.ts` signs it.
+- Two new settings, checked at boot: `JWT_ACCESS_SECRET` (32 characters or more) and
+  `JWT_ACCESS_TTL_SECONDS` (default 900).
+- A wrong password and an unknown email both answer 401 `UNAUTHENTICATED` with the same
+  message. The response is sent with `Cache-Control: no-store`.
+
+Verified
+
+- Typecheck, lint and 26 automated tests pass. The tests replace the database with a fake.
+- Against the real database: sign-in with the email typed in capitals and spaces returned 200;
+  the token had three parts, its `sub` matched the user id and its lifetime was 900 seconds;
+  a wrong password and an unknown email returned the same 401; a missing password returned 400.
+- A wrong password took 410 ms and an unknown email 379 ms, so timing does not tell them apart.
+- The OpenAPI document lists `/auth/login`.
+
+Open items
+
+- Nothing uses the token yet. Step 1.4 adds the middleware that checks it and `GET /auth/me`.
+- There is no refresh token, so a session ends after 15 minutes. That is step 1.5.
+- Login has no rate limit, so passwords can be guessed without slowing down. That is step 16.1.
+- The login page is step 1.7.
+
+Learning notes
+
+- A JWT is signed, not encrypted. Anyone holding it can read it; nobody without the secret can
+  change it. Put an id in it, never a password or personal details.
+- The API does not store access tokens. It trusts any token whose signature and expiry check
+  out, which is why the lifetime is short: a stolen token cannot be taken back.
+- "Email or password is incorrect" for both failures stops people testing which emails have
+  accounts. Comparing against a decoy hash when the email is unknown keeps the response time
+  the same too.
+- Name the algorithm when signing and when verifying. A verifier that accepts whatever the
+  token claims can be tricked.
+- The secret lives in `.env`, which git ignores. `.env.example` holds a placeholder only.

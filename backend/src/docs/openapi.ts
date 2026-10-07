@@ -133,9 +133,61 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/login': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Sign in',
+        description:
+          'Checks the email and password and returns the user with a short-lived access ' +
+          'token. Send the token on later requests as `Authorization: Bearer <token>`. ' +
+          'A wrong password and an unknown email get the same 401, on purpose.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/LoginRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Signed in',
+            successEnvelope({ $ref: '#/components/schemas/LoginResult' }),
+          ),
+          400: jsonResponse(
+            'Validation failed. `error.details` lists the messages for each field.',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
+          401: jsonResponse('Email or password is incorrect', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     schemas: {
+      LoginRequest: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email', example: 'sara@example.com' },
+          password: { type: 'string', example: 'secret-pass-1' },
+        },
+      },
+      LoginResult: {
+        type: 'object',
+        required: ['user', 'accessToken', 'tokenType', 'expiresIn'],
+        properties: {
+          user: { $ref: '#/components/schemas/User' },
+          accessToken: { type: 'string', description: 'A signed JWT.' },
+          tokenType: { type: 'string', enum: ['Bearer'] },
+          expiresIn: {
+            type: 'integer',
+            description: 'Seconds until the access token expires.',
+            example: 900,
+          },
+        },
+      },
       Gender: { type: 'string', enum: GENDERS },
       RegisterRequest: {
         type: 'object',

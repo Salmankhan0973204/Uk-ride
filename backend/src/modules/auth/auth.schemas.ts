@@ -53,3 +53,17 @@ export const registerSchema = z.object({
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const loginSchema = z.object({
+  // Cleaned the same way as at registration, so "Sara@Example.com " signs in.
+  email: z
+    .string('Email is required')
+    .trim()
+    .toLowerCase()
+    .pipe(z.email('Enter a valid email address')),
+  // Only "not empty" is checked here. The length rules belong to choosing a
+  // password; repeating them at login would tell a guesser what the rules are.
+  password: z.string('Password is required').min(1, 'Password is required'),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;

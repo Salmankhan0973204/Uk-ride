@@ -199,3 +199,57 @@ Look at what was stored. The hash starts with `$2b$12$`:
 ```bash
 docker compose exec postgres psql -U ukride -d ukride -c "select email, password_hash from users"
 ```
+
+### 1.3 Login
+
+Register the account from 1.2 first, then sign in:
+
+```powershell
+$body = '{"email":"sara@example.com","password":"secret-pass-1"}'
+$login = Invoke-RestMethod http://localhost:4000/api/v1/auth/login -Method Post -ContentType 'application/json' -Body $body
+$login | ConvertTo-Json -Depth 5
+```
+
+Expect `200`:
+
+```json
+{
+  "success": true,
+  "message": "Signed in",
+  "data": {
+    "user": {
+      "id": "...",
+      "firstName": "Sara",
+      "lastName": "Khan",
+      "email": "sara@example.com",
+      "mobile": "+447400123456",
+      "gender": "FEMALE",
+      "createdAt": "2026-10-06T10:05:46.873Z"
+    },
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "expiresIn": 900,
+    "tokenType": "Bearer"
+  }
+}
+```
+
+The token has three parts separated by dots. The middle part is readable by anyone; paste the
+token into https://jwt.io to see the user id (`sub`) and the expiry (`exp`). That is why it
+holds nothing secret.
+
+Send a wrong password, then an email that has no account:
+
+```powershell
+$body = '{"email":"sara@example.com","password":"wrong-password"}'
+Invoke-RestMethod http://localhost:4000/api/v1/auth/login -Method Post -ContentType 'application/json' -Body $body
+```
+
+Both answer `401` with the same body, so the answer never reveals which emails are registered:
+
+```json
+{
+  "success": false,
+  "error": { "code": "UNAUTHENTICATED", "message": "Email or password is incorrect" },
+  "requestId": "..."
+}
+```

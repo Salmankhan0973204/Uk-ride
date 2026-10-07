@@ -36,6 +36,11 @@ export class AppError extends Error {
     return new AppError(400, 'VALIDATION_ERROR', message, details);
   }
 
+  /** The caller is not signed in, or what they sent to sign in is wrong. */
+  static unauthenticated(message = 'Authentication required') {
+    return new AppError(401, 'UNAUTHENTICATED', message);
+  }
+
   static notFound(message = 'Resource not found') {
     return new AppError(404, 'NOT_FOUND', message);
   }

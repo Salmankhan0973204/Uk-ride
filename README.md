@@ -11,15 +11,15 @@ and runs on a local machine.
 
 ## Status
 
-**Module 0 of 17 is complete.** The web app and the API are connected and tested.
-Authentication is in progress: the database is in place and accounts can be registered. The full tracker
-is in [docs/PROGRESS.md](docs/PROGRESS.md).
+**Modules 0 and 1 of 17 are complete.** You can create an account, sign in, stay signed in
+and sign out. Profile management is next. The full tracker is in
+[docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                                        | Status   |
 | --- | --------------------------------------------- | -------- |
 | 0   | Foundation: health check + first screen       | Complete |
-| 1   | Authentication: register, login, current user | Started  |
-| 2   | Profile management                            | Planned  |
+| 1   | Authentication: register, login, current user | Complete |
+| 2   | Profile management                            | Next     |
 | 3   | Vehicle types: admin CRUD + customer catalog  | Planned  |
 | 4   | Fleet vehicles                                | Planned  |
 | 5   | Pricing rules + quote engine                  | Planned  |
@@ -143,7 +143,8 @@ npm run dev
 | API docs | http://localhost:4000/api/v1/docs |
 
 Open http://localhost:3000/system-status. Stop the API to see the offline state. Start it again
-and the page recovers by itself. Create an account at http://localhost:3000/register.
+and the page recovers by itself. Create an account at http://localhost:3000/register, sign in at http://localhost:3000/login,
+and see your details at http://localhost:3000/account.
 
 ## Scripts
 

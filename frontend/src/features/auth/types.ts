@@ -31,5 +31,20 @@ export interface User {
   createdAt: string;
 }
 
+/** Body of POST /api/v1/auth/login. */
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+/** Answer of POST /api/v1/auth/login. The refresh token is not here: it is in a cookie. */
+export interface LoginResult {
+  user: User;
+  accessToken: string;
+  tokenType: 'Bearer';
+  /** Seconds until the access token expires. */
+  expiresIn: number;
+}
+
 /** `details` of a 400 VALIDATION_ERROR: the messages for each field. */
 export type FieldErrors<T> = Partial<Record<keyof T, string[]>>;

@@ -1,12 +1,16 @@
 /**
  * Central query-key factory.
  * Every hook takes its key from here so invalidation stays predictable.
- * New modules add their own section (auth, vehicles, quotes, bookings ...).
+ * New modules add their own section (vehicles, quotes, bookings ...).
  */
 export const queryKeys = {
   health: {
     all: ['health'] as const,
     status: () => [...queryKeys.health.all, 'status'] as const,
     readiness: () => [...queryKeys.health.all, 'readiness'] as const,
+  },
+  auth: {
+    all: ['auth'] as const,
+    me: () => [...queryKeys.auth.all, 'me'] as const,
   },
 };

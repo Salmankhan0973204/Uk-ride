@@ -248,12 +248,11 @@ export function RegisterForm() {
           </dl>
 
           <p className="text-sm leading-relaxed text-ink-muted">
-            Signing in is not available yet. It is the next part of UkRide to be built, and this
-            account will work with it.
+            Sign in with your email and the password you just chose.
           </p>
 
-          <Link href="/" className="btn btn-primary">
-            Back to home
+          <Link href="/login" className="btn btn-primary">
+            Sign in
           </Link>
         </div>
       </Card>
@@ -354,6 +353,16 @@ export function RegisterForm() {
             )}
           </button>
         </form>
+
+        <p className="text-sm text-ink-muted">
+          Already have an account?{' '}
+          <Link
+            href="/login"
+            className="font-medium text-ink underline decoration-ring/70 decoration-2 underline-offset-4 hover:decoration-ring"
+          >
+            Sign in
+          </Link>
+        </p>
       </div>
     </Card>
   );

@@ -10,7 +10,7 @@ import { StatusSummary } from '@/features/health/components/StatusSummary';
 const stages = [
   {
     title: 'Create your account',
-    text: 'Your name, email and mobile number.',
+    text: 'Sign up, then sign in to see your details.',
     href: '/register',
   },
   { title: 'Get an exact price', text: 'The full fare before you commit.' },

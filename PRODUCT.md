@@ -46,9 +46,9 @@ Screens never ask a customer to compare or choose between operators.
 
 ## Capabilities and Constraints
 
-- Built so far: the app shell, the `/system-status` screen (Module 0) and the `/register`
-  screen (Module 1).
-- Planned, in order: authentication, profiles, vehicle types, fleet, pricing and quotes,
+- Built so far: the app shell and the `/system-status` screen (Module 0); the `/register`,
+  `/login` and `/account` screens (Module 1).
+- Planned, in order: profiles, vehicle types, fleet, pricing and quotes,
   bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
   real-time status and driver location, document uploads, reviews, admin reporting.
 - Prices, payment state and booking status always come from the server.

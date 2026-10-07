@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 1 - Authentication
-- **Last completed:** Module 0 - Foundation
-- **Next step:** 1.7 - Login page and `useMe()`
-- **Steps done:** 12 of 113
+- **Current module:** none in progress
+- **Last completed:** Module 1 - Authentication
+- **Next step:** 2.1 - Return the profile from `GET /users/me`
+- **Steps done:** 14 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
-| --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 6/8   | In progress | In progress | In progress | In progress    | -                            | In progress |
-| 2   | Profile Management                                 | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
-| 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -           | -           | -              | -                            | -           |
-| 6   | Booking Creation                                   | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 7   | My Bookings: List + Detail                         | 0/5   | -           | -           | -           | -              | -                            | -           |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -           | -           | -              | -                            | -           |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -           | -           | -              | -                            | -           |
-| 11  | Notifications + Email                              | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -           | -           | -              | -                            | -           |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -           | -           | -              | -                            | -           |
+| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
+| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 2   | Profile Management                                 | 0/6   | -       | -          | -           | -              | -                            | Next     |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
 
 ## Steps
 
@@ -64,8 +64,8 @@ runs.
 - [x] 1.4 Auth middleware and `GET /auth/me`. _Learn: protecting routes._
 - [x] 1.5 Refresh token and logout. _Learn: httpOnly cookies, token rotation._
 - [x] 1.6 Register page. _Learn: forms, field errors, mutations._
-- [ ] 1.7 Login page and `useMe()`. _Learn: auth state with TanStack Query._
-- [ ] 1.8 Protected page, logout button, design pass. _Learn: route guards._
+- [x] 1.7 Login page and `useMe()`. _Learn: auth state with TanStack Query._
+- [x] 1.8 Protected page, logout button, design pass. _Learn: route guards._
 
 ### Module 2 - Profile Management
 
@@ -261,7 +261,7 @@ Learning notes
 - An interrupted `npm install` can leave a broken lockfile. Delete `node_modules` and
   `package-lock.json` and install again.
 
-### Module 1 - Authentication (in progress)
+### Module 1 - Authentication (completed 2026-10-07)
 
 #### Step 1.1 - PostgreSQL + Prisma (done 2026-10-06)
 
@@ -611,3 +611,77 @@ Learning notes
 - `clearCookie` needs the same path and flags as the cookie it removes, or the browser keeps it.
 - Check your test before trusting a pass: a 401 for "no cookie" looked the same as a 401 for
   "replayed cookie" until the database rows were counted.
+
+#### Steps 1.7 and 1.8 - Login page, `useMe()`, account page and sign-out (done 2026-10-07)
+
+Built
+
+- `/login`: email and password form. A wrong password shows one message, clears the password
+  and returns focus to it. A signed-in visitor is sent on to `/account`.
+- `/account`: the protected page. It shows the signed-in user's details and a Sign out button.
+  A signed-out visitor is sent to `/login`, and nothing private is drawn while the check runs.
+- `useMe()`: the web app's auth state, a TanStack Query whose data is the user or `null`.
+  `useLogin()` and `useLogout()` write to it directly.
+- `authFetch()` in `frontend/src/lib/api/client.ts`: adds the access token, and when it is
+  missing or expired, gets a new one from the refresh cookie and tries once more. All callers
+  share one refresh request.
+- The access token is kept in memory only (`frontend/src/lib/auth/session.ts`).
+- The navigation shows Sign in and Sign up when signed out, and the person's first name when
+  signed in. The register confirmation now links to sign-in.
+
+Verified
+
+- Frontend lint, typecheck and production build pass (six routes).
+- Driven in a real browser against the real API and database:
+  - signed out, `/account` redirects to `/login`;
+  - register, then the confirmation's Sign in button leads to `/login`;
+  - a wrong password shows the message, clears the field and stays on the page;
+  - the right password, with the email typed in capitals and spaces, lands on `/account`;
+  - after a reload the page is still signed in, restored from the cookie;
+  - signed in, `/login` redirects to `/account`;
+  - Sign out returns to the home page, the navigation offers Sign in again, and `/account`
+    redirects to `/login`; every refresh token of the test user was revoked.
+- The access token was in neither localStorage nor sessionStorage, and page script could not
+  read the refresh cookie.
+- No horizontal scrolling at 1440px, 390px and 360px.
+
+Design pass (step 1.8)
+
+- A manual pass over the new screens in the glass design: states for loading, error, wrong
+  password, signed in and signed out; keyboard focus; 44px targets; three widths.
+- Found and fixed: signing out first landed on `/login` instead of home, because the page's
+  own guard reacted before the redirect.
+- The Impeccable finish review was not run on the glass design, and no `DESIGN.md` exists.
+
+Open items
+
+- The guard runs in the browser. The page's code is public; what is protected is the data,
+  which the API refuses without a token.
+- If the API cannot be reached during the session check, the account page says so and keeps
+  the session. That state was not triggered in a browser.
+- "Status" is hidden from the navigation on phones for lack of room; the home page links to it.
+- After sign-in the app always goes to `/account`. Returning to the page you came from can
+  wait until there are more protected pages.
+
+Learning notes
+
+- Auth state is server state: "who am I" is a query, and login and logout are mutations that
+  update its cache. No separate auth store is needed.
+- Keep the access token in a variable, not in localStorage. A reload loses it, and the
+  httpOnly cookie brings it back; an injected script can read neither.
+- `credentials: 'include'` is what lets the browser store and send a cookie set by the API on
+  another port. The API must answer with `Access-Control-Allow-Credentials: true` and a named
+  origin, never `*`.
+- A refresh token works once, so the client must make sure only one refresh runs at a time.
+  Sharing one promise between callers does that.
+- Two effects can race. Sign-out made the user null, which triggered the guard's redirect
+  before the sign-out's own. A flag set when the button is pressed settles which one wins.
+
+### Module 1 summary
+
+Built: PostgreSQL with Prisma; register, login, refresh, logout and current-user endpoints;
+access tokens as 15-minute JWTs and refresh tokens as rotating httpOnly cookies; the register,
+login and account screens; the glass-on-gradient design.
+
+Checks at completion: backend typecheck, lint and 53 tests pass; frontend lint, typecheck and
+build pass; the full journey was driven in a real browser.

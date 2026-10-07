@@ -2,20 +2,22 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMe } from '@/features/auth/hooks/useMe';
 
 /** A floating glass bar that stays at the top while the page scrolls. */
 export function SiteNav() {
   const pathname = usePathname();
+  const { data: user } = useMe();
 
-  const link = (href: string, label: string) => {
+  const link = (href: string, label: string, className = '') => {
     const active = pathname === href;
     return (
       <Link
         href={href}
         aria-current={active ? 'page' : undefined}
-        className={`flex min-h-11 items-center rounded-full px-4 text-sm font-medium transition-colors duration-200 ${
+        className={`flex min-h-11 items-center rounded-full px-4 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
           active ? 'bg-glass-strong text-ink' : 'text-ink-muted hover:bg-glass hover:text-ink'
-        }`}
+        } ${className}`}
       >
         {label}
       </Link>
@@ -37,16 +39,28 @@ export function SiteNav() {
         </Link>
 
         <div className="flex items-center gap-1">
-          {link('/system-status', 'Status')}
-          {pathname === '/register' ? (
-            link('/register', 'Sign up')
+          {/* On a phone there is no room for it; the home page links to it. */}
+          {link('/system-status', 'Status', 'max-sm:hidden')}
+
+          {user ? (
+            // Signed in: one way into the account, named after the person.
+            link('/account', user.firstName)
           ) : (
-            <Link
-              href="/register"
-              className="btn btn-primary min-h-11! rounded-full! px-5! text-sm"
-            >
-              Sign up
-            </Link>
+            // Signed out, or still checking: the two ways in. On the sign-up
+            // page itself the button would only repeat the form's own action.
+            <>
+              {link('/login', 'Sign in')}
+              {pathname === '/register' ? (
+                link('/register', 'Sign up')
+              ) : (
+                <Link
+                  href="/register"
+                  className="btn btn-primary min-h-11! rounded-full! px-5! text-sm whitespace-nowrap"
+                >
+                  Sign up
+                </Link>
+              )}
+            </>
           )}
         </div>
       </nav>

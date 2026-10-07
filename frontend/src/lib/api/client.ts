@@ -1,3 +1,4 @@
+import { getAccessToken, hasSessionHint, setAccessToken, setSessionHint } from '@/lib/auth/session';
 import type { ApiEnvelope } from './types';
 
 export const API_BASE_URL = (
@@ -50,6 +51,9 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     response = await fetch(`${API_BASE_URL}${API_PREFIX}${path}`, {
       ...init,
       cache: 'no-store',
+      // Lets the browser store and send the httpOnly refresh cookie, which the
+      // API sets on a different port from the web app.
+      credentials: 'include',
       headers: {
         Accept: 'application/json',
         ...(init.body ? { 'Content-Type': 'application/json' } : {}),
@@ -88,4 +92,64 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
 
   return body.data;
+}
+
+/** The error used when there is no session to act on. */
+const signedOut = () => new ApiError(401, 'UNAUTHENTICATED', 'Sign in to continue');
+
+/**
+ * Asks the API for a new access token using the refresh cookie.
+ *
+ * Each refresh token works once, so two refreshes at the same moment would
+ * make the second one fail. `pending` makes every caller share one request.
+ */
+let pending: Promise<string> | null = null;
+
+export function refreshAccessToken(): Promise<string> {
+  pending ??= apiFetch<{ accessToken: string }>('/auth/refresh', { method: 'POST' })
+    .then(({ accessToken }) => {
+      setAccessToken(accessToken);
+      setSessionHint(true);
+      return accessToken;
+    })
+    .catch((error: unknown) => {
+      // Only a real "no" from the API ends the session. If the API is merely
+      // unreachable, the hint stays so the next page load tries again.
+      if (error instanceof ApiError && error.status === 401) {
+        setAccessToken(null);
+        setSessionHint(false);
+      }
+      throw error;
+    })
+    .finally(() => {
+      pending = null;
+    });
+
+  return pending;
+}
+
+/**
+ * apiFetch for routes that need a signed-in user.
+ *
+ * It adds the access token, and when the token is missing (after a reload) or
+ * has expired (after 15 minutes) it gets a new one and tries once more. The
+ * caller only sees a 401 when the session is really over.
+ */
+export async function authFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const call = (token: string) =>
+    apiFetch<T>(path, { ...init, headers: { ...init.headers, Authorization: `Bearer ${token}` } });
+
+  let token = getAccessToken();
+  if (!token) {
+    if (!hasSessionHint()) throw signedOut();
+    token = await refreshAccessToken();
+    return call(token);
+  }
+
+  try {
+    return await call(token);
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
+    return call(await refreshAccessToken());
+  }
 }

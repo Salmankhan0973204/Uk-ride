@@ -11,7 +11,8 @@ web
 
 ## Product
 
-UkRide is a booking platform for taxis, chauffeurs and private-hire vehicles in the UK.
+UkRide is a booking platform for chauffeur-driven, private-hire travel in the UK, positioned as
+an executive chauffeur firm: airport transfers and business travel, booked ahead.
 Customers get a price, book a trip, pay and follow the trip. Drivers work through their
 assigned jobs. Dispatchers and admins run the operation.
 
@@ -84,21 +85,28 @@ DESIGN.md replaces them.
 
 ### Visual direction
 
-- Cool slate canvas, white surfaces, navy ink. One action colour: blue (`#0369a1` on light,
-  `#38bdf8` on dark), used for the primary button, the focus ring and the brand mark. The
-  palette comes from the ui-ux-pro-max design system ("Trust & Authority, minimal"), adopted on
-  2026-10-07 in place of the earlier warm off-white and amber.
-- Semantic colours for status only: success, danger, warning, neutral, each with a soft
-  background and a strong foreground.
-- Geist Sans for interface text, Geist Mono for references, codes and technical values.
-- Borders define structure. Shadows are reserved for things that float (menus, dialogs).
-- 8px radius on controls, 12px on cards. 44px minimum touch target.
-- Motion is functional and short, and is removed under `prefers-reduced-motion`.
-- Light and dark themes come from the same tokens in `frontend/src/app/globals.css`.
+- Glass on a gradient. The user chose this look on 2026-10-07 ("Glass and gradient", accent
+  "Indigo / violet") after rejecting a road-sign direction; it replaces every earlier palette.
+- One deep indigo-to-violet backdrop sits behind every page and stays fixed while content
+  scrolls. It is kept dark enough that white text on glass passes 4.5:1.
+- Content lives on frosted glass panels: translucent white fill, an 18px backdrop blur, a thin
+  light border, a soft shadow. 24px radius on panels, 14px on controls and buttons.
+- One accent: an indigo-to-violet gradient, used for the primary button, the brand mark and the
+  step that is open. Focus uses a soft violet ring.
+- Inputs and the dropdown are glass too. The dropdown is the project's own `Select` component,
+  not the browser's list.
+- Status is a pill with a coloured dot and words: green, red, amber or neutral.
+- Geist Sans for interface text, Geist Mono for technical values.
+- One theme. The gradient is the design, so there is no separate light mode.
+- Motion is short: panels rise in once, the dropdown opens from its trigger. It is removed
+  under `prefers-reduced-motion`. 44px minimum touch target.
+- Tokens and shared classes (`.glass`, `.btn`, `.control`, `.pill`) live in
+  `frontend/src/app/globals.css`.
 
 ### Avoid
 
-- Gradient hero sections, glass effects, decorative blobs and generic card grids.
+- Gradient text, and glass so transparent that text behind it is hard to read.
+- Generic grids of identical icon cards.
 - Dashboards full of numbers that drive no decision.
 - Colour-only status, placeholder-only labels, disabled buttons with no explanation.
 - Modals for content that deserves a page; toasts for errors the user must act on.

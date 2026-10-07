@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Card } from '@/components/ui/Card';
-import { Field, controlClass, describedBy } from '@/components/ui/Field';
+import { Field, describedBy, fieldIds } from '@/components/ui/Field';
+import { Select } from '@/components/ui/Select';
 import { Spinner } from '@/components/ui/Spinner';
 import type { ApiError } from '@/lib/api/client';
 import { useRegister } from '../hooks/useRegister';
@@ -138,24 +139,26 @@ export function RegisterForm() {
 
   const id = (name: FieldName) => `${formId}-${name}`;
 
-  /** Props shared by every control: value, change and blur handling, error wiring. */
-  function control(name: FieldName, hint?: string) {
+  function setValue(name: FieldName, value: string) {
+    setValues((current) => ({ ...current, [name]: value }));
+    // A message disappears as soon as the user starts correcting the field.
+    if (errors[name]) setErrors((current) => ({ ...current, [name]: undefined }));
+  }
+
+  /** Props shared by every text input: value, change and blur handling, error wiring. */
+  function input(name: FieldName, hint?: string) {
     return {
       id: id(name),
       name,
       value: values[name],
-      onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setValues((current) => ({ ...current, [name]: event.target.value }));
-        // A message disappears as soon as the user starts correcting the field.
-        if (errors[name]) setErrors((current) => ({ ...current, [name]: undefined }));
-      },
+      onChange: (event: React.ChangeEvent<HTMLInputElement>) => setValue(name, event.target.value),
       // Checked when the user leaves the field, not on every key press.
       onBlur: () => {
         if (!values[name]) return;
         setErrors((current) => ({ ...current, [name]: checkField(name, values) }));
       },
       ...describedBy(id(name), { hint, error: errors[name] }),
-      className: controlClass(Boolean(errors[name])),
+      className: 'control',
     };
   }
 
@@ -200,10 +203,10 @@ export function RegisterForm() {
     const { user } = data;
 
     return (
-      <Card className="register-done">
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-success-soft text-success">
+      <Card className="rise mx-auto max-w-xl">
+        <div className="space-y-7">
+          <div className="space-y-4">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-glass-border bg-glass-strong text-success shadow-[0_0_28px_rgb(110_231_183/0.35)]">
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
@@ -212,31 +215,33 @@ export function RegisterForm() {
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="h-5 w-5"
+                className="h-6 w-6"
               >
                 <path d="M5 12.5l4.5 4.5L19 7.5" />
               </svg>
             </span>
-            <h1
-              ref={doneRef}
-              tabIndex={-1}
-              className="text-2xl font-semibold tracking-tight text-balance outline-none sm:text-3xl"
-            >
-              Your account is ready, {user.firstName}
-            </h1>
-            <p role="status" className="text-base leading-relaxed text-ink-muted">
-              We created your UkRide account with these details.
-            </p>
+            <div className="space-y-2">
+              <h1
+                ref={doneRef}
+                tabIndex={-1}
+                className="text-3xl leading-tight font-semibold tracking-tight text-balance outline-none sm:text-4xl"
+              >
+                Your account is ready, {user.firstName}
+              </h1>
+              <p role="status" className="text-base leading-relaxed text-ink-muted">
+                We created your UkRide account with these details.
+              </p>
+            </div>
           </div>
 
-          <dl className="divide-y divide-line border-y border-line text-sm">
+          <dl className="divide-y divide-line rounded-2xl border border-line bg-glass px-4">
             {[
               ['Name', `${user.firstName} ${user.lastName}`],
               ['Email', user.email],
               ['Mobile', user.mobile],
             ].map(([label, value]) => (
-              <div key={label} className="flex items-baseline justify-between gap-4 py-3">
-                <dt className="text-ink-muted">{label}</dt>
+              <div key={label} className="flex items-baseline justify-between gap-4 py-3.5">
+                <dt className="text-sm text-ink-muted">{label}</dt>
                 <dd className="text-right font-medium break-all">{value}</dd>
               </div>
             ))}
@@ -247,10 +252,7 @@ export function RegisterForm() {
             account will work with it.
           </p>
 
-          <Link
-            href="/"
-            className="inline-flex min-h-12 items-center rounded-lg bg-brand px-5 text-sm font-medium text-brand-ink transition-opacity duration-200 hover:opacity-90"
-          >
+          <Link href="/" className="btn btn-primary">
             Back to home
           </Link>
         </div>
@@ -262,39 +264,39 @@ export function RegisterForm() {
   const passwordHint = `At least ${MIN_PASSWORD} characters.`;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-          Create your account
-        </h1>
-        <p className="text-base leading-relaxed text-ink-muted">
-          Tell us who you are and choose a password.
-        </p>
-      </div>
+    <Card className="rise mx-auto max-w-xl">
+      <div className="space-y-7">
+        <div className="space-y-2">
+          <h1 className="text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl">
+            Create your account
+          </h1>
+          <p className="text-base leading-relaxed text-ink-muted">
+            Tell us who you are and choose a password.
+          </p>
+        </div>
 
-      <Card>
-        <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
           {formError ? (
             <p
               role="alert"
-              className="rounded-lg bg-danger-soft px-4 py-3 text-sm leading-relaxed font-medium text-danger"
+              className="rounded-2xl border border-danger/50 bg-[rgb(253_164_175/0.12)] px-4 py-3 text-sm leading-relaxed font-medium text-danger"
             >
               {formError}
             </p>
           ) : null}
 
-          <div className="grid gap-6 sm:grid-cols-2 sm:gap-4">
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-4">
             <Field id={id('firstName')} label="First name" error={errors.firstName}>
-              <input {...control('firstName')} type="text" autoComplete="given-name" />
+              <input {...input('firstName')} type="text" autoComplete="given-name" />
             </Field>
             <Field id={id('lastName')} label="Last name" error={errors.lastName}>
-              <input {...control('lastName')} type="text" autoComplete="family-name" />
+              <input {...input('lastName')} type="text" autoComplete="family-name" />
             </Field>
           </div>
 
           <Field id={id('email')} label="Email address" error={errors.email}>
             <input
-              {...control('email')}
+              {...input('email')}
               type="email"
               inputMode="email"
               autoComplete="email"
@@ -304,54 +306,47 @@ export function RegisterForm() {
           </Field>
 
           <Field id={id('mobile')} label="Mobile number" hint={mobileHint} error={errors.mobile}>
-            <input
-              {...control('mobile', mobileHint)}
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-            />
+            <input {...input('mobile', mobileHint)} type="tel" inputMode="tel" autoComplete="tel" />
           </Field>
 
           <Field id={id('gender')} label="Gender" optional error={errors.gender}>
-            <select {...control('gender')} autoComplete="sex">
-              <option value="">Select</option>
-              {GENDER_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            <Select
+              id={id('gender')}
+              name="gender"
+              labelId={fieldIds(id('gender')).label}
+              value={values.gender}
+              options={GENDER_OPTIONS}
+              onChange={(value) => setValue('gender', value)}
+              clearLabel="No answer"
+              {...describedBy(id('gender'), { error: errors.gender })}
+            />
           </Field>
 
           <Field id={id('password')} label="Password" hint={passwordHint} error={errors.password}>
             <div className="relative">
               <input
-                {...control('password', passwordHint)}
+                {...input('password', passwordHint)}
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
                 autoCapitalize="none"
                 spellCheck={false}
-                className={`${controlClass(Boolean(errors.password))} pr-20`}
+                className="control pr-20"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((shown) => !shown)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute inset-y-0.5 right-0.5 min-w-16 rounded-md px-3 text-sm font-medium text-ink-muted transition-colors duration-200 hover:bg-neutral-soft hover:text-ink"
+                className="absolute inset-y-0.5 right-0.5 min-w-16 rounded-xl px-3 text-sm font-medium text-ink-muted transition-colors duration-200 hover:bg-glass-strong hover:text-ink"
               >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
           </Field>
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2.5 rounded-lg bg-brand px-5 text-base font-medium text-brand-ink transition-opacity duration-200 hover:opacity-90 disabled:cursor-progress disabled:opacity-70"
-          >
+          <button type="submit" disabled={isPending} className="btn btn-primary mt-2 w-full">
             {isPending ? (
               <>
-                <Spinner className="h-5 w-5 text-brand-ink!" />
+                <Spinner />
                 Creating your account
               </>
             ) : (
@@ -359,7 +354,7 @@ export function RegisterForm() {
             )}
           </button>
         </form>
-      </Card>
-    </div>
+      </div>
+    </Card>
   );
 }

@@ -16,7 +16,7 @@ const dependencies = [
 function CheckBadge({ check }: { check?: DependencyCheck }) {
   if (check?.status === 'up') return <Badge variant="success">Up</Badge>;
   if (check?.status === 'down') return <Badge variant="danger">Down</Badge>;
-  if (check?.status === 'skipped') return <Badge>Not used yet</Badge>;
+  if (check?.status === 'skipped') return <Badge variant="warning">Not used yet</Badge>;
   return <Badge>Unknown</Badge>;
 }
 
@@ -29,7 +29,7 @@ export function DependencyStatus() {
       <Card>
         <div role="status" className="flex items-center gap-3">
           <Spinner />
-          <p className="text-sm text-ink-muted">Checking the database</p>
+          <p className="text-base text-ink-muted">Checking the database</p>
         </div>
       </Card>
     );
@@ -40,7 +40,7 @@ export function DependencyStatus() {
   return (
     <Card>
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Dependencies</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Dependencies</h2>
 
         {/* The wrapper announces changes; the list keeps its own semantics. */}
         <div role="status">
@@ -63,7 +63,10 @@ export function DependencyStatus() {
         ) : null}
 
         {isDown ? (
-          <p role="alert" className="text-sm leading-relaxed">
+          <p
+            role="alert"
+            className="rounded-2xl border border-warning/50 bg-[rgb(252_211_77/0.12)] px-4 py-3 text-sm leading-relaxed"
+          >
             The API is running but cannot reach a dependency marked Down. Requests that read or save
             data will fail until it is back. This page will recover on its own.
           </p>

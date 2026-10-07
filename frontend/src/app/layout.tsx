@@ -19,16 +19,16 @@ export const metadata: Metadata = {
     default: 'UkRide',
     template: '%s | UkRide',
   },
-  description: 'Taxi and chauffeur booking platform.',
+  description: 'Chauffeur-driven travel, booked ahead.',
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en-GB" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <QueryProvider>
           <SiteNav />
-          <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 sm:py-14">
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-10 pb-16 sm:px-6 sm:pt-14 sm:pb-24">
             {children}
           </main>
         </QueryProvider>

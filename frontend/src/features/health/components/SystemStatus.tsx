@@ -19,7 +19,7 @@ function formatUptime(totalSeconds: number) {
 }
 
 function formatTime(value: number | string) {
-  return new Date(value).toLocaleTimeString([], {
+  return new Date(value).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
@@ -57,11 +57,11 @@ export function SystemStatus() {
       <Card>
         <div role="alert" className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">API</h2>
+            <h2 className="text-xl font-semibold tracking-tight">API</h2>
             <Badge variant="danger">Offline</Badge>
           </div>
 
-          <p className="text-sm leading-relaxed">
+          <p className="text-base leading-relaxed">
             {error.isNetworkError
               ? 'The web app cannot reach the API. Start the backend and this page will recover on its own.'
               : error.message}
@@ -78,7 +78,7 @@ export function SystemStatus() {
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-brand px-5 text-sm font-medium text-brand-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn btn-primary"
           >
             {isFetching ? 'Trying again' : 'Try again'}
           </button>
@@ -91,7 +91,7 @@ export function SystemStatus() {
     <Card>
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">API</h2>
+          <h2 className="text-xl font-semibold tracking-tight">API</h2>
           <div role="status">
             <Badge variant="success">Online</Badge>
           </div>

@@ -9,16 +9,20 @@ export const metadata: Metadata = {
 
 export default function SystemStatusPage() {
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">System status</h1>
-        <p className="text-sm leading-relaxed text-ink-muted">
+    <div className="space-y-8 pt-4 sm:pt-8">
+      <div className="rise space-y-3">
+        <h1 className="text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
+          System status
+        </h1>
+        <p className="text-lg leading-relaxed text-ink-muted">
           Checks the API and its database every 10 seconds and updates on its own.
         </p>
       </div>
 
-      <SystemStatus />
-      <DependencyStatus />
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <SystemStatus />
+        <DependencyStatus />
+      </div>
     </div>
   );
 }

@@ -437,3 +437,43 @@ Learning notes
   rows it needs a default or a two-step migration.
 - Normalise before you compare: "0044 (7400) 123-456" and "+447400123456" are one number, so
   the unique index only works on the cleaned form.
+
+#### Frontend redesign: glass on a gradient (2026-10-07)
+
+Built
+
+- The whole web app was restyled to the look the user chose: frosted glass panels on a deep
+  indigo-to-violet gradient, with an indigo-to-violet accent. `PRODUCT.md` describes it.
+- Shared pieces in `frontend/src/app/globals.css`: `.glass` (panel), `.btn` with
+  `.btn-primary` and `.btn-ghost`, `.control` (inputs and the dropdown trigger), `.pill`
+  (status).
+- A custom dropdown, `components/ui/Select.tsx`, replaces the browser's select. It works by
+  mouse, touch and keyboard (Up, Down, Home, End, Enter, Space, Escape, type a letter).
+- A floating glass navigation bar, a home page with the journey stages and a live status card,
+  and glass versions of the register form, its confirmation and the System Status page.
+
+Verified
+
+- Frontend lint, typecheck and production build pass.
+- Driven in a real browser: the dropdown by pointer and by keyboard, every field error, a full
+  registration, and a duplicate email.
+- No horizontal scrolling at 1440px, 390px and 360px.
+
+Open items
+
+- One theme only. The gradient is the design, so there is no separate light mode.
+- Backdrop blur costs more to draw than flat panels. It was not measured on a low-end phone.
+- Two earlier directions from the same day (a slate and blue palette, then a road-sign design)
+  were replaced. The road-sign one was never committed.
+- The ui-ux-pro-max and Impeccable skills are both still installed. No `DESIGN.md` exists yet.
+
+Learning notes
+
+- Glass needs a dark or busy backdrop behind it and enough fill in front of it: text contrast
+  is measured against the panel as it actually renders, not against the panel colour alone.
+- A menu that floats over a form must be nearly opaque, or the fields behind show through the
+  options.
+- A custom select has to rebuild what the browser gave for free: a label, an expanded state,
+  an active option, and every key a native select answers to.
+- After changing the root layout or global CSS heavily, restart `next dev`. A stale server
+  render causes hydration warnings that are not real bugs.

@@ -1,11 +1,13 @@
 interface CardProps {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export function Card({ children, className = '' }: CardProps) {
+/** A frosted glass panel. Forms and detail live on these. */
+export function Card({ children, className = '', style }: CardProps) {
   return (
-    <section className={`rounded-xl border border-line bg-surface p-5 sm:p-6 ${className}`}>
+    <section style={style} className={`glass p-6 sm:p-8 ${className}`}>
       {children}
     </section>
   );

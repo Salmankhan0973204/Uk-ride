@@ -10,9 +10,9 @@ interface FieldProps {
   children: React.ReactNode;
 }
 
-/** ids a control needs for `aria-describedby`. */
+/** ids a control needs for `aria-describedby` and its label. */
 export function fieldIds(id: string) {
-  return { hint: `${id}-hint`, error: `${id}-error` };
+  return { label: `${id}-label`, hint: `${id}-hint`, error: `${id}-error` };
 }
 
 /** What a control inside a Field passes on so its error and hint are announced. */
@@ -22,13 +22,6 @@ export function describedBy(id: string, { hint, error }: { hint?: string; error?
     'aria-invalid': error ? (true as const) : undefined,
     'aria-describedby': error ? ids.error : hint ? ids.hint : undefined,
   };
-}
-
-/** Shared look of text inputs and selects. */
-export function controlClass(hasError: boolean) {
-  return `min-h-12 w-full rounded-lg border bg-surface px-3.5 text-base text-ink transition-colors duration-200 ${
-    hasError ? 'border-danger' : 'border-control hover:border-ink-muted focus:border-accent'
-  }`;
 }
 
 /**
@@ -41,9 +34,13 @@ export function Field({ id, label, optional, hint, error, children }: FieldProps
 
   return (
     <div className="space-y-2">
-      <label htmlFor={id} className="flex items-baseline justify-between gap-3 text-sm font-medium">
+      <label
+        id={ids.label}
+        htmlFor={id}
+        className="flex items-baseline justify-between gap-3 text-sm font-medium"
+      >
         {label}
-        {optional ? <span className="font-normal text-ink-muted">Optional</span> : null}
+        {optional ? <span className="text-xs font-normal text-ink-muted">Optional</span> : null}
       </label>
 
       {children}

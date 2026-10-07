@@ -1,115 +1,290 @@
 @import 'tailwindcss';
 
 /*
- * Design tokens.
- * Components use the semantic names (bg-surface, text-ink, border-line ...)
- * so the palette can change in one place. Dark values follow the OS setting.
+ * UkRide design tokens: glass on a gradient.
+ *
+ * One deep indigo-to-violet backdrop sits behind every page. Content lives on
+ * frosted glass panels: a translucent white fill, a blur of what is behind,
+ * and a thin light border. The backdrop is kept dark enough that white text
+ * on glass always passes 4.5:1.
  */
 :root {
-  /* Palette from the ui-ux-pro-max design system ("Trust & Authority"):
-     navy ink, one blue action colour, cool slate neutrals. */
-  --canvas: #f8fafc;
-  --surface: #ffffff;
-  --ink: #0f172a;
-  --ink-muted: #475569;
-  --line: #e2e8f0;
-  /* Edge of a form control. Stronger than --line: a field must be findable (3:1). */
-  --control: #64748b;
-  --brand: #0369a1;
-  --brand-ink: #ffffff;
-  --accent: #0369a1;
+  /* Backdrop */
+  --bg-base: #0c0a24;
+  --bg-indigo: #4338ca;
+  --bg-violet: #7c3aed;
+  --bg-fuchsia: #c026d3;
+  --bg-sky: #0ea5e9;
 
-  --success: #0f7a4d;
-  --success-soft: #e3f4ec;
-  --danger: #b3261e;
-  --danger-soft: #fbe9e7;
-  --warning: #8a5a00;
-  --warning-soft: #fdf1d3;
-  --neutral-soft: #eef2f6;
-}
+  /* Text */
+  --ink: #ffffff;
+  --ink-muted: #cfd0f2;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --canvas: #020617;
-    --surface: #0f172a;
-    --ink: #f1f5f9;
-    --ink-muted: #94a3b8;
-    --line: #1e293b;
-    --control: #64748b;
-    --brand: #38bdf8;
-    --brand-ink: #020617;
-    --accent: #38bdf8;
+  /* Glass */
+  --glass: rgb(255 255 255 / 0.1);
+  --glass-strong: rgb(255 255 255 / 0.16);
+  --glass-border: rgb(255 255 255 / 0.22);
+  --line: rgb(255 255 255 / 0.16);
+  --blur: 18px;
 
-    --success: #5fd3a0;
-    --success-soft: #12301f;
-    --danger: #ff9a8f;
-    --danger-soft: #3a1714;
-    --warning: #f6cf6b;
-    --warning-soft: #33270a;
-    --neutral-soft: #1e293b;
-  }
+  /* Accent: indigo to violet */
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --ring: #c4b5fd;
+
+  /* Status, tuned to read on glass */
+  --success: #6ee7b7;
+  --danger: #fda4af;
+  --warning: #fcd34d;
 }
 
 @theme inline {
-  --color-canvas: var(--canvas);
-  --color-surface: var(--surface);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-line: var(--line);
-  --color-control: var(--control);
-  --color-brand: var(--brand);
-  --color-brand-ink: var(--brand-ink);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-border: var(--glass-border);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-ring: var(--ring);
   --color-success: var(--success);
-  --color-success-soft: var(--success-soft);
   --color-danger: var(--danger);
-  --color-danger-soft: var(--danger-soft);
   --color-warning: var(--warning);
-  --color-warning-soft: var(--warning-soft);
-  --color-neutral-soft: var(--neutral-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  color-scheme: dark;
+  background: var(--bg-base);
+  scrollbar-color: rgb(255 255 255 / 0.3) transparent;
+}
+
 body {
-  background: var(--canvas);
   color: var(--ink);
+}
+
+/*
+ * The backdrop: soft pools of colour on a deep base. It is fixed, so glass
+ * panels show it shifting behind them as the page scrolls.
+ */
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60rem 40rem at 12% -10%, var(--bg-indigo), transparent 60%),
+    radial-gradient(50rem 38rem at 95% 10%, var(--bg-violet), transparent 62%),
+    radial-gradient(
+      42rem 34rem at 78% 105%,
+      color-mix(in oklab, var(--bg-fuchsia) 70%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      40rem 30rem at 5% 100%,
+      color-mix(in oklab, var(--bg-sky) 45%, transparent),
+      transparent 60%
+    ),
+    var(--bg-base);
+  content: '';
+}
+
+/* A frosted glass panel. */
+.glass {
+  border: 1px solid var(--glass-border);
+  border-radius: 1.5rem;
+  background: var(--glass);
+  box-shadow:
+    0 24px 60px -20px rgb(8 6 30 / 0.65),
+    inset 0 1px 0 rgb(255 255 255 / 0.18);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
+}
+
+/* A menu floats over other content, so it is almost opaque: nothing behind
+   it may show through the options. */
+.glass.menu {
+  border-radius: 1rem;
+  background: rgb(27 22 74 / 0.97);
+  box-shadow:
+    0 24px 60px -12px rgb(4 3 20 / 0.85),
+    inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+
+/* Where blur is not supported, a more solid fill keeps text readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: rgb(40 34 92 / 0.92);
+  }
+}
+
+/* Primary button: the indigo-to-violet accent with a soft glow. */
+.btn {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.875rem;
+  padding: 0 1.4rem;
+  font-weight: 600;
+  line-height: 1.2;
+  transition:
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 180ms ease-out,
+    background-color 180ms ease-out,
+    filter 180ms ease-out;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow:
+    0 10px 30px -8px rgb(124 58 237 / 0.7),
+    inset 0 1px 0 rgb(255 255 255 / 0.25);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow:
+    0 14px 36px -8px rgb(124 58 237 / 0.9),
+    inset 0 1px 0 rgb(255 255 255 / 0.3);
+  filter: brightness(1.1);
+}
+
+/* Secondary button: plain glass. */
+.btn-ghost {
+  border: 1px solid var(--glass-border);
+  background: var(--glass);
+  color: var(--ink);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--glass-strong);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+/* Text inputs and the dropdown trigger share one look. */
+.control {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 0.875rem;
+  background: rgb(255 255 255 / 0.08);
+  padding: 0 1rem;
+  color: var(--ink);
+  font-size: 1rem;
+  transition:
+    border-color 160ms ease-out,
+    background-color 160ms ease-out,
+    box-shadow 160ms ease-out;
+}
+
+.control::placeholder {
+  color: var(--ink-muted);
+}
+
+.control:hover {
+  border-color: rgb(255 255 255 / 0.4);
+}
+
+.control:focus,
+.control[aria-expanded='true'] {
+  outline: none;
+  border-color: var(--ring);
+  background: rgb(255 255 255 / 0.14);
+  box-shadow: 0 0 0 4px rgb(167 139 250 / 0.35);
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 4px rgb(253 164 175 / 0.22);
+}
+
+/* Browsers paint autofilled fields pale yellow or blue; keep them glass. */
+.control:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  caret-color: var(--ink);
+  transition: background-color 9999s ease-out;
+}
+
+/* Status pill: a coloured dot and words. Colour supports the label. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  padding: 0.25rem 0.75rem;
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.pill::before {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--dot, var(--ink-muted));
+  box-shadow: 0 0 10px var(--dot, transparent);
+  content: '';
 }
 
 /* Everything clickable shows the pointer. */
 button:not(:disabled),
-select,
+[role='option'],
 a[href] {
   cursor: pointer;
 }
 
-/* One visible focus style for every interactive element. */
+/* One visible focus style for links and buttons. Controls have their own. */
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
 }
 
-/* The parts of a form the browser draws take their colour from the palette. */
 ::selection {
-  background: color-mix(in oklab, var(--accent) 40%, transparent);
-  color: var(--ink);
+  background: rgb(167 139 250 / 0.55);
+  color: #ffffff;
 }
 
-input,
-select {
-  caret-color: var(--ink);
-  accent-color: var(--brand);
+input {
+  caret-color: var(--ring);
 }
 
-/* The one authored moment on the register page: the confirmation settles in. */
-.register-done {
-  animation: settle 320ms cubic-bezier(0.16, 1, 0.3, 1);
+/* Motion: panels rise in once; the dropdown opens from its trigger. */
+.rise {
+  animation: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--order, 0) * 90ms);
 }
 
-@keyframes settle {
+@keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(14px);
+  }
+}
+
+.pop {
+  transform-origin: top;
+  animation: pop 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
   }
 }
 
@@ -118,6 +293,7 @@ select {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }

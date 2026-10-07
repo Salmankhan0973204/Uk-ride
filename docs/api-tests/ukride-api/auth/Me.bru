@@ -1,0 +1,26 @@
+meta {
+  name: Me
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.user.email: isString
+  res.body.data.user.passwordHash: isUndefined
+}
+
+docs {
+  Run Login first and copy data.accessToken into the accessToken variable of the
+  environment. Without a token, or 15 minutes after login, this answers 401.
+}

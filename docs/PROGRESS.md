@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 1 - Authentication
 - **Last completed:** Module 0 - Foundation
-- **Next step:** 1.4 - Auth middleware and `GET /auth/me`
-- **Steps done:** 10 of 113
+- **Next step:** 1.5 - Refresh token and logout
+- **Steps done:** 11 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -15,7 +15,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
 | --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 4/8   | In progress | In progress | In progress | In progress    | -                            | In progress |
+| 1   | Authentication: Register + Login + Current User    | 5/8   | In progress | In progress | In progress | In progress    | -                            | In progress |
 | 2   | Profile Management                                 | 0/6   | -           | -           | -           | -              | -                            | -           |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
 | 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
@@ -61,7 +61,7 @@ runs.
       _Learn: ORM, schema, migrations._
 - [x] 1.2 `POST /auth/register`. _Learn: Zod request validation, password hashing._
 - [x] 1.3 `POST /auth/login`. _Learn: JWT access tokens, safe error messages._
-- [ ] 1.4 Auth middleware and `GET /auth/me`. _Learn: protecting routes._
+- [x] 1.4 Auth middleware and `GET /auth/me`. _Learn: protecting routes._
 - [ ] 1.5 Refresh token and logout. _Learn: httpOnly cookies, token rotation._
 - [x] 1.6 Register page. _Learn: forms, field errors, mutations._
 - [ ] 1.7 Login page and `useMe()`. _Learn: auth state with TanStack Query._
@@ -519,3 +519,44 @@ Learning notes
 - Name the algorithm when signing and when verifying. A verifier that accepts whatever the
   token claims can be tricked.
 - The secret lives in `.env`, which git ignores. `.env.example` holds a placeholder only.
+
+#### Step 1.4 - Auth middleware and `GET /auth/me` (done 2026-10-07)
+
+Built
+
+- `requireAuth` in `backend/src/middleware/requireAuth.ts`. Put it in front of any controller
+  to protect the route. It reads `Authorization: Bearer <token>`, checks the token and stores
+  the user id for the controller, read with `currentUserId(res)`.
+- `verifyAccessToken()` beside `signAccessToken()`: accepts only a token this API signed, with
+  HS256, that has not expired and names a user.
+- `GET /api/v1/auth/me`: the first protected route. It returns the signed-in user, read fresh
+  from the database.
+- Swagger UI has an Authorize button, and `/auth/me` shows a padlock.
+
+Verified
+
+- Typecheck, lint and 40 automated tests pass. The tests cover a missing header, a wrong
+  scheme, and tokens that are garbage, signed with another secret, signed with another
+  algorithm, unsigned, missing the user id, or expired.
+- Against the real database: a valid token returned the user; no header, a wrong scheme, a
+  garbage token and a token with a changed signature each returned 401; after the account was
+  deleted the same valid token returned 401.
+- The browser's preflight request allows the `Authorization` header from the web app's origin.
+
+Open items
+
+- A token cannot be cancelled before it expires. Logging out, and ending sessions on the
+  server, arrive with the refresh token in step 1.5.
+- Nothing in the web app signs in or sends a token yet. That is step 1.7.
+
+Learning notes
+
+- Middleware is a function that runs before the controller and either calls `next()` or ends
+  the request. `router.get('/me', requireAuth, me)` reads left to right: check, then answer.
+- Authentication asks "who are you?" (401 when unknown). Authorisation asks "are you allowed?"
+  (403), and comes with roles in step 3.3.
+- The token proves who signed in, not that the account still exists. Reading the user from the
+  database on `/auth/me` catches an account deleted after the token was issued.
+- Verifying with an explicit algorithm list rejects "alg: none" tokens, a classic JWT attack.
+- Expiry is the one failure worth naming, because the client can act on it: sign in again, or
+  later, refresh.

@@ -253,3 +253,40 @@ Both answer `401` with the same body, so the answer never reveals which emails a
   "requestId": "..."
 }
 ```
+
+### 1.4 Current user (protected route)
+
+Sign in as in 1.3, which leaves the answer in `$login`, then send the token:
+
+```powershell
+$headers = @{ Authorization = "Bearer $($login.data.accessToken)" }
+Invoke-RestMethod http://localhost:4000/api/v1/auth/me -Headers $headers | ConvertTo-Json -Depth 5
+```
+
+Expect `200` with the user and no password hash.
+
+Now call it without a token:
+
+```bash
+curl.exe -i http://localhost:4000/api/v1/auth/me
+```
+
+Expect `401` and the header `WWW-Authenticate: Bearer`:
+
+```json
+{
+  "success": false,
+  "error": { "code": "UNAUTHENTICATED", "message": "Sign in to continue" },
+  "requestId": "..."
+}
+```
+
+| What you send                         | Message                                           |
+| ------------------------------------- | ------------------------------------------------- |
+| No `Authorization` header             | Sign in to continue                               |
+| A header that is not `Bearer <token>` | The Authorization header must be "Bearer <token>" |
+| A changed, forged or unsigned token   | Your session is not valid. Sign in again.         |
+| A token older than 15 minutes         | Your session has expired. Sign in again.          |
+
+In Swagger UI, press **Authorize**, paste the token (without the word Bearer), and every request
+marked with a padlock will send it.

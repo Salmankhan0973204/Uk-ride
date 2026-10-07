@@ -97,3 +97,17 @@ export async function loginUser({ email, password }: LoginInput) {
 
   return { user, ...signAccessToken(user.id) };
 }
+
+/**
+ * The signed-in user, read fresh from the database.
+ * A token stays valid until it expires even if the account is deleted in the
+ * meantime, so "no such user" is answered as "not signed in".
+ */
+export async function getCurrentUser(userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: publicUser });
+
+  if (!user) {
+    throw AppError.unauthenticated('Your session is not valid. Sign in again.');
+  }
+  return user;
+}

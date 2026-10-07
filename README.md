@@ -65,7 +65,7 @@ is in [docs/PROGRESS.md](docs/PROGRESS.md).
 │       ├── server.ts        Starts the HTTP server, graceful shutdown
 │       ├── config/          Environment validation, logger, database client
 │       ├── generated/       Prisma client, generated and not committed
-│       ├── middleware/      Request ID, 404, central error handler
+│       ├── middleware/      Request ID, validation, auth, 404, error handler
 │       ├── modules/         One folder per feature (routes, controller, tests)
 │       └── shared/          AppError, response helpers
 ├── frontend/                Next.js web app
@@ -199,13 +199,14 @@ Never commit `.env` or `.env.local`. Only the example files are tracked.
 
 Base URL: `http://localhost:4000/api/v1`
 
-| Method | Path             | Purpose                                                 |
-| ------ | ---------------- | ------------------------------------------------------- |
-| GET    | `/health`        | Service name, version, environment, uptime              |
-| GET    | `/health/live`   | The process is alive                                    |
-| GET    | `/health/ready`  | The database answers; `503` when it cannot be reached   |
-| POST   | `/auth/register` | Create an account: name, email, mobile number, password |
-| POST   | `/auth/login`    | Sign in and receive an access token                     |
+| Method | Path             | Purpose                                                   |
+| ------ | ---------------- | --------------------------------------------------------- |
+| GET    | `/health`        | Service name, version, environment, uptime                |
+| GET    | `/health/live`   | The process is alive                                      |
+| GET    | `/health/ready`  | The database answers; `503` when it cannot be reached     |
+| POST   | `/auth/register` | Create an account: name, email, mobile number, password   |
+| POST   | `/auth/login`    | Sign in and receive an access token                       |
+| GET    | `/auth/me`       | The signed-in user; needs `Authorization: Bearer <token>` |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

@@ -14,6 +14,7 @@ describe('API docs', () => {
       '/health/ready',
       '/auth/register',
       '/auth/login',
+      '/auth/me',
     ]);
   });
 

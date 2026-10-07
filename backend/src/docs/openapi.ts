@@ -163,8 +163,35 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/me': {
+      get: {
+        tags: ['Auth'],
+        summary: 'The signed-in user',
+        description:
+          'A protected route. Send the access token from `/auth/login` in the header ' +
+          '`Authorization: Bearer <token>`. In Swagger UI, press Authorize and paste the token.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'Signed-in user',
+            successEnvelope({
+              type: 'object',
+              required: ['user'],
+              properties: { user: { $ref: '#/components/schemas/User' } },
+            }),
+          ),
+          401: jsonResponse('No token, or a token that is invalid or expired', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
+    securitySchemes: {
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    },
     schemas: {
       LoginRequest: {
         type: 'object',

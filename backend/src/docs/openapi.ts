@@ -140,7 +140,9 @@ export const openApiDocument = {
         description:
           'Checks the email and password and returns the user with a short-lived access ' +
           'token. Send the token on later requests as `Authorization: Bearer <token>`. ' +
-          'A wrong password and an unknown email get the same 401, on purpose.',
+          'A wrong password and an unknown email get the same 401, on purpose. ' +
+          'Also sets the httpOnly cookie `ukride_refresh`, used by `/auth/refresh` and ' +
+          '`/auth/logout`.',
         requestBody: {
           required: true,
           content: {
@@ -159,6 +161,43 @@ export const openApiDocument = {
           401: jsonResponse('Email or password is incorrect', {
             $ref: '#/components/schemas/ApiFailure',
           }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/auth/refresh': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Get a new access token',
+        description:
+          'Uses the `ukride_refresh` cookie set by `/auth/login`; there is no body. ' +
+          'Answers with a new access token and replaces the cookie with a new refresh ' +
+          'token. Each refresh token works once. If a used token is sent again, every ' +
+          'session of that user is ended.',
+        security: [{ refreshCookie: [] }],
+        responses: {
+          200: jsonResponse(
+            'Session refreshed',
+            successEnvelope({ $ref: '#/components/schemas/AccessToken' }),
+          ),
+          401: jsonResponse('No cookie, or a token that is unknown, used, expired or revoked', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/auth/logout': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Sign out',
+        description:
+          'Revokes the refresh token in the `ukride_refresh` cookie and removes the cookie. ' +
+          'Always answers 200, so signing out twice is not an error. An access token ' +
+          'already issued stays valid until it expires, at most 15 minutes.',
+        security: [{ refreshCookie: [] }],
+        responses: {
+          200: jsonResponse('Signed out', successEnvelope({ type: 'object', nullable: true })),
           500: { $ref: '#/components/responses/Error' },
         },
       },
@@ -191,6 +230,7 @@ export const openApiDocument = {
   components: {
     securitySchemes: {
       bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      refreshCookie: { type: 'apiKey', in: 'cookie', name: 'ukride_refresh' },
     },
     schemas: {
       LoginRequest: {
@@ -199,6 +239,15 @@ export const openApiDocument = {
         properties: {
           email: { type: 'string', format: 'email', example: 'sara@example.com' },
           password: { type: 'string', example: 'secret-pass-1' },
+        },
+      },
+      AccessToken: {
+        type: 'object',
+        required: ['accessToken', 'tokenType', 'expiresIn'],
+        properties: {
+          accessToken: { type: 'string', description: 'A signed JWT.' },
+          tokenType: { type: 'string', enum: ['Bearer'] },
+          expiresIn: { type: 'integer', example: 900 },
         },
       },
       LoginResult: {

@@ -6,7 +6,10 @@ import { app } from '../../app.js';
 
 // The database is replaced by a fake, so these tests run without PostgreSQL.
 const db = vi.hoisted(() => ({ findUnique: vi.fn() }));
-vi.mock('../../config/db.js', () => ({ prisma: { user: db } }));
+vi.mock('../../config/db.js', () => ({
+  // Signing in also stores a refresh token; auth.session.test.ts covers that.
+  prisma: { user: db, refreshToken: { create: vi.fn().mockResolvedValue({}) } },
+}));
 
 const PASSWORD = 'secret-pass-1';
 const SECRET = process.env.JWT_ACCESS_SECRET!;

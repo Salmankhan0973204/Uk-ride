@@ -184,6 +184,7 @@ Database commands belong to the backend workspace.
 | `DATABASE_URL`           | none, required          | PostgreSQL connection string                    |
 | `JWT_ACCESS_SECRET`      | none, required          | Signs login tokens; 32 characters or more       |
 | `JWT_ACCESS_TTL_SECONDS` | `900`                   | Lifetime of an access token                     |
+| `REFRESH_TOKEN_TTL_DAYS` | `7`                     | How long someone stays signed in                |
 
 The API refuses to start if a value is invalid.
 
@@ -206,6 +207,8 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/health/ready`  | The database answers; `503` when it cannot be reached     |
 | POST   | `/auth/register` | Create an account: name, email, mobile number, password   |
 | POST   | `/auth/login`    | Sign in and receive an access token                       |
+| POST   | `/auth/refresh`  | New access token from the refresh cookie                  |
+| POST   | `/auth/logout`   | Sign out: revoke the refresh token, clear the cookie      |
 | GET    | `/auth/me`       | The signed-in user; needs `Authorization: Bearer <token>` |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw

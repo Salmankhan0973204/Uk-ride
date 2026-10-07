@@ -1,0 +1,20 @@
+meta {
+  name: Refresh
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/auth/refresh
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Run Login first. Bruno keeps the ukride_refresh cookie and sends it here.
+  Each call replaces the cookie; the old token stops working.
+}

@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 1 - Authentication
 - **Last completed:** Module 0 - Foundation
-- **Next step:** 1.5 - Refresh token and logout
-- **Steps done:** 11 of 113
+- **Next step:** 1.7 - Login page and `useMe()`
+- **Steps done:** 12 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -15,7 +15,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
 | --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 5/8   | In progress | In progress | In progress | In progress    | -                            | In progress |
+| 1   | Authentication: Register + Login + Current User    | 6/8   | In progress | In progress | In progress | In progress    | -                            | In progress |
 | 2   | Profile Management                                 | 0/6   | -           | -           | -           | -              | -                            | -           |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
 | 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
@@ -62,7 +62,7 @@ runs.
 - [x] 1.2 `POST /auth/register`. _Learn: Zod request validation, password hashing._
 - [x] 1.3 `POST /auth/login`. _Learn: JWT access tokens, safe error messages._
 - [x] 1.4 Auth middleware and `GET /auth/me`. _Learn: protecting routes._
-- [ ] 1.5 Refresh token and logout. _Learn: httpOnly cookies, token rotation._
+- [x] 1.5 Refresh token and logout. _Learn: httpOnly cookies, token rotation._
 - [x] 1.6 Register page. _Learn: forms, field errors, mutations._
 - [ ] 1.7 Login page and `useMe()`. _Learn: auth state with TanStack Query._
 - [ ] 1.8 Protected page, logout button, design pass. _Learn: route guards._
@@ -560,3 +560,54 @@ Learning notes
 - Verifying with an explicit algorithm list rejects "alg: none" tokens, a classic JWT attack.
 - Expiry is the one failure worth naming, because the client can act on it: sign in again, or
   later, refresh.
+
+#### Step 1.5 - Refresh token and logout (done 2026-10-07)
+
+Built
+
+- `refresh_tokens` table (migration `20261007130736_add_refresh_tokens`): one row per issued
+  token, holding its SHA-256 hash, expiry and `revoked_at`. Deleting a user deletes the rows.
+- `POST /auth/login` also sets the cookie `ukride_refresh`: httpOnly, `SameSite=Strict`,
+  path `/api/v1/auth`, 7 days, and `Secure` in production.
+- `POST /auth/refresh`: no body. Trades the cookie for a new access token and replaces the
+  cookie with a new refresh token (rotation). A token works once.
+- `POST /auth/logout`: revokes the token, clears the cookie, always answers 200.
+- Reuse detection: if a token that was already used or signed out is sent again, every session
+  of that user is ended.
+- New setting `REFRESH_TOKEN_TTL_DAYS` (default 7). The session code is in
+  `backend/src/modules/auth/auth.sessions.ts`, the cookie rules in `auth.cookies.ts`.
+
+Verified
+
+- Typecheck, lint and 53 automated tests pass. The session tests run against a small
+  in-memory fake of the table, so rotation is followed across several requests.
+- Against the real database, with cookie jars for two devices: login set the cookie with the
+  expected attributes; the database held a hash, not the token; refresh replaced the cookie and
+  revoked the old row; logging out one device left the other signed in; replaying a used token
+  answered 401 and took the user from 2 active sessions to 0; deleting the user removed the
+  token rows.
+
+Open items
+
+- Logging out does not cancel an access token that was already issued. It stays valid until it
+  expires, at most 15 minutes.
+- Two requests arriving at the same instant with the same refresh token: one wins and one gets 401. The web app must run one refresh at a time (step 1.7).
+- Expired and revoked rows are never deleted. A clean-up job fits with the queue in Module 11.
+- Refresh and logout are protected from other sites by `SameSite=Strict` and the CORS
+  allowlist. There is no separate CSRF token.
+- The first live replay test passed for the wrong reason: PowerShell dropped a hand-written
+  `Cookie` header, so no cookie was sent. It was repeated with a real cookie jar.
+
+Learning notes
+
+- Two tokens, two jobs. The access token is short-lived and sent on every request; the refresh
+  token is long-lived and sent only to get a new access token.
+- httpOnly means page scripts cannot read the cookie, so an injected script cannot steal the
+  long-lived token. The access token stays in memory in the web app for the same reason.
+- Rotation turns a stolen refresh token into a detectable event: the thief and the owner
+  cannot both keep using it, and the first replay ends every session.
+- Store a hash of a random token, not the token. SHA-256 is enough because the token is 256
+  random bits; bcrypt is for passwords, which people choose and attackers can guess.
+- `clearCookie` needs the same path and flags as the cookie it removes, or the browser keeps it.
+- Check your test before trusting a pass: a 401 for "no cookie" looked the same as a 401 for
+  "replayed cookie" until the database rows were counted.

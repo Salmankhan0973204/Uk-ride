@@ -290,3 +290,50 @@ Expect `401` and the header `WWW-Authenticate: Bearer`:
 
 In Swagger UI, press **Authorize**, paste the token (without the word Bearer), and every request
 marked with a padlock will send it.
+
+### 1.5 Refresh and logout
+
+These two use a cookie, so keep one session object for every call:
+
+```powershell
+$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+$body = '{"email":"sara@example.com","password":"secret-pass-1"}'
+Invoke-RestMethod http://localhost:4000/api/v1/auth/login -Method Post -ContentType 'application/json' -Body $body -WebSession $session | Out-Null
+
+# The login answer set this cookie:
+$session.Cookies.GetCookies('http://localhost:4000/api/v1/auth') | Select-Object Name, HttpOnly, Path, Expires
+```
+
+Get a new access token. There is no body; the cookie is the proof:
+
+```powershell
+Invoke-RestMethod http://localhost:4000/api/v1/auth/refresh -Method Post -WebSession $session | ConvertTo-Json -Depth 5
+```
+
+Expect `200` with a new `accessToken`. The cookie now holds a different refresh token; the
+previous one no longer works.
+
+Sign out, then try to refresh:
+
+```powershell
+Invoke-RestMethod http://localhost:4000/api/v1/auth/logout -Method Post -WebSession $session
+Invoke-RestMethod http://localhost:4000/api/v1/auth/refresh -Method Post -WebSession $session
+```
+
+Logout answers `200`. The refresh after it answers `401`:
+
+```json
+{
+  "success": false,
+  "error": { "code": "UNAUTHENTICATED", "message": "Your session has ended. Sign in again." },
+  "requestId": "..."
+}
+```
+
+See what the database keeps. It is a hash, never the token itself:
+
+```bash
+docker compose exec postgres psql -U ukride -d ukride -c "select left(token_hash, 12) as hash, expires_at, revoked_at from refresh_tokens order by created_at"
+```
+
+In PowerShell, a `Cookie` written by hand in `-Headers` is silently dropped. Use `-WebSession`.

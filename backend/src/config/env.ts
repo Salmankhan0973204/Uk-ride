@@ -26,6 +26,8 @@ const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
   // How long an access token is valid. Short on purpose: 15 minutes.
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(86_400).default(900),
+  // How long someone stays signed in without typing their password again.
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
 });
 
 const parsed = envSchema.safeParse(process.env);

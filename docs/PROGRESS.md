@@ -920,3 +920,79 @@ Learning notes
   wherever it is displayed, including email.
 - In development React runs effects twice. A page that consumes a single-use token on load
   must guard against sending it twice.
+
+#### Follow-up 7 - Design review and `DESIGN.md`
+
+Done
+
+- An independent reviewer (the Impeccable finish reviewer, which never saw the build
+  conversation) judged all 22 screens and states against `PRODUCT.md`. Its first verdict was
+  "fix", with eight findings. All eight were fixed in one batch and scored "resolved" on the
+  recaptures; the final verdict was "ship". That verdict covers the eight fixes, not a fresh
+  review of every screen.
+- `DESIGN.md` now records the design system as built: tokens, the shared classes, the
+  components and the rules. `PRODUCT.md` says what the product is; `DESIGN.md` says how it
+  looks.
+
+What the review changed
+
+- Backdrop: colour pools are sized to the viewport and use indigo and violet only, over an
+  indigo-to-violet wash. Before, a desktop showed near-black with tinted corners, and a phone
+  was flooded with bright violet.
+- Contrast: every glass panel has a dark scrim under its fill. Muted text on a phone went from
+  between 2.9:1 and 4.2:1 to between 5.8:1 and 8.4:1. The rule is 4.5:1.
+- One accent button per page: the navigation's Sign up became a glass pill.
+- No glass card inside a glass card: the journey stages and the detail lists are divider rows.
+- Depth is an offset soft shadow, not a glow. The brand mark is a drawn "U".
+- The headline is two set lines on a desktop. A button label that wrapped on a phone was
+  shortened, and buttons now centre a label that wraps.
+
+Open items
+
+- On the sign-in page the active "Sign in" pill and the glass "Sign up" pill look alike. The
+  reviewer called it visual only; the current page is still marked for assistive technology.
+- The reviewer's "ceiling" notes were not all taken up: grain on the backdrop to stop banding,
+  depth tiers between nav, panels and controls, and a motion moment for the open stage.
+- The HTML emails are plain and use a system font on purpose. They are outside the web design
+  system.
+
+Learning notes
+
+- A reviewer with no memory of the build sees what the builder has stopped seeing. The mobile
+  contrast failure was measured from the screenshots, not noticed by eye.
+- Check the evidence before the verdict: an earlier review was sent two screenshots that did
+  not show what their names said, and the reviewer rightly refused to judge from them.
+- Size a backdrop in viewport units. Sized in fixed units, the same gradient is a void on a
+  wide screen and a flood on a narrow one.
+
+#### Follow-up 8 - Tag `module-00` on GitHub
+
+Done
+
+- The `module-00` tag is now on GitHub, beside `module-01`.
+- The local tag pointed at a duplicate of the module-00 commit that was not on `main`: same
+  author, same files, same parent, a different id, most likely left by an amended commit. The
+  tag was moved to the matching commit on `main` (`a8b0608`) before it was left on GitHub.
+
+Learning notes
+
+- A tag is a name for one exact commit. Amending or rebasing makes new commits with new ids,
+  and a tag made before that keeps pointing at the old one.
+- `git branch -r --contains <tag>` shows whether a tag's commit is on any pushed branch. An
+  empty answer means the tag points at something the branches do not have.
+
+### Module 1 follow-ups: summary
+
+All eight gaps are closed. Module 1 now has: rate limits on every auth route; logout that
+takes effect at once; a sweep for expired tokens; 29 integration tests against a real database
+beside 73 unit tests; mobile numbers checked against real numbering plans; email confirmation
+and password reset through Mailpit; an independent design review with its fixes, and a
+`DESIGN.md`; and both module tags on GitHub.
+
+Still open, by choice or by the free-tools rule
+
+- Proving a mobile number belongs to the person needs SMS, which costs money.
+- Real email delivery needs a provider and a sending domain. That belongs with deployment.
+- Rate-limit counts and the clean-up timer live in the API process. Redis and the queue
+  (Module 11) are the place for both.
+- Nothing runs the tests automatically yet. Continuous integration is step 17.4.

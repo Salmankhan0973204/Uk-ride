@@ -47,7 +47,8 @@ Screens never ask a customer to compare or choose between operators.
 ## Capabilities and Constraints
 
 - Built so far: the app shell and the `/system-status` screen (Module 0); the `/register`,
-  `/login` and `/account` screens (Module 1).
+  `/login`, `/account`, `/verify-email`, `/forgot-password` and `/reset-password` screens
+  (Module 1).
 - Planned, in order: profiles, vehicle types, fleet, pricing and quotes,
   bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
   real-time status and driver location, document uploads, reviews, admin reporting.
@@ -80,19 +81,22 @@ British English spelling in customer-facing copy. No exclamation marks, no jokes
 
 ## Brand Commitments
 
-The name is UkRide. The visual direction and the avoid list below are binding until a
-DESIGN.md replaces them.
+The name is UkRide. The design system is recorded in full in [DESIGN.md](DESIGN.md): tokens,
+components and named rules, taken from the shipped code. The visual direction and the avoid list
+below are the short version and must agree with it. Where they differ, DESIGN.md wins.
 
 ### Visual direction
 
 - Glass on a gradient. The user chose this look on 2026-10-07 ("Glass and gradient", accent
   "Indigo / violet") after rejecting a road-sign direction; it replaces every earlier palette.
 - One deep indigo-to-violet backdrop sits behind every page and stays fixed while content
-  scrolls. It is kept dark enough that white text on glass passes 4.5:1.
+  scrolls. Its colour pools are sized to the viewport and use indigo and violet only. Every
+  glass panel has a dark scrim under its fill, so muted text on glass passes 4.5:1 on a phone
+  as well as on a desktop.
 - Content lives on frosted glass panels: translucent white fill, an 18px backdrop blur, a thin
   light border, a soft shadow. 24px radius on panels, 14px on controls and buttons.
-- One accent: an indigo-to-violet gradient, used for the primary button, the brand mark and the
-  step that is open. Focus uses a soft violet ring.
+- One accent: an indigo-to-violet gradient, used for the one primary button of a page, the
+  brand mark, the avatar and the step that is open. Navigation buttons are glass, never accent. Focus uses a soft violet ring.
 - Inputs and the dropdown are glass too. The dropdown is the project's own `Select` component,
   not the browser's list.
 - Status is a pill with a coloured dot and words: green, red, amber or neutral.
@@ -106,6 +110,8 @@ DESIGN.md replaces them.
 ### Avoid
 
 - Gradient text, and glass so transparent that text behind it is hard to read.
+- A glass card inside a glass card. Inside a panel, group with divider rows.
+- Glows with no offset. Depth comes from a soft shadow that falls below the object.
 - Generic grids of identical icon cards.
 - Dashboards full of numbers that drive no decision.
 - Colour-only status, placeholder-only labels, disabled buttons with no explanation.

@@ -88,7 +88,7 @@ export function AccountPanel() {
         <div className="flex items-center gap-4">
           <span
             aria-hidden="true"
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-accent to-accent-2 text-lg font-semibold shadow-[0_0_24px_rgb(139_92_246/0.6)]"
+            className="lift flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-accent to-accent-2 text-lg font-semibold"
           >
             {user.firstName.charAt(0)}
             {user.lastName.charAt(0)}
@@ -101,7 +101,7 @@ export function AccountPanel() {
           </div>
         </div>
 
-        <dl className="divide-y divide-line rounded-2xl border border-line bg-glass px-4">
+        <dl className="tabular divide-y divide-line border-y border-line">
           {details.map(([label, value]) => (
             <div key={label} className="flex items-baseline justify-between gap-4 py-3.5">
               <dt className="text-sm text-ink-muted">{label}</dt>

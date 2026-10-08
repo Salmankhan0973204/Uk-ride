@@ -33,8 +33,18 @@ export function SiteNav() {
         <Link href="/" className="flex min-h-11 items-center gap-2.5 text-base font-semibold">
           <span
             aria-hidden="true"
-            className="h-6 w-6 rounded-lg bg-linear-to-br from-accent to-accent-2 shadow-[0_0_18px_rgb(139_92_246/0.8)]"
-          />
+            className="lift flex h-7 w-7 items-center justify-center rounded-lg bg-linear-to-br from-accent to-accent-2"
+          >
+            {/* The mark: a "U" drawn as one stroke, like a road that turns back. */}
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+              <path
+                d="M7 5v8a5 5 0 0 0 10 0V5"
+                stroke="#fff"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
           UkRide
         </Link>
 
@@ -46,8 +56,9 @@ export function SiteNav() {
             // Signed in: one way into the account, named after the person.
             link('/account', user.firstName)
           ) : (
-            // Signed out, or still checking: the two ways in. On the sign-up
-            // page itself the button would only repeat the form's own action.
+            // Signed out, or still checking: the two ways in. Sign up is a glass
+            // pill, not the accent: the accent belongs to each page's own main
+            // action. On the sign-up page it is only a marker of where you are.
             <>
               {link('/login', 'Sign in')}
               {pathname === '/register' ? (
@@ -55,7 +66,7 @@ export function SiteNav() {
               ) : (
                 <Link
                   href="/register"
-                  className="btn btn-primary min-h-11! rounded-full! px-5! text-sm whitespace-nowrap"
+                  className="btn btn-ghost min-h-11! rounded-full! px-5! py-0! text-sm whitespace-nowrap"
                 >
                   Sign up
                 </Link>

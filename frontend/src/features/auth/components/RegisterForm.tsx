@@ -202,7 +202,7 @@ export function RegisterForm() {
       <Card className="rise mx-auto max-w-xl">
         <div className="space-y-7">
           <div className="space-y-4">
-            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-glass-border bg-glass-strong text-success shadow-[0_0_28px_rgb(110_231_183/0.35)]">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-glass-border bg-glass-strong text-success">
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
@@ -230,7 +230,7 @@ export function RegisterForm() {
             </div>
           </div>
 
-          <dl className="divide-y divide-line rounded-2xl border border-line bg-glass px-4">
+          <dl className="tabular divide-y divide-line border-y border-line">
             {[
               ['Name', `${user.firstName} ${user.lastName}`],
               ['Email', user.email],

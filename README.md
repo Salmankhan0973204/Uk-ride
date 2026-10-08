@@ -286,3 +286,4 @@ A module is complete only when all seven steps are done.
 - [docs/decisions/ADR-0001-stack.md](docs/decisions/ADR-0001-stack.md): why this stack
 - [docs/api-tests/curl.md](docs/api-tests/curl.md): manual API tests
 - [PRODUCT.md](PRODUCT.md): product and design context
+- [DESIGN.md](DESIGN.md): the design system as built (tokens, components, rules)

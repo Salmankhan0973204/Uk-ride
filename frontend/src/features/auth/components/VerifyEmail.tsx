@@ -46,7 +46,7 @@ export function VerifyEmail() {
           </div>
           {unreachable ? null : (
             <Link href={user ? '/account' : '/login'} className="btn btn-primary">
-              {user ? 'Send a new link from your account' : 'Sign in to send a new link'}
+              {user ? 'Send a new link' : 'Sign in for a new link'}
             </Link>
           )}
         </div>
@@ -58,7 +58,7 @@ export function VerifyEmail() {
     return (
       <Card className="rise mx-auto max-w-md">
         <div className="space-y-6">
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-glass-border bg-glass-strong text-success shadow-[0_0_28px_rgb(110_231_183/0.35)]">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-glass-border bg-glass-strong text-success">
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"

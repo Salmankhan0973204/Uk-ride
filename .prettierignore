@@ -10,3 +10,5 @@ package-lock.json
 *.bru
 frontend/.impeccable
 .impeccable
+# Written by the design documenter in the format its tools read
+DESIGN.md

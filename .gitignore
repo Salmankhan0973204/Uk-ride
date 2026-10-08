@@ -40,3 +40,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Screenshots taken for design reviews
+frontend/.impeccable/review/

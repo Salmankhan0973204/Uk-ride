@@ -793,3 +793,42 @@ Learning notes
 - Decide what "dead" means before deleting. A revoked token looks dead but still does a job:
   it is the evidence that lets the server spot a stolen copy. Only expiry makes it useless.
 - `timer.unref()` lets Node exit even though the timer is still scheduled.
+
+#### Follow-up 4 - Tests against a real database
+
+Built
+
+- A second test suite, `npm run test:integration`, that runs the real application against a
+  real PostgreSQL database. Its files end in `.itest.ts`.
+- It uses its own database, `ukride_test`, in the same Docker container. The suite creates it
+  if it is missing, applies the migration files, and empties the tables before every test.
+- `resetDatabase()` refuses to run against any database whose name does not end in `_test`.
+- 12 tests in `backend/src/modules/auth/auth.itest.ts`: registration with real rows, duplicate
+  email and mobile, two identical registrations at once, the whole sign-in journey, replay of
+  a used refresh token, two devices, cascade delete, and the clean-up sweep.
+- `npm test` still runs the 68 fast unit tests and needs no database.
+
+Verified
+
+- All 12 integration tests pass. The development database was untouched: it still held its one
+  user afterwards.
+- The race test proves what the unit tests could only assume: with two identical requests at
+  once, the unique index refuses the second and the API turns Prisma's `P2002` into a 409.
+- Test-only files are excluded from the production build.
+
+Open items
+
+- The integration suite needs Docker running. It fails with a clear message when PostgreSQL is
+  not reachable.
+- It covers the auth module only. Each later module adds its own `.itest.ts`.
+- Nothing runs these automatically yet. Continuous integration is step 17.4.
+
+Learning notes
+
+- A unit test with a fake database tests your code against your own idea of the database. An
+  integration test finds out whether that idea is right. Both are worth having: the first is
+  fast, the second is true.
+- Give tests their own database and reset it before each test, so tests cannot depend on each
+  other or on leftovers.
+- Put a guard on anything that deletes data. One wrong connection string should produce an
+  error, not an empty development database.

@@ -8,6 +8,12 @@
         "value": "arial",
         "createdAt": "2026-10-08T12:06:02.286Z",
         "reason": "Claude decided, not user confirmed: Arial appears only in the HTML email template (backend auth.emails.ts). Mail clients do not load web fonts, so a system font stack is required there; the web app itself uses Geist."
+      },
+      {
+        "rule": "design-system-font",
+        "value": "arial",
+        "createdAt": "2026-10-08T12:26:04.872Z",
+        "reason": "Claude decided, not user confirmed: Arial appears only in the HTML email template (backend auth.emails.ts). DESIGN.md's Overview records the emails as deliberately outside the web design system, because mail clients do not load web fonts."
       }
     ]
   }

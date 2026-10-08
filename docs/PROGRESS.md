@@ -832,3 +832,35 @@ Learning notes
   other or on leftovers.
 - Put a guard on anything that deletes data. One wrong connection string should produce an
   error, not an empty development database.
+
+#### Follow-up 5 - Mobile numbers checked against real numbering plans
+
+Built
+
+- Registration validates the mobile number with `libphonenumber-js`, which carries each
+  country's numbering plan. A number must have the right length for its country, sit in a
+  range that is really allocated, and be a mobile rather than a landline.
+- The web form runs the same validity check before sending, and shows numbers in readable
+  international form ("+44 7400 123456") on the confirmation and account pages.
+
+Verified
+
+- 73 unit tests and 12 integration tests pass. New cases: too few digits, too many digits, a
+  country code that does not exist, a UK landline, and a US number (where mobiles and
+  landlines share ranges, so it is accepted).
+
+Open items
+
+- This proves a number could exist, not that it does, nor that the person registering holds
+  it. Only sending a code by SMS can prove that, and SMS providers charge per message, which
+  the free-tools rule excludes. If that rule changes, verification by code is the next step.
+- The numbering data ships inside the library, so new ranges arrive with library updates.
+- The browser uses the library's smaller data set, which cannot tell a landline from a mobile.
+  The API can, and has the final say.
+
+Learning notes
+
+- A regular expression can check that something looks like a phone number. It cannot know
+  that UK mobiles have exactly ten digits after +44, or which ranges are in use. That is data,
+  and a library that ships the data is the right tool.
+- Validation proves form. Verification proves ownership. They are different jobs.

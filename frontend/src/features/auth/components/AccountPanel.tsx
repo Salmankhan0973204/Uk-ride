@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
+import { formatMobile } from '@/lib/phone/mobile';
 import { useLogout } from '../hooks/useLogout';
 import { useMe } from '../hooks/useMe';
 import { GENDER_OPTIONS } from '../types';
@@ -73,7 +74,7 @@ export function AccountPanel() {
   const gender = GENDER_OPTIONS.find((option) => option.value === user.gender)?.label;
   const details = [
     ['Email', user.email],
-    ['Mobile', user.mobile],
+    ['Mobile', formatMobile(user.mobile)],
     ...(gender ? [['Gender', gender]] : []),
     ['Member since', memberSince(user.createdAt)],
   ];

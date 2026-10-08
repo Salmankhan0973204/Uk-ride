@@ -1,3 +1,4 @@
+import { parsePhoneNumberFromString } from 'libphonenumber-js/max';
 import { z } from 'zod';
 
 export const GENDERS = ['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'] as const;
@@ -16,6 +17,44 @@ function name(label: string) {
     .regex(NAME_PATTERN, `${label} can only contain letters, spaces, hyphens and apostrophes`);
 }
 
+// Kinds of number that can be a mobile. Some countries, the United States
+// among them, do not tell mobiles and landlines apart by their digits.
+const MOBILE_TYPES = new Set(['MOBILE', 'FIXED_LINE_OR_MOBILE', 'PERSONAL_NUMBER']);
+
+/**
+ * A mobile number from any country, returned in one international form
+ * (E.164): "+447400123456".
+ *
+ * Spaces, dashes and brackets are removed and a leading "00" becomes "+", so
+ * "0044 (7400) 123-456" and "+447400123456" are the same number. The digits
+ * are then checked against the numbering plan of the number's own country:
+ * the right length, a range that is really allocated, and a mobile rather
+ * than a landline. That proves the number could exist. Only sending a code
+ * to it could prove that it does, and that this person holds it.
+ */
+const mobile = z.string('Mobile number is required').transform((value, ctx) => {
+  const fail = (message: string) => {
+    ctx.issues.push({ code: 'custom', message, input: value });
+    return z.NEVER;
+  };
+
+  const cleaned = value.replace(/[\s().-]/g, '').replace(/^00/, '+');
+  if (!cleaned) return fail('Mobile number is required');
+  if (!cleaned.startsWith('+')) {
+    return fail('Enter a mobile number with its country code, like +44 7400 123456');
+  }
+
+  const phone = parsePhoneNumberFromString(cleaned);
+  if (!phone?.isValid()) {
+    return fail('That is not a valid number for its country. Check the digits');
+  }
+  if (!MOBILE_TYPES.has(phone.getType() ?? '')) {
+    return fail('That looks like a landline. Enter a mobile number');
+  }
+
+  return phone.number as string;
+});
+
 export const registerSchema = z.object({
   firstName: name('First name'),
   lastName: name('Last name'),
@@ -26,22 +65,7 @@ export const registerSchema = z.object({
     .trim()
     .toLowerCase()
     .pipe(z.email('Enter a valid email address')),
-  // Any country, stored in one international form (E.164): "+" then the
-  // country code and number, 8 to 15 digits. Spaces, dashes and brackets are
-  // removed and a leading "00" becomes "+", so "0044 (7400) 123-456" and
-  // "+447400123456" are the same number.
-  mobile: z
-    .string('Mobile number is required')
-    .transform((value) => value.replace(/[\s().-]/g, '').replace(/^00/, '+'))
-    .pipe(
-      z
-        .string()
-        .min(1, 'Mobile number is required')
-        .regex(
-          /^\+[1-9]\d{7,14}$/,
-          'Enter a mobile number with its country code, like +44 7400 123456',
-        ),
-    ),
+  mobile,
   // Optional: leaving it out is a valid answer.
   gender: z.enum(GENDERS, 'Choose one of the listed options').optional(),
   // bcrypt ignores everything after 72 bytes, so longer passwords are refused

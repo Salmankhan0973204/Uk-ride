@@ -7,6 +7,7 @@ import { Field, describedBy, fieldIds } from '@/components/ui/Field';
 import { Select } from '@/components/ui/Select';
 import { Spinner } from '@/components/ui/Spinner';
 import type { ApiError } from '@/lib/api/client';
+import { checkMobile, formatMobile, normaliseMobile } from '@/lib/phone/mobile';
 import { useRegister } from '../hooks/useRegister';
 import { GENDER_OPTIONS } from '../types';
 import type { FieldErrors, Gender, RegisterInput } from '../types';
@@ -34,11 +35,6 @@ const EMPTY: Values = {
 // The same rules as the API, so most mistakes never leave the browser.
 const NAME_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}' .-]*$/u;
 
-/** "0044 (7400) 123-456" and "+44 7400 123456" both become "+447400123456". */
-function normaliseMobile(value: string) {
-  return value.replace(/[\s().-]/g, '').replace(/^00/, '+');
-}
-
 function checkName(value: string, label: string) {
   const name = value.trim();
   if (!name) return `Enter your ${label}.`;
@@ -61,10 +57,7 @@ function checkField(name: FieldName, values: Values): string | undefined {
         return 'Enter a valid email address, like name@example.com.';
       return;
     case 'mobile':
-      if (!value.trim()) return 'Enter your mobile number.';
-      if (!/^\+[1-9]\d{7,14}$/.test(normaliseMobile(value)))
-        return 'Start with the country code, like +44 7400 123456.';
-      return;
+      return checkMobile(value);
     case 'password':
       if (!value) return 'Enter a password.';
       if (value.length < MIN_PASSWORD)
@@ -241,7 +234,7 @@ export function RegisterForm() {
             {[
               ['Name', `${user.firstName} ${user.lastName}`],
               ['Email', user.email],
-              ['Mobile', user.mobile],
+              ['Mobile', formatMobile(user.mobile)],
             ].map(([label, value]) => (
               <div key={label} className="flex items-baseline justify-between gap-4 py-3.5">
                 <dt className="text-sm text-ink-muted">{label}</dt>

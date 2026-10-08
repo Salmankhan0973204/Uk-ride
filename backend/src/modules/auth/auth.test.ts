@@ -83,6 +83,38 @@ describe('POST /api/v1/auth/register', () => {
     expect(res.body.data.user.mobile).toBe('+923001234567');
   });
 
+  it.each([
+    [
+      'too few digits for its country',
+      '+44 7400 1234',
+      'That is not a valid number for its country. Check the digits',
+    ],
+    [
+      'too many digits for its country',
+      '+44 7400 123456 789',
+      'That is not a valid number for its country. Check the digits',
+    ],
+    [
+      'a country code that does not exist',
+      '+999 123 456 789',
+      'That is not a valid number for its country. Check the digits',
+    ],
+    ['a landline', '+44 20 7946 0000', 'That looks like a landline. Enter a mobile number'],
+  ])('refuses a mobile number with %s', async (_name, mobile, message) => {
+    const res = await register({ ...validBody, mobile });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.details).toEqual({ mobile: [message] });
+    expect(db.create).not.toHaveBeenCalled();
+  });
+
+  it('accepts a number from a country where mobiles and landlines share ranges', async () => {
+    const res = await register({ ...validBody, mobile: '+1 202 555 0123' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.data.user.mobile).toBe('+12025550123');
+  });
+
   it('saves gender as null when it is left out', async () => {
     const { gender: _gender, ...withoutGender } = validBody;
     const res = await register(withoutGender);

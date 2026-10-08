@@ -1,4 +1,5 @@
 import type { RequestHandler, Response } from 'express';
+import { isSessionActive, sessionEnded } from '../modules/auth/auth.sessions.js';
 import { verifyAccessToken } from '../modules/auth/auth.tokens.js';
 import { AppError } from '../shared/AppError.js';
 
@@ -8,11 +9,15 @@ import { AppError } from '../shared/AppError.js';
  *
  *   router.get('/me', requireAuth, me);
  *
+ * Two things are checked. The token: signed by this API and not expired. Then
+ * the session it names: still signed in. The second check is one small
+ * database query, and it is what makes logout work immediately.
+ *
  * On success the user's id is stored in `res.locals.userId` for the
  * controller. On failure the request ends here with 401 and the controller
  * never runs.
  */
-export const requireAuth: RequestHandler = (req, res, next) => {
+export const requireAuth: RequestHandler = async (req, res, next) => {
   // Tells a client how this route expects to be authenticated.
   res.set('WWW-Authenticate', 'Bearer');
 
@@ -25,7 +30,13 @@ export const requireAuth: RequestHandler = (req, res, next) => {
     throw AppError.unauthenticated('The Authorization header must be "Bearer <token>"');
   }
 
-  res.locals.userId = verifyAccessToken(token);
+  const { userId, sessionId } = verifyAccessToken(token);
+  if (!(await isSessionActive(sessionId))) {
+    throw sessionEnded();
+  }
+
+  res.locals.userId = userId;
+  res.locals.sessionId = sessionId;
   res.removeHeader('WWW-Authenticate');
   next();
 };

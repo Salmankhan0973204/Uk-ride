@@ -4,7 +4,6 @@ import { isTest } from '../../config/env.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
 import type { LoginInput, RegisterInput } from './auth.schemas.js';
-import { signAccessToken } from './auth.tokens.js';
 
 /**
  * bcrypt work factor: each step up doubles the time one hash takes.
@@ -73,11 +72,11 @@ let decoyHash: Promise<string> | undefined;
 const getDecoyHash = () => (decoyHash ??= bcrypt.hash('no-such-account', HASH_COST));
 
 /**
- * Checks an email and password and issues an access token.
+ * Checks an email and password and returns the user they belong to.
  * Both ways of failing give the same answer: saying "no such email" would let
  * anyone test which addresses have accounts.
  */
-export async function loginUser({ email, password }: LoginInput) {
+export async function checkCredentials({ email, password }: LoginInput) {
   const found = await prisma.user.findUnique({
     where: { email },
     select: { ...publicUser, passwordHash: true },
@@ -95,7 +94,7 @@ export async function loginUser({ email, password }: LoginInput) {
   // The hash was needed for the check only. It never leaves this function.
   const { passwordHash: _passwordHash, ...user } = found;
 
-  return { user, ...signAccessToken(user.id) };
+  return user;
 }
 
 /**

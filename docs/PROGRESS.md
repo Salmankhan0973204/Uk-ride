@@ -723,3 +723,45 @@ Learning notes
 - Put the limiter first in the route, before validation and the database, so a refused request
   costs almost nothing.
 - Count failures only on sign-in: a legitimate user who signs in often is never the problem.
+
+#### Follow-up 2 - Logout ends the access token at once
+
+Built
+
+- `refresh_tokens` gained `session_id` (migration `add_session_id`). A session is one sign-in on
+  one device. Rotation replaces the refresh token but keeps the session id.
+- The access token now carries the session id as `sid`, beside the user id.
+- `requireAuth` checks two things: the token (signature, algorithm, expiry), then that its
+  session still has a refresh token that is neither revoked nor expired.
+- Logout ends the whole session, so every access token issued in it stops working immediately.
+- The service now only checks credentials (`checkCredentials`); the controller starts the
+  session and issues the tokens.
+- `backend/src/test/fakeDb.ts`: a small in-memory stand-in for the database, shared by the
+  session tests.
+
+Verified
+
+- 65 automated tests pass. New ones cover: a good token refused after sign-out, after its
+  session runs out, and for a session that never existed; a token still accepted after
+  rotation; an older access token cut off by a later logout; one device signed out while the
+  other keeps working.
+- Against the real database, with two devices: the phone's access tokens answered 200 before
+  logout and 401 "Your session has ended" right after it, including the one issued before a
+  refresh; the laptop's token kept answering 200.
+
+Open items
+
+- Every protected request now makes one extra, indexed database query. That is the price of
+  instant logout. A short cache or Redis could remove it later if it ever matters.
+- The migration deleted the existing refresh tokens, because they had no session to belong
+  to. Anyone signed in had to sign in again.
+
+Learning notes
+
+- A JWT alone cannot be cancelled: it is valid until it expires. To cancel early, the server
+  has to remember something. Here it remembers sessions, and the token only points at one.
+- That gives a middle path between "stateless" tokens and classic server sessions: the token
+  still proves who you are without a lookup, and one cheap lookup says whether you are still
+  signed in.
+- Keep the stable id (the session) separate from the thing that rotates (the refresh token).
+  Otherwise every rotation would orphan the access tokens issued before it.

@@ -196,8 +196,8 @@ export const openApiDocument = {
         summary: 'Sign out',
         description:
           'Revokes the refresh token in the `ukride_refresh` cookie and removes the cookie. ' +
-          'Always answers 200, so signing out twice is not an error. An access token ' +
-          'already issued stays valid until it expires, at most 15 minutes.',
+          'Always answers 200, so signing out twice is not an error. Access tokens ' +
+          'issued in that session stop working at once.',
         security: [{ refreshCookie: [] }],
         responses: {
           200: jsonResponse('Signed out', successEnvelope({ type: 'object', nullable: true })),

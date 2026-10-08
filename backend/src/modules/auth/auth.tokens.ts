@@ -5,15 +5,21 @@ import { AppError } from '../../shared/AppError.js';
 // Named in both directions, so a token signed any other way is never accepted.
 const ALGORITHM = 'HS256';
 
+/** What an access token says: who, and in which session. */
+export interface AccessClaims {
+  userId: string;
+  sessionId: string;
+}
+
 /**
- * An access token is a signed note saying "this is user <id>, until <time>".
- * The API can check the signature without a database lookup. It is signed, not
- * encrypted: anyone holding it can read it, so it carries the user id only.
+ * An access token is a signed note saying "this is user <id>, in session
+ * <sid>, until <time>". It is signed, not encrypted: anyone holding it can
+ * read it, so it carries ids only.
  */
-export function signAccessToken(userId: string) {
+export function signAccessToken({ userId, sessionId }: AccessClaims) {
   const expiresIn = env.JWT_ACCESS_TTL_SECONDS;
 
-  const accessToken = jwt.sign({}, env.JWT_ACCESS_SECRET, {
+  const accessToken = jwt.sign({ sid: sessionId }, env.JWT_ACCESS_SECRET, {
     subject: userId,
     expiresIn,
     algorithm: ALGORITHM,
@@ -23,19 +29,22 @@ export function signAccessToken(userId: string) {
 }
 
 /**
- * Returns the user id inside a token, or throws 401.
+ * Returns what a token says, or throws 401.
  * A token passes only if this API signed it, with the expected algorithm, and
  * it has not expired. Everything else gets the same answer except expiry,
- * which is safe to name and tells the client to sign in again.
+ * which is safe to name and tells the client to refresh or sign in again.
+ *
+ * This checks the token itself. Whether its session is still alive is a
+ * separate question, answered by requireAuth.
  */
-export function verifyAccessToken(token: string): string {
+export function verifyAccessToken(token: string): AccessClaims {
   try {
     const payload = jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: [ALGORITHM] });
 
-    if (typeof payload === 'string' || !payload.sub) {
-      throw new Error('token has no subject');
+    if (typeof payload === 'string' || !payload.sub || typeof payload.sid !== 'string') {
+      throw new Error('token is missing its user or session');
     }
-    return payload.sub;
+    return { userId: payload.sub, sessionId: payload.sid };
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
       throw AppError.unauthenticated('Your session has expired. Sign in again.');

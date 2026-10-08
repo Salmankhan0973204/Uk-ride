@@ -4,46 +4,13 @@ import jwt from 'jsonwebtoken';
 import request from 'supertest';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { app } from '../../app.js';
+import { fakeDb } from '../../test/fakeDb.js';
 
-/**
- * The database is replaced by a small in-memory fake of the refresh_tokens
- * table, so rotation can be followed across several requests without
- * PostgreSQL.
- */
-interface Row {
-  id: string;
-  userId: string;
-  tokenHash: string;
-  expiresAt: Date;
-  revokedAt: Date | null;
-}
-
-const fake = vi.hoisted(() => {
-  const rows: Row[] = [];
-  const matches = (row: Row, where: Partial<Row>) =>
-    Object.entries(where).every(([key, value]) => row[key as keyof Row] === value);
-
-  return {
-    rows,
-    user: { findUnique: vi.fn() },
-    refreshToken: {
-      create: vi.fn(({ data }: { data: Omit<Row, 'id' | 'revokedAt'> }) => {
-        const row = { id: `rt-${rows.length + 1}`, revokedAt: null, ...data };
-        rows.push(row);
-        return Promise.resolve(row);
-      }),
-      findUnique: vi.fn(({ where }: { where: { tokenHash: string } }) =>
-        Promise.resolve(rows.find((row) => row.tokenHash === where.tokenHash) ?? null),
-      ),
-      updateMany: vi.fn(({ where, data }: { where: Partial<Row>; data: Partial<Row> }) => {
-        const hit = rows.filter((row) => matches(row, where));
-        hit.forEach((row) => Object.assign(row, data));
-        return Promise.resolve({ count: hit.length });
-      }),
-    },
-  };
-});
-vi.mock('../../config/db.js', () => ({ prisma: fake }));
+// An in-memory fake of the tables, so a session can be followed across
+// several requests without PostgreSQL.
+vi.mock('../../config/db.js', async () => ({
+  prisma: (await import('../../test/fakeDb.js')).fakeDb,
+}));
 
 const PASSWORD = 'secret-pass-1';
 const SECRET = process.env.JWT_ACCESS_SECRET!;
@@ -70,22 +37,24 @@ function refreshCookie(res: request.Response) {
 
 const login = () =>
   request(app).post('/api/v1/auth/login').send({ email: stored.email, password: PASSWORD });
-const refresh = (token?: string) => {
-  const req = request(app).post('/api/v1/auth/refresh');
+const withCookie = (path: string, token?: string) => {
+  const req = request(app).post(path);
   return token === undefined ? req : req.set('Cookie', `${COOKIE}=${token}`);
 };
-const logout = (token?: string) => {
-  const req = request(app).post('/api/v1/auth/logout');
-  return token === undefined ? req : req.set('Cookie', `${COOKIE}=${token}`);
-};
+const refresh = (token?: string) => withCookie('/api/v1/auth/refresh', token);
+const logout = (token?: string) => withCookie('/api/v1/auth/logout', token);
+const me = (accessToken: string) =>
+  request(app).get('/api/v1/auth/me').set('Authorization', `Bearer ${accessToken}`);
+
+const sessionOf = (accessToken: string) => (jwt.decode(accessToken) as jwt.JwtPayload).sid;
 
 beforeAll(async () => {
   stored.passwordHash = await bcrypt.hash(PASSWORD, 4);
 });
 
 beforeEach(() => {
-  fake.rows.length = 0;
-  fake.user.findUnique.mockReset().mockResolvedValue(stored);
+  fakeDb.reset();
+  fakeDb.users.push({ ...stored });
 });
 
 describe('POST /api/v1/auth/login: the refresh cookie', () => {
@@ -102,18 +71,28 @@ describe('POST /api/v1/auth/login: the refresh cookie', () => {
     expect(JSON.stringify(res.body)).not.toContain(token);
   });
 
-  it('stores only a hash of the token, for 7 days', async () => {
+  it('stores only a hash of the token, for 7 days, in a new session', async () => {
     const before = Date.now();
-    const { token } = refreshCookie(await login());
+    const res = await login();
+    const { token } = refreshCookie(res);
 
-    expect(fake.rows).toHaveLength(1);
-    const row = fake.rows[0]!;
+    expect(fakeDb.tokens).toHaveLength(1);
+    const row = fakeDb.tokens[0]!;
     expect(row.userId).toBe('user-1');
     expect(row.tokenHash).toBe(sha256(token));
     expect(row.tokenHash).not.toBe(token);
     const days = (row.expiresAt.getTime() - before) / 86_400_000;
     expect(days).toBeGreaterThan(6.99);
     expect(days).toBeLessThan(7.01);
+    // The access token names the same session as the stored row.
+    expect(sessionOf(res.body.data.accessToken)).toBe(row.sessionId);
+  });
+
+  it('gives each sign-in its own session', async () => {
+    await login();
+    await login();
+
+    expect(fakeDb.tokens[0]!.sessionId).not.toBe(fakeDb.tokens[1]!.sessionId);
   });
 
   it('sets no cookie when the password is wrong', async () => {
@@ -123,7 +102,7 @@ describe('POST /api/v1/auth/login: the refresh cookie', () => {
 
     expect(res.status).toBe(401);
     expect(refreshCookie(res).line).toBeUndefined();
-    expect(fake.rows).toHaveLength(0);
+    expect(fakeDb.tokens).toHaveLength(0);
   });
 });
 
@@ -143,11 +122,17 @@ describe('POST /api/v1/auth/refresh', () => {
     expect(res.headers['cache-control']).toBe('no-store');
   });
 
-  it('rotates: the old token stops working and the new one works', async () => {
-    const first = refreshCookie(await login()).token;
-    const second = refreshCookie(await refresh(first)).token;
+  it('rotates inside one session: old token dead, new token works, same session id', async () => {
+    const signedIn = await login();
+    const first = refreshCookie(signedIn).token;
+    const refreshed = await refresh(first);
+    const second = refreshCookie(refreshed).token;
 
-    expect(fake.rows.find((row) => row.tokenHash === sha256(first))!.revokedAt).not.toBeNull();
+    expect(fakeDb.tokens.find((row) => row.tokenHash === sha256(first))!.revokedAt).not.toBeNull();
+    expect(fakeDb.tokens[1]!.sessionId).toBe(fakeDb.tokens[0]!.sessionId);
+    expect(sessionOf(refreshed.body.data.accessToken)).toBe(
+      sessionOf(signedIn.body.data.accessToken),
+    );
     expect((await refresh(second)).status).toBe(200);
   });
 
@@ -161,7 +146,7 @@ describe('POST /api/v1/auth/refresh', () => {
 
     expect(replay.status).toBe(401);
     expect(replay.body.error.code).toBe('UNAUTHENTICATED');
-    expect(fake.rows.every((row) => row.revokedAt !== null)).toBe(true);
+    expect(fakeDb.tokens.every((row) => row.revokedAt !== null)).toBe(true);
     // Both the current token and the other device are signed out.
     expect((await refresh(second)).status).toBe(401);
     expect((await refresh(otherDevice)).status).toBe(401);
@@ -187,17 +172,17 @@ describe('POST /api/v1/auth/refresh', () => {
     const res = await refresh('made-up-token');
 
     expect(res.status).toBe(401);
-    expect(fake.rows).toHaveLength(0);
+    expect(fakeDb.tokens).toHaveLength(0);
   });
 
   it('answers 401 for an expired token and does not issue a new one', async () => {
     const token = refreshCookie(await login()).token;
-    fake.rows[0]!.expiresAt = new Date(Date.now() - 1_000);
+    fakeDb.tokens[0]!.expiresAt = new Date(Date.now() - 1_000);
 
     const res = await refresh(token);
 
     expect(res.status).toBe(401);
-    expect(fake.rows).toHaveLength(1);
+    expect(fakeDb.tokens).toHaveLength(1);
   });
 });
 
@@ -210,17 +195,41 @@ describe('POST /api/v1/auth/logout', () => {
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ success: true, message: 'Signed out', data: null });
     expect(refreshCookie(res).line).toMatch(/Expires=Thu, 01 Jan 1970/);
-    expect(fake.rows[0]!.revokedAt).not.toBeNull();
+    expect(fakeDb.tokens[0]!.revokedAt).not.toBeNull();
     expect((await refresh(token)).status).toBe(401);
   });
 
-  it('signs out one device and leaves the other signed in', async () => {
-    const phone = refreshCookie(await login()).token;
-    const laptop = refreshCookie(await login()).token;
+  it('cuts off the access token at once, not after 15 minutes', async () => {
+    const signedIn = await login();
+    const accessToken = signedIn.body.data.accessToken as string;
+    expect((await me(accessToken)).status).toBe(200);
 
-    await logout(phone);
+    await logout(refreshCookie(signedIn).token);
+    const after = await me(accessToken);
 
-    expect((await refresh(laptop)).status).toBe(200);
+    expect(after.status).toBe(401);
+    expect(after.body.error.message).toBe('Your session has ended. Sign in again.');
+  });
+
+  it('also cuts off an access token issued before a rotation', async () => {
+    const signedIn = await login();
+    const oldAccess = signedIn.body.data.accessToken as string;
+    const rotated = refreshCookie(await refresh(refreshCookie(signedIn).token)).token;
+
+    await logout(rotated);
+
+    expect((await me(oldAccess)).status).toBe(401);
+  });
+
+  it('signs out one device and leaves the other fully signed in', async () => {
+    const phone = await login();
+    const laptop = await login();
+
+    await logout(refreshCookie(phone).token);
+
+    expect((await me(phone.body.data.accessToken)).status).toBe(401);
+    expect((await me(laptop.body.data.accessToken)).status).toBe(200);
+    expect((await refresh(refreshCookie(laptop).token)).status).toBe(200);
   });
 
   it('succeeds with no cookie, so signing out twice is not an error', async () => {

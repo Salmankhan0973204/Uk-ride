@@ -65,6 +65,8 @@ describe('POST /api/v1/auth/login', () => {
     }) as jwt.JwtPayload;
 
     expect(payload.sub).toBe('user-1');
+    // It also names the session, so signing out can cut it off.
+    expect(typeof payload.sid).toBe('string');
     expect(payload.exp! - payload.iat!).toBe(900);
     // Signed with a different secret, the same token must not verify.
     expect(() => jwt.verify(res.body.data.accessToken, 'x'.repeat(40))).toThrow();

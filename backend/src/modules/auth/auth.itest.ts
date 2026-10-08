@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { app } from '../../app.js';
 import { runCleanup } from '../../jobs/cleanup.js';
 import { prisma, resetDatabase } from '../../test/testDatabase.js';
@@ -10,6 +10,12 @@ import { prisma, resetDatabase } from '../../test/testDatabase.js';
  * prove what the unit tests can only assume, that the SQL, the unique indexes,
  * the foreign keys and Prisma's error codes behave the way the code expects.
  */
+
+// Registration sends a confirmation email. These tests are not about email,
+// so it goes to an in-memory outbox; auth.emails.itest.ts covers it.
+vi.mock('../../config/mailer.js', async () => ({
+  sendEmail: (await import('../../test/fakeMailer.js')).sendEmail,
+}));
 
 const COOKIE = 'ukride_refresh';
 const sara = {

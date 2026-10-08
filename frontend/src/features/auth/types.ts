@@ -28,6 +28,8 @@ export interface User {
   /** International form, for example "+447400123456". */
   mobile: string;
   gender: Gender | null;
+  /** When the person confirmed their email address, or null if not yet. */
+  emailVerifiedAt: string | null;
   createdAt: string;
 }
 

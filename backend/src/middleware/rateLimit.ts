@@ -68,3 +68,20 @@ export const sessionLimiter = rateLimiter({
   limit: 120,
   message: `Too many requests. ${TRY_LATER}`,
 });
+
+/**
+ * Anything that sends an email. Without a limit, a stranger could fill
+ * someone's inbox, or use us to send mail in bulk.
+ */
+export const emailLimiter = rateLimiter({
+  windowMinutes: 60,
+  limit: 5,
+  message: 'Too many emails requested. Try again in an hour.',
+});
+
+/** Opening an emailed link: enough for honest use, too few to guess a token. */
+export const linkLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 20,
+  message: `Too many attempts. ${TRY_LATER}`,
+});

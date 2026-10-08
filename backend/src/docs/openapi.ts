@@ -230,6 +230,103 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/verify-email': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Confirm an email address',
+        description:
+          'Takes the token from the link emailed at registration. A link works once and ' +
+          'lasts 24 hours. No sign-in is needed: the token is the proof.',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/LinkToken' } } },
+        },
+        responses: {
+          200: jsonResponse(
+            'Email address confirmed',
+            successEnvelope({ type: 'object', nullable: true }),
+          ),
+          400: jsonResponse('The link is not valid, was used already, or has expired', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/auth/resend-verification': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Send the confirmation link again',
+        description:
+          'For the signed-in user. Any earlier link stops working. `data.sent` is false when ' +
+          'the address is already confirmed.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'Confirmation email sent, or already confirmed',
+            successEnvelope({
+              type: 'object',
+              required: ['sent'],
+              properties: { sent: { type: 'boolean' } },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/auth/forgot-password': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Ask for a password reset link',
+        description:
+          'Always answers 200 with the same message, whether or not the email has an ' +
+          'account, so it cannot be used to find out who is registered. Limited to 5 an hour.',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/EmailOnly' } } },
+        },
+        responses: {
+          200: jsonResponse(
+            'The same answer for every address',
+            successEnvelope({ type: 'object', nullable: true }),
+          ),
+          400: jsonResponse('The email address is missing or badly formed', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/auth/reset-password': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Choose a new password',
+        description:
+          'Takes the token from the reset link and the new password. A link works once and ' +
+          'lasts 1 hour. Every session of the user is ended.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/ResetPasswordRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Password changed',
+            successEnvelope({ type: 'object', nullable: true }),
+          ),
+          400: jsonResponse('The link is not usable, or the password breaks the rules', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -237,6 +334,24 @@ export const openApiDocument = {
       refreshCookie: { type: 'apiKey', in: 'cookie', name: 'ukride_refresh' },
     },
     schemas: {
+      LinkToken: {
+        type: 'object',
+        required: ['token'],
+        properties: { token: { type: 'string', description: 'From the emailed link.' } },
+      },
+      EmailOnly: {
+        type: 'object',
+        required: ['email'],
+        properties: { email: { type: 'string', format: 'email', example: 'sara@example.com' } },
+      },
+      ResetPasswordRequest: {
+        type: 'object',
+        required: ['token', 'password'],
+        properties: {
+          token: { type: 'string', description: 'From the emailed link.' },
+          password: { type: 'string', minLength: 8, maxLength: 72, example: 'a-brand-new-pass' },
+        },
+      },
       LoginRequest: {
         type: 'object',
         required: ['email', 'password'],
@@ -287,7 +402,16 @@ export const openApiDocument = {
       },
       User: {
         type: 'object',
-        required: ['id', 'firstName', 'lastName', 'email', 'mobile', 'gender', 'createdAt'],
+        required: [
+          'id',
+          'firstName',
+          'lastName',
+          'email',
+          'mobile',
+          'gender',
+          'emailVerifiedAt',
+          'createdAt',
+        ],
         properties: {
           id: { type: 'string', format: 'uuid' },
           firstName: { type: 'string', example: 'Sara' },
@@ -298,6 +422,12 @@ export const openApiDocument = {
             allOf: [{ $ref: '#/components/schemas/Gender' }],
             nullable: true,
             description: 'null when the customer left it out',
+          },
+          emailVerifiedAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            description: 'null until the person opens the confirmation link',
           },
           createdAt: { type: 'string', format: 'date-time' },
         },

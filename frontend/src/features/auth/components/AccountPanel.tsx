@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatMobile } from '@/lib/phone/mobile';
+import { useResendVerification } from '../hooks/useEmailActions';
 import { useLogout } from '../hooks/useLogout';
 import { useMe } from '../hooks/useMe';
 import { GENDER_OPTIONS } from '../types';
@@ -21,6 +23,7 @@ export function AccountPanel() {
   const router = useRouter();
   const { data: user, isPending, isError, refetch, isFetching } = useMe();
   const logout = useLogout();
+  const resend = useResendVerification();
   // True from the moment "Sign out" is pressed. Signing out also makes
   // `user` null, and without this the guard below would send the person to
   // the sign-in page instead of home.
@@ -102,10 +105,54 @@ export function AccountPanel() {
           {details.map(([label, value]) => (
             <div key={label} className="flex items-baseline justify-between gap-4 py-3.5">
               <dt className="text-sm text-ink-muted">{label}</dt>
-              <dd className="text-right font-medium break-all">{value}</dd>
+              <dd className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5 text-right font-medium break-all">
+                {value}
+                {label === 'Email' ? (
+                  <Badge variant={user.emailVerifiedAt ? 'success' : 'warning'}>
+                    {user.emailVerifiedAt ? 'Confirmed' : 'Not confirmed'}
+                  </Badge>
+                ) : null}
+              </dd>
             </div>
           ))}
         </dl>
+
+        {user.emailVerifiedAt ? null : (
+          <div className="space-y-3 rounded-2xl border border-warning/50 bg-[rgb(252_211_77/0.1)] p-4">
+            <p className="text-sm leading-relaxed">
+              Please confirm your email address. We sent a link to{' '}
+              <span className="font-medium break-all">{user.email}</span> when you registered.
+            </p>
+            {resend.isSuccess && resend.data.sent ? (
+              <p role="status" className="text-sm font-medium text-success">
+                A new link is on its way. It lasts 24 hours.
+              </p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => resend.mutate()}
+                disabled={resend.isPending}
+                className="btn btn-ghost min-h-11! text-sm"
+              >
+                {resend.isPending ? (
+                  <>
+                    <Spinner />
+                    Sending
+                  </>
+                ) : (
+                  'Send the link again'
+                )}
+              </button>
+            )}
+            {resend.isError ? (
+              <p role="alert" className="text-sm font-medium text-danger">
+                {resend.error.status === 429
+                  ? resend.error.message
+                  : 'We could not send the link. Try again in a moment.'}
+              </p>
+            ) : null}
+          </div>
+        )}
 
         <p className="text-sm leading-relaxed text-ink-muted">
           Prices, bookings and trip tracking will appear here as each part of UkRide opens.

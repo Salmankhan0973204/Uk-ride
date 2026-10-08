@@ -17,6 +17,10 @@ describe('API docs', () => {
       '/auth/refresh',
       '/auth/logout',
       '/auth/me',
+      '/auth/verify-email',
+      '/auth/resend-verification',
+      '/auth/forgot-password',
+      '/auth/reset-password',
     ]);
   });
 

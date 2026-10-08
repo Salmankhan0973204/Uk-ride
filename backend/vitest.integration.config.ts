@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import { TEST_DATABASE_URL } from './src/test/testDatabaseUrl';
+import { TEST_DATABASE_URL } from './src/test/testDatabaseUrl.ts';
 
 /**
  * Integration tests: the real application against a real PostgreSQL database.

@@ -9,3 +9,4 @@ package-lock.json
 .claude
 *.bru
 frontend/.impeccable
+.impeccable

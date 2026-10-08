@@ -28,6 +28,16 @@ const envSchema = z.object({
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(86_400).default(900),
   // How long someone stays signed in without typing their password again.
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
+  // Where email is handed over. The defaults are Mailpit from docker-compose.yml,
+  // which catches every message: read them at http://localhost:8025.
+  SMTP_HOST: z.string().min(1).default('localhost'),
+  SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(1025),
+  MAIL_FROM: z.string().min(3).default('UkRide <no-reply@ukride.local>'),
+  // Address of the web app, used to build the links inside emails.
+  WEB_APP_URL: z
+    .url()
+    .default('http://localhost:3000')
+    .transform((value) => value.replace(/\/+$/, '')),
 });
 
 const parsed = envSchema.safeParse(process.env);

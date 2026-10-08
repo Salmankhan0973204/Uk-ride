@@ -2,7 +2,19 @@ import type { RequestHandler } from 'express';
 import { currentUserId } from '../../middleware/requireAuth.js';
 import { sendSuccess } from '../../shared/response.js';
 import { clearRefreshCookie, readRefreshCookie, setRefreshCookie } from './auth.cookies.js';
-import type { LoginInput, RegisterInput } from './auth.schemas.js';
+import {
+  requestPasswordReset,
+  resendVerification,
+  resetPassword,
+  verifyEmail,
+} from './auth.emails.js';
+import type {
+  ForgotPasswordInput,
+  LoginInput,
+  RegisterInput,
+  ResetPasswordInput,
+  VerifyEmailInput,
+} from './auth.schemas.js';
 import { checkCredentials, getCurrentUser, registerUser } from './auth.service.js';
 import { createSession, endSession, rotateSession } from './auth.sessions.js';
 import { signAccessToken } from './auth.tokens.js';
@@ -81,4 +93,44 @@ export const me: RequestHandler = async (_req, res) => {
   // Personal data for one user: no shared cache may keep it.
   res.set('Cache-Control', 'no-store');
   sendSuccess(res, { message: 'Signed-in user', data: { user } });
+};
+
+/** Confirms an email address from the token in the link we sent. */
+export const confirmEmail: RequestHandler = async (req, res) => {
+  await verifyEmail((req.body as VerifyEmailInput).token);
+
+  sendSuccess(res, { message: 'Email address confirmed', data: null });
+};
+
+/** Sends the confirmation link again to the signed-in user. */
+export const resendConfirmation: RequestHandler = async (_req, res) => {
+  const sent = await resendVerification(currentUserId(res));
+
+  sendSuccess(res, {
+    message: sent ? 'Confirmation email sent' : 'Your email address is already confirmed',
+    data: { sent },
+  });
+};
+
+/**
+ * Starts a password reset. The answer is the same for every email address, so
+ * it never reveals which ones have an account.
+ */
+export const forgotPassword: RequestHandler = async (req, res) => {
+  await requestPasswordReset((req.body as ForgotPasswordInput).email);
+
+  sendSuccess(res, {
+    message: 'If that email has an account, we have sent a link to reset the password',
+    data: null,
+  });
+};
+
+/** Sets a new password from the token in the reset link. Signs the user out everywhere. */
+export const choosePassword: RequestHandler = async (req, res) => {
+  const { token, password } = req.body as ResetPasswordInput;
+  await resetPassword(token, password);
+
+  // The browser that did the reset may hold an old session cookie.
+  clearRefreshCookie(res);
+  sendSuccess(res, { message: 'Password changed. Sign in with your new password', data: null });
 };

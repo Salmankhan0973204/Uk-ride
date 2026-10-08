@@ -163,6 +163,15 @@ export function LoginForm() {
         </form>
 
         <p className="text-sm text-ink-muted">
+          <Link
+            href="/forgot-password"
+            className="font-medium text-ink underline decoration-ring/70 decoration-2 underline-offset-4 hover:decoration-ring"
+          >
+            Forgot your password?
+          </Link>
+        </p>
+
+        <p className="-mt-4 text-sm text-ink-muted">
           New to UkRide?{' '}
           <Link
             href="/register"

@@ -7,6 +7,9 @@ import { Prisma } from '../../generated/prisma/client.js';
 // The database is replaced by a fake, so these tests run without PostgreSQL.
 const db = vi.hoisted(() => ({ findFirst: vi.fn(), create: vi.fn() }));
 vi.mock('../../config/db.js', () => ({ prisma: { user: db } }));
+// Sending the confirmation email is covered by the integration tests.
+const emails = vi.hoisted(() => ({ sendVerificationEmail: vi.fn(), sendInBackground: vi.fn() }));
+vi.mock('./auth.emails.js', () => emails);
 
 const validBody = {
   firstName: 'Sara',

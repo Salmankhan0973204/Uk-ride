@@ -1,9 +1,31 @@
 import { Router } from 'express';
-import { loginLimiter, registerLimiter, sessionLimiter } from '../../middleware/rateLimit.js';
+import {
+  emailLimiter,
+  linkLimiter,
+  loginLimiter,
+  registerLimiter,
+  sessionLimiter,
+} from '../../middleware/rateLimit.js';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { validate } from '../../middleware/validate.js';
-import { login, logout, me, refresh, register } from './auth.controller.js';
-import { loginSchema, registerSchema } from './auth.schemas.js';
+import {
+  choosePassword,
+  confirmEmail,
+  forgotPassword,
+  login,
+  logout,
+  me,
+  refresh,
+  register,
+  resendConfirmation,
+} from './auth.controller.js';
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
+} from './auth.schemas.js';
 
 export const authRouter = Router();
 
@@ -15,3 +37,9 @@ authRouter.post('/login', loginLimiter, validate(loginSchema), login);
 authRouter.post('/refresh', sessionLimiter, refresh);
 authRouter.post('/logout', sessionLimiter, logout);
 authRouter.get('/me', requireAuth, me);
+
+// Links sent by email. Opening one needs no sign-in: the token is the proof.
+authRouter.post('/verify-email', linkLimiter, validate(verifyEmailSchema), confirmEmail);
+authRouter.post('/resend-verification', emailLimiter, requireAuth, resendConfirmation);
+authRouter.post('/forgot-password', emailLimiter, validate(forgotPasswordSchema), forgotPassword);
+authRouter.post('/reset-password', linkLimiter, validate(resetPasswordSchema), choosePassword);

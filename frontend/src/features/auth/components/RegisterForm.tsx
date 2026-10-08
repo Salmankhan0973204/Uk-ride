@@ -244,7 +244,8 @@ export function RegisterForm() {
           </dl>
 
           <p className="text-sm leading-relaxed text-ink-muted">
-            Sign in with your email and the password you just chose.
+            We have emailed you a link to confirm your address. You can sign in straight away with
+            the password you just chose.
           </p>
 
           <Link href="/login" className="btn btn-primary">

@@ -337,3 +337,41 @@ docker compose exec postgres psql -U ukride -d ukride -c "select left(token_hash
 ```
 
 In PowerShell, a `Cookie` written by hand in `-Headers` is silently dropped. Use `-WebSession`.
+
+### Follow-up: confirm an email address, reset a password
+
+Start Mailpit with `npm run docker:up`. Every email the API sends appears at
+http://localhost:8025.
+
+Register (as in 1.2). A message "Confirm your email address for UkRide" arrives in Mailpit.
+Copy the `token` from its link, then:
+
+```powershell
+$body = '{"token":"PASTE-THE-TOKEN"}'
+Invoke-RestMethod http://localhost:4000/api/v1/auth/verify-email -Method Post -ContentType 'application/json' -Body $body
+```
+
+Expect `200` "Email address confirmed". Run it again: `400`, because a link works once.
+
+Ask for a reset link. The answer is the same for an address with no account:
+
+```powershell
+$body = '{"email":"sara@example.com"}'
+Invoke-RestMethod http://localhost:4000/api/v1/auth/forgot-password -Method Post -ContentType 'application/json' -Body $body
+```
+
+Copy the token from the "Choose a new UkRide password" email, then:
+
+```powershell
+$body = '{"token":"PASTE-THE-TOKEN","password":"a-brand-new-pass"}'
+Invoke-RestMethod http://localhost:4000/api/v1/auth/reset-password -Method Post -ContentType 'application/json' -Body $body
+```
+
+Expect `200`. Signing in with the old password now answers `401`, and every device that was
+signed in has been signed out.
+
+Read the mailbox from the command line:
+
+```powershell
+(Invoke-RestMethod http://localhost:8025/api/v1/messages).messages | Select-Object Subject, Created
+```

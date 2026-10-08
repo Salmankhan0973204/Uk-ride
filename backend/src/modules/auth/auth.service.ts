@@ -3,6 +3,7 @@ import { prisma } from '../../config/db.js';
 import { isTest } from '../../config/env.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
+import { sendInBackground, sendVerificationEmail } from './auth.emails.js';
 import type { LoginInput, RegisterInput } from './auth.schemas.js';
 
 /**
@@ -19,6 +20,7 @@ const publicUser = {
   lastName: true,
   mobile: true,
   gender: true,
+  emailVerifiedAt: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;
 
@@ -47,10 +49,13 @@ export async function registerUser({ password, gender, ...profile }: RegisterInp
   const passwordHash = await bcrypt.hash(password, HASH_COST);
 
   try {
-    return await prisma.user.create({
+    const user = await prisma.user.create({
       data: { ...profile, gender: gender ?? null, passwordHash },
       select: publicUser,
     });
+    // Not awaited: the account exists whether or not the email goes out.
+    sendInBackground(sendVerificationEmail(user), 'confirmation');
+    return user;
   } catch (err) {
     // Two requests with the same email or mobile can both pass the check
     // above. The unique index stops the second one; P2002 is Prisma's code for

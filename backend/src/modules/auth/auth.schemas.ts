@@ -55,39 +55,51 @@ const mobile = z.string('Mobile number is required').transform((value, ctx) => {
   return phone.number as string;
 });
 
+// bcrypt ignores everything after 72 bytes, so longer passwords are refused
+// instead of being silently shortened. Used wherever a password is chosen.
+const newPassword = z
+  .string('Password is required')
+  .min(8, 'Password must be at least 8 characters')
+  .max(72, 'Password must be at most 72 characters');
+
+// The cleaned form of an email: trimmed and lower-cased, so
+// "Sara@Example.com " and "sara@example.com" are the same account.
+const email = z
+  .string('Email is required')
+  .trim()
+  .toLowerCase()
+  .pipe(z.email('Enter a valid email address'));
+
+// The token from a link we emailed. Its content is checked against the database.
+const linkToken = z.string('The link is incomplete').min(20, 'The link is incomplete').max(200);
+
 export const registerSchema = z.object({
   firstName: name('First name'),
   lastName: name('Last name'),
-  // Trimmed and lower-cased first, so "Sara@Example.com " and
-  // "sara@example.com" are the same account.
-  email: z
-    .string('Email is required')
-    .trim()
-    .toLowerCase()
-    .pipe(z.email('Enter a valid email address')),
+  email,
   mobile,
   // Optional: leaving it out is a valid answer.
   gender: z.enum(GENDERS, 'Choose one of the listed options').optional(),
-  // bcrypt ignores everything after 72 bytes, so longer passwords are refused
-  // instead of being silently shortened.
-  password: z
-    .string('Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .max(72, 'Password must be at most 72 characters'),
+  password: newPassword,
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 export const loginSchema = z.object({
   // Cleaned the same way as at registration, so "Sara@Example.com " signs in.
-  email: z
-    .string('Email is required')
-    .trim()
-    .toLowerCase()
-    .pipe(z.email('Enter a valid email address')),
+  email,
   // Only "not empty" is checked here. The length rules belong to choosing a
   // password; repeating them at login would tell a guesser what the rules are.
   password: z.string('Password is required').min(1, 'Password is required'),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export const verifyEmailSchema = z.object({ token: linkToken });
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+export const forgotPasswordSchema = z.object({ email });
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({ token: linkToken, password: newPassword });
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

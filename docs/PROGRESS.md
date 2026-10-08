@@ -864,3 +864,59 @@ Learning notes
   that UK mobiles have exactly ten digits after +44, or which ranges are in use. That is data,
   and a library that ships the data is the right tool.
 - Validation proves form. Verification proves ownership. They are different jobs.
+
+#### Follow-up 6 - Email confirmation and password reset
+
+Built
+
+- Email sending with `nodemailer` in `backend/src/config/mailer.ts`. In development the mail
+  server is Mailpit, which catches every message: read them at http://localhost:8025.
+- `email_tokens` table and `users.email_verified_at` (migration `add_email_tokens`). A link
+  carries a random token; the database keeps its hash, an expiry and whether it was used.
+- Registration emails a confirmation link (24 hours). The account works straight away;
+  confirming is not required to sign in.
+- Four endpoints: `POST /auth/verify-email`, `POST /auth/resend-verification` (signed in),
+  `POST /auth/forgot-password`, `POST /auth/reset-password`.
+- Resetting a password ends every session of the user, and also confirms the email address,
+  since opening the link proved the mailbox is theirs.
+- Limits: 5 emails an hour per address for forgot-password and resend; 20 link attempts per 15
+  minutes.
+- Web app: `/verify-email`, `/forgot-password` and `/reset-password` pages; a "Forgot your
+  password?" link on sign-in; the account page shows Confirmed or Not confirmed with a button
+  to send the link again.
+
+Verified
+
+- 73 unit tests pass. 29 integration tests pass against the real database, 17 of them new for
+  these flows, with the mail sender replaced by an in-memory outbox.
+- Against the running API with real emails in Mailpit: the confirmation email arrived with a
+  text and an HTML part, its link confirmed the address, the reset email arrived, its link
+  changed the password, the old password answered 401 and the new one signed in.
+- In a real browser, reading links from Mailpit: register, see "Not confirmed", send the link
+  again, open it, see "Confirmed"; the same link a second time fails; forgot password; a short
+  new password is refused; a good one is saved; old password refused, new one accepted; the
+  used reset link fails; both pages handle a link with no token.
+- No horizontal scrolling at 1440px and 390px on the new screens.
+
+Open items
+
+- Mailpit delivers nothing. Sending real email needs a provider's SMTP settings in `.env`, and
+  a real sending domain. That belongs with deployment.
+- Emails are sent inside the API process, in the background of the request. If the mail server
+  is down the email is lost and only logged. A queue with retries (Module 11) fixes that.
+- An unconfirmed account can do everything a confirmed one can. Requiring confirmation for
+  specific actions, such as booking, can be added where it matters.
+- There is no "change password while signed in" yet. That is step 2.3.
+- The HTML email is plain. It was checked in Mailpit only, not in real mail clients.
+
+Learning notes
+
+- "Forgot password" must answer the same for every address, and take the same time. That is
+  why the email is sent without waiting for it.
+- A reset link is a credential, as powerful as the password. It gets the same care: random,
+  stored hashed, single use, short-lived, and it ends existing sessions.
+- Asking for a new link deletes the earlier one, so only one working link exists at a time.
+- A user's name goes into the HTML email, so it is escaped. Any text a user typed is untrusted
+  wherever it is displayed, including email.
+- In development React runs effects twice. A page that consumes a single-use token on load
+  must guard against sending it twice.

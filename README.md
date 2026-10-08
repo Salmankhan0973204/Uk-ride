@@ -171,6 +171,7 @@ Database commands belong to the backend workspace.
 | `npm run db:migrate -w backend -- --name <why>` | Create a migration after a schema change, apply it |
 | `npm run db:generate -w backend`                | Regenerate the typed Prisma client                 |
 | `npm run db:studio -w backend`                  | Browse the data in Prisma Studio                   |
+| `npm run db:cleanup -w backend`                 | Delete expired refresh tokens now                  |
 
 ## Environment variables
 

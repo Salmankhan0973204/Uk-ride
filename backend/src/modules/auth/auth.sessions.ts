@@ -108,3 +108,17 @@ export async function isSessionActive(sessionId: string) {
   });
   return live !== null;
 }
+
+/**
+ * Deletes refresh tokens that have expired, and returns how many.
+ *
+ * A token that was used or signed out but has not expired yet is kept on
+ * purpose: if it shows up again, rotateSession() must still be able to
+ * recognise it as a replay. Once expired it is useless to everyone.
+ */
+export async function deleteExpiredSessions() {
+  const { count } = await prisma.refreshToken.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
+  return count;
+}

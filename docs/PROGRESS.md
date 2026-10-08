@@ -765,3 +765,31 @@ Learning notes
   signed in.
 - Keep the stable id (the session) separate from the thing that rotates (the refresh token).
   Otherwise every rotation would orphan the access tokens issued before it.
+
+#### Follow-up 3 - Clean-up of expired refresh tokens
+
+Built
+
+- `deleteExpiredSessions()` removes refresh tokens whose expiry has passed.
+- `backend/src/jobs/cleanup.ts`: the API runs the sweep 30 seconds after it starts and every 6
+  hours after that. A failure is logged and never stops the server.
+- `npm run db:cleanup -w backend` runs one sweep by hand.
+
+Verified
+
+- 68 automated tests pass (three new).
+- Against the real database: with one expired token, one used but unexpired token and one live
+  token, the sweep removed exactly the expired one.
+
+Open items
+
+- The sweep is a timer inside the API process. With several servers each would run it. That
+  is harmless but wasteful; one scheduled job on the queue (Module 11) replaces it.
+- A used or signed-out token is kept until it expires, up to 7 days, so a replay can still be
+  recognised. The table therefore holds a week of history at most.
+
+Learning notes
+
+- Decide what "dead" means before deleting. A revoked token looks dead but still does a job:
+  it is the evidence that lets the server spot a stolen copy. Only expiry makes it useless.
+- `timer.unref()` lets Node exit even though the timer is still scheduled.

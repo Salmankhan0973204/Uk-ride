@@ -20,6 +20,8 @@ function readApiError(error: ApiError): string {
   // The API gives one answer for a wrong password and for an unknown email,
   // on purpose, so this message cannot say which it was either.
   if (error.status === 401) return 'Email or password is incorrect. Check both and try again.';
+  // Too many wrong attempts. The API's message says how long to wait.
+  if (error.status === 429) return error.message;
   if (error.isNetworkError)
     return 'We could not reach the server. Check your connection and try again.';
   return 'We could not sign you in. Try again in a moment.';

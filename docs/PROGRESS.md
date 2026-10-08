@@ -685,3 +685,41 @@ login and account screens; the glass-on-gradient design.
 
 Checks at completion: backend typecheck, lint and 53 tests pass; frontend lint, typecheck and
 build pass; the full journey was driven in a real browser.
+
+### Module 1 follow-ups (started 2026-10-08)
+
+Eight gaps were left open when Module 1 closed. They are closed here, one at a time, before
+Module 2 starts. These are extra work, not numbered steps, so the step count does not change.
+
+#### Follow-up 1 - Rate limiting on the auth routes
+
+Built
+
+- `rateLimiter()` in `backend/src/middleware/rateLimit.ts`, built on `express-rate-limit`.
+  A refused request answers 429 `RATE_LIMITED` in the standard error envelope, with a
+  `Retry-After` header.
+- Sign-in: 10 wrong attempts per 15 minutes from one address. Correct sign-ins are not counted.
+- Registration: 10 per hour from one address. Refresh and logout: 120 per 15 minutes.
+- The sign-in and register forms show the API's 429 message. Swagger lists the 429 answer.
+
+Verified
+
+- 57 automated tests pass. Four new ones exercise the limiter on a small app of its own.
+- Against the running API: twelve wrong sign-ins in a row answered 401 ten times, then 429 with
+  `Retry-After: 896`.
+
+Open items
+
+- Counts live in the API process's memory, so they reset on restart and are not shared between
+  several servers. Redis (Module 11) fixes both.
+- The limit is per address, not per account. Many addresses guessing one account are not
+  slowed. An account lockout would need care not to let strangers lock people out.
+- Behind a proxy or load balancer, Express must be told to trust it (`trust proxy`), or every
+  visitor appears to come from the proxy's address. That belongs to deployment, Module 17.
+- The limiter is switched off in the automated tests, where every request shares one address.
+
+Learning notes
+
+- Put the limiter first in the route, before validation and the database, so a refused request
+  costs almost nothing.
+- Count failures only on sign-in: a legitimate user who signs in often is never the problem.

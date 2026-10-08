@@ -129,6 +129,7 @@ export const openApiDocument = {
               '`error.details.field` is `email` or `mobile`.',
             { $ref: '#/components/schemas/ApiFailure' },
           ),
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/Error' },
         },
       },
@@ -161,6 +162,7 @@ export const openApiDocument = {
           401: jsonResponse('Email or password is incorrect', {
             $ref: '#/components/schemas/ApiFailure',
           }),
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/Error' },
         },
       },
@@ -183,6 +185,7 @@ export const openApiDocument = {
           401: jsonResponse('No cookie, or a token that is unknown, used, expired or revoked', {
             $ref: '#/components/schemas/ApiFailure',
           }),
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/Error' },
         },
       },
@@ -198,6 +201,7 @@ export const openApiDocument = {
         security: [{ refreshCookie: [] }],
         responses: {
           200: jsonResponse('Signed out', successEnvelope({ type: 'object', nullable: true })),
+          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/Error' },
         },
       },
@@ -349,6 +353,12 @@ export const openApiDocument = {
     },
     responses: {
       Error: jsonResponse('Error envelope', { $ref: '#/components/schemas/ApiFailure' }),
+      RateLimited: {
+        description:
+          'Too many requests from this address. The `Retry-After` header gives the wait in seconds.',
+        headers: { 'Retry-After': { schema: { type: 'integer' } } },
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiFailure' } } },
+      },
     },
   },
 };

@@ -117,6 +117,9 @@ function readApiError(error: ApiError): { fields: Errors; form?: string } {
     };
   }
 
+  // Too many attempts from this address. The API's message says how long to wait.
+  if (error.status === 429) return { fields: {}, form: error.message };
+
   return { fields: {}, form: 'We could not create your account. Try again in a moment.' };
 }
 

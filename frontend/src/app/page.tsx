@@ -54,8 +54,8 @@ export default function HomePage() {
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </Link>
-            <Link href="/system-status" className="btn btn-ghost px-6! text-base">
-              System status
+            <Link href="/vehicles" className="btn btn-ghost px-6! text-base">
+              See the vehicles
             </Link>
           </div>
         </div>
@@ -121,8 +121,8 @@ export default function HomePage() {
       </div>
 
       <p className="max-w-[70ch] px-1 text-sm leading-relaxed text-ink-muted">
-        UkRide is being built one stage at a time. Prices, vehicles and the area served have not
-        been published yet, so none are shown here.
+        UkRide is being built one stage at a time. Prices and the area served have not been
+        published yet, so none are shown here.
       </p>
     </div>
   );

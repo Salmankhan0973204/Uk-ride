@@ -13,4 +13,10 @@ export const queryKeys = {
     all: ['auth'] as const,
     me: () => [...queryKeys.auth.all, 'me'] as const,
   },
+  vehicleTypes: {
+    // Invalidating `all` refreshes every list below it: public and admin.
+    all: ['vehicleTypes'] as const,
+    list: () => [...queryKeys.vehicleTypes.all, 'list'] as const,
+    admin: () => [...queryKeys.vehicleTypes.all, 'admin'] as const,
+  },
 };

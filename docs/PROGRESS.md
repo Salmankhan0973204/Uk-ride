@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 3 - Vehicle Types
 - **Last completed:** Module 2 - Profile Management
-- **Next step:** 3.5 - Customer catalogue page
-- **Steps done:** 24 of 113
+- **Next step:** 3.6 - Admin table with create and edit form
+- **Steps done:** 25 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -17,7 +17,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 4/7   | Done    | Done       | -           | -              | -                            | In progress |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 5/7   | Done    | Done       | In progress | In progress    | -                            | In progress |
 | 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -           |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -           |
 | 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
@@ -84,7 +84,7 @@ runs.
 - [x] 3.2 Public list and detail endpoints. _Learn: public read endpoints._
 - [x] 3.3 User roles and an admin-only guard. _Learn: role-based access._
 - [x] 3.4 Admin create, update and deactivate endpoints. _Learn: CRUD, soft delete._
-- [ ] 3.5 Customer catalogue page. _Learn: list queries._
+- [x] 3.5 Customer catalogue page. _Learn: list queries._
 - [ ] 3.6 Admin table with create and edit form. _Learn: query invalidation._
 - [ ] 3.7 Deactivate with confirmation, design pass.
 
@@ -1333,3 +1333,31 @@ Learning notes
   people have saved should not.
 - JSON has real numbers, so `"4"` is refused rather than converted. The form in step 3.6
   will have to turn its text inputs into numbers before sending.
+
+#### Step 3.5 - Customer catalogue page (done 2026-10-09)
+
+Built
+
+- `/vehicles`: the public catalogue. One glass panel; each vehicle type is a divider row with
+  its name, description, passengers and suitcases. No prices: none exist yet.
+- `frontend/src/features/vehicle-types/`: `types.ts`, `api/vehicle-types.api.ts`,
+  `hooks/useVehicleTypes.ts`, `components/VehicleCatalogue.tsx`.
+- Loading, error (with Try again) and empty states.
+- A "Vehicles" link in the navigation (hidden on phones) and a "See the vehicles" button on
+  the home page. `User` in the web app now carries `role`.
+
+Verified
+
+- Typecheck and lint pass.
+- In a real browser against the running API: five rows in list order, "4 passengers" and
+  "2 suitcases" on the first, the navigation link marked current, the home button leading to
+  the page. No horizontal scrolling at 1440px, 390px and 360px.
+
+Learning notes
+
+- A list query is `useQuery` whose data is an array. `select` unwraps the envelope so the
+  component receives the array itself.
+- `staleTime` says how long an answer counts as fresh. A catalogue changes rarely, so one
+  minute saves a request on every visit to the page.
+- A public page uses `apiFetch`. `authFetch` is for requests that need the access token.
+- A list has four states to design, not one: loading, error, empty, and filled.

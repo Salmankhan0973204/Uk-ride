@@ -50,8 +50,9 @@ export function SiteNav() {
         </Link>
 
         <div className="flex items-center gap-1">
-          {/* On a phone there is no room for it; the home page links to it. */}
-          {link('/system-status', 'Status', 'max-sm:hidden')}
+          {/* On a phone there is no room for these; the home page links to both. */}
+          {link('/vehicles', 'Vehicles', 'max-sm:hidden')}
+          {link('/system-status', 'Status', 'max-md:hidden')}
 
           {user ? (
             // Signed in: one way into the account, named after the person.

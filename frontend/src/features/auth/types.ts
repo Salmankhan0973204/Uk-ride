@@ -7,6 +7,8 @@ export const GENDER_OPTIONS = [
 
 export type Gender = (typeof GENDER_OPTIONS)[number]['value'];
 
+export type Role = 'CUSTOMER' | 'DRIVER' | 'DISPATCHER' | 'ADMIN';
+
 /** Body of POST /api/v1/auth/register. */
 export interface RegisterInput {
   firstName: string;
@@ -28,6 +30,8 @@ export interface User {
   /** International form, for example "+447400123456". */
   mobile: string;
   gender: Gender | null;
+  /** What the person may do. Everyone who registers is a customer. */
+  role: Role;
   /** When the person confirmed their email address, or null if not yet. */
   emailVerifiedAt: string | null;
   createdAt: string;

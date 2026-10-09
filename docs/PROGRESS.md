@@ -996,3 +996,19 @@ Still open, by choice or by the free-tools rule
 - Rate-limit counts and the clean-up timer live in the API process. Redis and the queue
   (Module 11) are the place for both.
 - Nothing runs the tests automatically yet. Continuous integration is step 17.4.
+
+### Automated tests removed (2026-10-09)
+
+At the user's request every automated test file was deleted: the 73 unit tests, the 29
+integration tests, their helpers in `backend/src/test/` and the integration test config.
+Earlier notes in this file that say "N tests pass" describe the project as it was then.
+
+- `npm test` still runs and succeeds, with nothing to run. `npm run test:integration` is gone.
+- Vitest and Supertest stay installed, and `backend/vitest.config.ts` stays, so a `*.test.ts`
+  file placed beside the code it tests is picked up again without setup.
+- The tests are still in git history. `git show 06baaab:backend/src/modules/auth/auth.test.ts`
+  prints one; `git checkout 06baaab -- backend/src` followed by a review would bring them back.
+- Not removed: the manual API checks in `docs/api-tests/` (Bruno requests and the curl guide).
+  They are documentation, not automated tests.
+- Consequence: nothing checks the code automatically any more. Typecheck and lint still run.
+  Step 16.2 and step 16.3 plan the automated tests again.

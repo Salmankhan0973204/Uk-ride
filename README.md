@@ -150,19 +150,18 @@ and see your details at http://localhost:3000/account.
 
 Run these from the repository root.
 
-| Command                    | What it does                                          |
-| -------------------------- | ----------------------------------------------------- |
-| `npm run dev`              | Start the API and the web app together                |
-| `npm run dev:api`          | Start the API only                                    |
-| `npm run dev:web`          | Start the web app only                                |
-| `npm run typecheck`        | Type-check both apps                                  |
-| `npm run lint`             | Lint both apps                                        |
-| `npm test`                 | Run the automated tests                               |
-| `npm run test:integration` | Run the tests that use a real database (needs Docker) |
-| `npm run build`            | Production build of both apps                         |
-| `npm run format`           | Format the code with Prettier                         |
-| `npm run docker:up`        | Start PostgreSQL, Redis and Mailpit                   |
-| `npm run docker:down`      | Stop them                                             |
+| Command               | What it does                                   |
+| --------------------- | ---------------------------------------------- |
+| `npm run dev`         | Start the API and the web app together         |
+| `npm run dev:api`     | Start the API only                             |
+| `npm run dev:web`     | Start the web app only                         |
+| `npm run typecheck`   | Type-check both apps                           |
+| `npm run lint`        | Lint both apps                                 |
+| `npm test`            | Run automated tests (none exist at the moment) |
+| `npm run build`       | Production build of both apps                  |
+| `npm run format`      | Format the code with Prettier                  |
+| `npm run docker:up`   | Start PostgreSQL, Redis and Mailpit            |
+| `npm run docker:down` | Stop them                                      |
 
 Database commands belong to the backend workspace.
 

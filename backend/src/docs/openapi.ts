@@ -49,6 +49,7 @@ export const openApiDocument = {
     { name: 'Health', description: 'Service status checks' },
     { name: 'Auth', description: 'Accounts and sign-in' },
     { name: 'Users', description: 'Your own profile' },
+    { name: 'Vehicle types', description: 'The classes of car on offer' },
   ],
   paths: {
     '/health': {
@@ -413,6 +414,61 @@ export const openApiDocument = {
         },
       },
     },
+    '/vehicle-types': {
+      get: {
+        tags: ['Vehicle types'],
+        summary: 'The catalogue',
+        description:
+          'Every vehicle type on offer, in list order. Public: no sign-in needed. ' +
+          'A type that was switched off is left out.',
+        responses: {
+          200: jsonResponse(
+            'Vehicle types',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleTypes'],
+              properties: {
+                vehicleTypes: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/VehicleType' },
+                },
+              },
+            }),
+          ),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/vehicle-types/{slug}': {
+      get: {
+        tags: ['Vehicle types'],
+        summary: 'One vehicle type',
+        description:
+          'Public. A type that was switched off answers 404, like one that never existed.',
+        parameters: [
+          {
+            name: 'slug',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', example: 'executive' },
+          },
+        ],
+        responses: {
+          200: jsonResponse(
+            'Vehicle type',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleType'],
+              properties: { vehicleType: { $ref: '#/components/schemas/VehicleType' } },
+            }),
+          ),
+          404: jsonResponse('No vehicle type on offer has this slug', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -587,6 +643,18 @@ export const openApiDocument = {
         properties: {
           status: { type: 'string', enum: ['up', 'down', 'skipped'] },
           note: { type: 'string' },
+        },
+      },
+      VehicleType: {
+        type: 'object',
+        required: ['id', 'slug', 'name', 'description', 'passengers', 'suitcases'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          slug: { type: 'string', example: 'executive' },
+          name: { type: 'string', example: 'Executive' },
+          description: { type: 'string' },
+          passengers: { type: 'integer', example: 4 },
+          suitcases: { type: 'integer', example: 2 },
         },
       },
       ApiFailure: {

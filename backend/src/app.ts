@@ -12,6 +12,7 @@ import { requestId } from './middleware/requestId.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
 import { usersRouter } from './modules/users/users.routes.js';
+import { vehicleTypesRouter } from './modules/vehicle-types/vehicle-types.routes.js';
 
 /**
  * Builds the Express application without starting a server.
@@ -53,6 +54,7 @@ const api = express.Router();
 api.use('/health', healthRouter);
 api.use('/auth', authRouter);
 api.use('/users', usersRouter);
+api.use('/vehicle-types', vehicleTypesRouter);
 // Swagger UI is a development tool; it is not exposed in production.
 if (!isProd) {
   api.use('/docs', docsRouter);

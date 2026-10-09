@@ -429,3 +429,17 @@ still works; a session on any other device does not.
 | `newPassword` equal to `currentPassword`  | `400`, message under `details.newPassword`     |
 | a `newPassword` shorter than 8 characters | `400`, message under `details.newPassword`     |
 | more than 10 wrong attempts in 15 minutes | `429` with a `Retry-After` header              |
+
+## Module 3 - Vehicle types
+
+Run `npm run db:seed -w backend` once so there is something to list.
+
+### 3.2 The catalogue (public)
+
+```powershell
+Invoke-RestMethod http://localhost:4000/api/v1/vehicle-types | ConvertTo-Json -Depth 5
+Invoke-RestMethod http://localhost:4000/api/v1/vehicle-types/executive | ConvertTo-Json -Depth 5
+```
+
+Expect `200` from both, with no token. The list holds five types in order and
+`meta.count` = 5. An unknown slug such as `/vehicle-types/limo` answers `404`.

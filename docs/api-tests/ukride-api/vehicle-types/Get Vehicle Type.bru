@@ -1,0 +1,20 @@
+meta {
+  name: Get Vehicle Type
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/vehicle-types/executive
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.vehicleType.slug: eq executive
+}
+
+docs {
+  Change the slug to one that does not exist, such as "limo", to see the 404.
+}

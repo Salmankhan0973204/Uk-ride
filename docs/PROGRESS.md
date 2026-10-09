@@ -4,34 +4,34 @@ Update this file after every coding session.
 
 - **Current module:** Module 3 - Vehicle Types
 - **Last completed:** Module 2 - Profile Management
-- **Next step:** 3.2 - Public list and detail endpoints
-- **Steps done:** 21 of 113
+- **Next step:** 3.3 - User roles and an admin-only guard
+- **Steps done:** 22 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 1/7   | In progress | -       | -           | -              | -                            | In progress |
-| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| #   | Module                                             | Steps | Backend     | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
+| --- | -------------------------------------------------- | ----- | ----------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 2/7   | In progress | -          | -           | -              | -                            | In progress |
+| 4   | Fleet Vehicles                                     | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -          | -           | -              | -                            | -           |
+| 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -          | -           | -              | -                            | -           |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -          | -           | -              | -                            | -           |
+| 11  | Notifications + Email                              | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -          | -           | -              | -                            | -           |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -          | -           | -              | -                            | -           |
 
 ## Steps
 
@@ -81,7 +81,7 @@ runs.
 ### Module 3 - Vehicle Types
 
 - [x] 3.1 `VehicleType` model and seed data. _Learn: database seeding._
-- [ ] 3.2 Public list and detail endpoints. _Learn: public read endpoints._
+- [x] 3.2 Public list and detail endpoints. _Learn: public read endpoints._
 - [ ] 3.3 User roles and an admin-only guard. _Learn: role-based access._
 - [ ] 3.4 Admin create, update and deactivate endpoints. _Learn: CRUD, soft delete._
 - [ ] 3.5 Customer catalogue page. _Learn: list queries._
@@ -1233,3 +1233,32 @@ Learning notes
   addresses and for code that needs to name one row.
 - `isActive` is a soft delete: a type is switched off, not removed, because old bookings will
   still point at it.
+
+#### Step 3.2 - Public list and detail endpoints (done 2026-10-09)
+
+Built
+
+- `backend/src/modules/vehicle-types/`: select, service, controller, routes; mounted at
+  `/api/v1/vehicle-types`.
+- `GET /vehicle-types`: the active types in list order, with `meta.count`.
+- `GET /vehicle-types/:slug`: one active type. The slug is matched in lower case.
+- Neither needs a token. The answer leaves out `isActive`, `sortOrder` and the timestamps.
+- Swagger, `README.md`, `docs/api-tests/curl.md` and two Bruno requests.
+
+Verified (by hand against the running API; no automated tests)
+
+- The list answered 200 with five types in order and only the six public fields.
+- `/vehicle-types/executive` and `/vehicle-types/EXECUTIVE` answered 200; `/vehicle-types/limo`
+  answered 404 in the standard error envelope.
+- With one type switched off in the database, the list held four and its detail address
+  answered 404. It was switched back on afterwards.
+
+Learning notes
+
+- A public endpoint is simply a route with no `requireAuth` in front of it. What makes it
+  safe is the `select`: it returns only what a stranger may see.
+- A list answer goes in a named key (`data.vehicleTypes`), never a bare array, so fields can be
+  added later without breaking clients. The count goes in `meta`.
+- "Switched off" and "never existed" give the same 404, so the answer does not reveal what is
+  kept in the back office.
+- The address uses the slug, not the id: `/vehicle-types/executive` can be read and shared.

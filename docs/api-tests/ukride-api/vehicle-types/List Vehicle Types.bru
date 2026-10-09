@@ -1,0 +1,21 @@
+meta {
+  name: List Vehicle Types
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/vehicle-types
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.vehicleTypes: isArray
+  res.body.meta.count: isNumber
+}
+
+docs {
+  Public: no token. Run "npm run db:seed -w backend" first so the list is not empty.
+}

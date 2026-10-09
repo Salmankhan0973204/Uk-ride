@@ -227,6 +227,8 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/users/me`                 | Your profile (signed in)                                  |
 | PATCH  | `/users/me`                 | Change your name, mobile number or gender                 |
 | POST   | `/users/me/password`        | Change your password; signs out other devices             |
+| GET    | `/vehicle-types`            | The catalogue of vehicle types (public)                   |
+| GET    | `/vehicle-types/:slug`      | One vehicle type, for example `executive` (public)        |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

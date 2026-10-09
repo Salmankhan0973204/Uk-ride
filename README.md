@@ -223,6 +223,7 @@ Base URL: `http://localhost:4000/api/v1`
 | POST   | `/auth/reset-password`      | Choose a new password with the emailed token              |
 | GET    | `/users/me`                 | Your profile (signed in)                                  |
 | PATCH  | `/users/me`                 | Change your name, mobile number or gender                 |
+| POST   | `/users/me/password`        | Change your password; signs out other devices             |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

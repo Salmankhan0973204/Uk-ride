@@ -50,3 +50,12 @@ export function currentUserId(res: Response): string {
   }
   return userId;
 }
+
+/** The id of the session this request belongs to. Only valid after requireAuth has run. */
+export function currentSessionId(res: Response): string {
+  const sessionId: unknown = res.locals.sessionId;
+  if (typeof sessionId !== 'string') {
+    throw new Error('currentSessionId() was called on a route without requireAuth');
+  }
+  return sessionId;
+}

@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 2 - Profile Management
 - **Last completed:** Module 1 - Authentication
-- **Next step:** 2.3 - Change password endpoint
-- **Steps done:** 16 of 113
+- **Next step:** 2.4 - Profile page
+- **Steps done:** 17 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -16,7 +16,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 2/6   | In progress | In progress | -           | -              | -                            | In progress |
+| 2   | Profile Management                                 | 3/6   | In progress | In progress | -           | -              | -                            | In progress |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
 | 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -           | -           | -              | -                            | -           |
@@ -73,7 +73,7 @@ runs.
       with registration, on 2026-10-07.)
       _Learn: changing a schema with a migration._
 - [x] 2.2 `PATCH /users/me`. _Learn: partial updates._
-- [ ] 2.3 Change password endpoint. _Learn: re-checking the current password._
+- [x] 2.3 Change password endpoint. _Learn: re-checking the current password._
 - [ ] 2.4 Profile page. _Learn: reading cached data._
 - [ ] 2.5 Edit profile form. _Learn: updating the cache after a mutation._
 - [ ] 2.6 Change password form, design pass.
@@ -1075,3 +1075,60 @@ Learning notes
 - Never build an update from the raw request body. Validate first, then pass only what the
   schema allowed. That one habit prevents "mass assignment", where a client sets a column it
   was never meant to touch.
+
+#### Step 2.3 - Change password, and a session fix found on the way (done 2026-10-09)
+
+Built
+
+- `POST /api/v1/users/me/password` takes `currentPassword` and `newPassword`. It checks the
+  current password against the stored hash, refuses a new password equal to the old one,
+  saves the new hash, and signs out every other device. The device making the request stays
+  signed in.
+- A wrong current password answers 400 under `details.currentPassword`, not 401. The session
+  is valid; it is the form that is wrong.
+- Wrong attempts are limited to 10 per 15 minutes.
+- `backend/src/shared/passwords.ts` now holds password hashing and checking for the whole API.
+  Registration, sign-in, password reset and password change all use it.
+
+A flaw from Module 1, found and fixed here
+
+- After a password change, the signed-out phone asked for a refresh with its cancelled token.
+  The server read that as a stolen token being replayed and ended every session, including
+  the laptop that had just changed the password.
+- Cause: "this token was exchanged for a newer one" and "this session was signed out" were
+  stored the same way, as `revoked_at`.
+- Fix: they are now different. A token that was exchanged stays in the table, marked used, as
+  the evidence for spotting a replay. A session that is signed out (logout, password change,
+  password reset) has its tokens deleted. A browser still holding one is told "sign in again"
+  and nothing else happens.
+
+Verified
+
+- Typecheck and lint pass. Checked by hand against the running API and the real database:
+  - a wrong current password, a new password equal to the old one, a short one, missing
+    fields and an extra field each returned 400 with a clear message, and the old password
+    still worked afterwards;
+  - after a successful change, the laptop's access token and refresh kept working, the
+    phone's returned 401, the old password failed to sign in and the new one worked;
+  - the phone retrying its refresh twice left the laptop signed in;
+  - a real replay of an exchanged token still ended every session;
+  - logout left no token rows for that session;
+  - a password reset from the emailed link ended the existing session.
+
+Open items
+
+- The session tests on GitHub expect a signed-out token to be marked, not deleted. They no
+  longer match the code. Nothing runs them.
+- A stolen refresh token used by a thief after the owner has signed out is now answered with
+  a plain 401 and leaves no trace. The token is useless by then, so nothing is lost.
+
+Learning notes
+
+- Asking for the current password again protects against the unlocked-laptop case. A valid
+  session proves someone is at the keyboard, not who.
+- 401 means "I do not know who you are". 400 means "I know you, and this request is wrong".
+  Returning 401 for a wrong current password would have made the web app try to refresh the
+  session and then sign the person out.
+- One column meaning two things is a bug waiting for the right sequence of events. This one
+  needed two devices and a password change to show itself, which is why checking the real
+  flow end to end matters.

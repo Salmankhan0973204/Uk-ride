@@ -1,11 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
-import bcrypt from 'bcryptjs';
 import { prisma } from '../../config/db.js';
-import { env, isTest } from '../../config/env.js';
+import { env } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
 import { sendEmail } from '../../config/mailer.js';
 import type { EmailTokenPurpose } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
+import { hashPassword } from '../../shared/passwords.js';
+import { endAllSessions } from './auth.sessions.js';
 
 /**
  * Links sent by email: one to confirm an email address, one to choose a new
@@ -19,7 +20,6 @@ import { AppError } from '../../shared/AppError.js';
 const MINUTE_MS = 60_000;
 const VERIFY_TTL_MINUTES = 24 * 60;
 const RESET_TTL_MINUTES = 60;
-const HASH_COST = isTest ? 4 : 12;
 
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
 
@@ -175,17 +175,14 @@ export async function requestPasswordReset(email: string) {
 /** Sets a new password from the link token and signs the user out everywhere. */
 export async function resetPassword(token: string, password: string) {
   const stored = await findUsableToken(token, 'RESET_PASSWORD');
-  const passwordHash = await bcrypt.hash(password, HASH_COST);
+  const passwordHash = await hashPassword(password);
   const now = new Date();
 
   await prisma.$transaction([
     prisma.emailToken.update({ where: { id: stored.id }, data: { usedAt: now } }),
     prisma.user.update({ where: { id: stored.userId }, data: { passwordHash } }),
     // Whoever knew the old password, on any device, is signed out.
-    prisma.refreshToken.updateMany({
-      where: { userId: stored.userId, revokedAt: null },
-      data: { revokedAt: now },
-    }),
+    endAllSessions(stored.userId),
   ]);
 
   // Opening the reset link also proves the mailbox is theirs. Kept outside the

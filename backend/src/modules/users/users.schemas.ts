@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GENDERS, mobile, name } from '../auth/auth.schemas.js';
+import { GENDERS, mobile, name, newPassword } from '../auth/auth.schemas.js';
 
 /**
  * A partial update: send only what you want to change.
@@ -25,3 +25,17 @@ export const updateProfileSchema = z
   .refine((changes) => Object.keys(changes).length > 0, 'Nothing to update');
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+export const changePasswordSchema = z.strictObject(
+  {
+    // Checked against the stored hash, so only "not empty" is asked here.
+    currentPassword: z
+      .string('Current password is required')
+      .min(1, 'Current password is required'),
+    // The same rule as at registration and at reset.
+    newPassword,
+  },
+  'Send currentPassword and newPassword only',
+);
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

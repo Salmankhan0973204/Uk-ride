@@ -1,17 +1,10 @@
-import bcrypt from 'bcryptjs';
 import { prisma } from '../../config/db.js';
-import { isTest } from '../../config/env.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
+import { hashPassword, verifyPassword } from '../../shared/passwords.js';
 import { publicUser } from '../users/users.select.js';
 import { sendInBackground, sendVerificationEmail } from './auth.emails.js';
 import type { LoginInput, RegisterInput } from './auth.schemas.js';
-
-/**
- * bcrypt work factor: each step up doubles the time one hash takes.
- * 12 is slow enough to make guessing expensive; tests use the minimum.
- */
-const HASH_COST = isTest ? 4 : 12;
 
 /**
  * Throws 409 when the email or the mobile number belongs to an account.
@@ -35,7 +28,7 @@ async function assertNotTaken(email: string, mobile: string) {
 export async function registerUser({ password, gender, ...profile }: RegisterInput) {
   await assertNotTaken(profile.email, profile.mobile);
 
-  const passwordHash = await bcrypt.hash(password, HASH_COST);
+  const passwordHash = await hashPassword(password);
 
   try {
     const user = await prisma.user.create({
@@ -63,7 +56,7 @@ export async function registerUser({ password, gender, ...profile }: RegisterInp
  * long as "wrong password" and timing does not reveal which emails exist.
  */
 let decoyHash: Promise<string> | undefined;
-const getDecoyHash = () => (decoyHash ??= bcrypt.hash('no-such-account', HASH_COST));
+const getDecoyHash = () => (decoyHash ??= hashPassword('no-such-account'));
 
 /**
  * Checks an email and password and returns the user they belong to.
@@ -76,7 +69,7 @@ export async function checkCredentials({ email, password }: LoginInput) {
     select: { ...publicUser, passwordHash: true },
   });
 
-  const passwordMatches = await bcrypt.compare(
+  const passwordMatches = await verifyPassword(
     password,
     found?.passwordHash ?? (await getDecoyHash()),
   );

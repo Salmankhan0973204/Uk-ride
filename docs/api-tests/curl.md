@@ -412,3 +412,20 @@ Expect `200`. Only `firstName` and `updatedAt` differ from before.
 | `{"firstName":"S4ra"}`            | `400` with a message under `details.firstName`                          |
 | `{"mobile":"+44 20 7946 0000"}`   | `400`, a landline                                                       |
 | a mobile that another account has | `409` with `details.field` = `mobile`                                   |
+
+### 2.3 Change your password
+
+```powershell
+$body = '{"currentPassword":"secret-pass-1","newPassword":"a-brand-new-pass"}'
+Invoke-RestMethod http://localhost:4000/api/v1/users/me/password -Method Post -Headers $headers -ContentType 'application/json' -Body $body
+```
+
+Expect `200` "Password changed. Other devices have been signed out". The token in `$headers`
+still works; a session on any other device does not.
+
+| Body                                      | Answer                                         |
+| ----------------------------------------- | ---------------------------------------------- |
+| a wrong `currentPassword`                 | `400`, message under `details.currentPassword` |
+| `newPassword` equal to `currentPassword`  | `400`, message under `details.newPassword`     |
+| a `newPassword` shorter than 8 characters | `400`, message under `details.newPassword`     |
+| more than 10 wrong attempts in 15 minutes | `429` with a `Retry-After` header              |

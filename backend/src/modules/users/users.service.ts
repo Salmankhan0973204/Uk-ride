@@ -1,7 +1,9 @@
 import { prisma } from '../../config/db.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
-import type { UpdateProfileInput } from './users.schemas.js';
+import { hashPassword, verifyPassword } from '../../shared/passwords.js';
+import { endAllSessions } from '../auth/auth.sessions.js';
+import type { ChangePasswordInput, UpdateProfileInput } from './users.schemas.js';
 import { profileSelect } from './users.select.js';
 
 /**
@@ -54,4 +56,47 @@ export async function updateProfile(userId: string, changes: UpdateProfileInput)
     if (isPrismaError(err, 'P2025')) throw accountGone();
     throw err;
   }
+}
+
+/**
+ * Changes the password of a signed-in user.
+ *
+ * A valid session is not enough: the current password is asked for again.
+ * That way an unlocked phone or a stolen access token cannot be turned into
+ * permanent control of the account.
+ *
+ * A wrong current password is a 400 on that field, not a 401. The session is
+ * fine; it is the form that is wrong, and a 401 would make the web app try to
+ * refresh the session and sign the person out.
+ *
+ * Afterwards every other session of the user is ended, and the one making
+ * the request is kept: you stay signed in here, and nowhere else.
+ */
+export async function changePassword(
+  userId: string,
+  sessionId: string,
+  { currentPassword, newPassword }: ChangePasswordInput,
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { passwordHash: true },
+  });
+  if (!user) throw accountGone();
+
+  if (!(await verifyPassword(currentPassword, user.passwordHash))) {
+    throw AppError.validation({ currentPassword: ['Current password is incorrect'] });
+  }
+  if (newPassword === currentPassword) {
+    throw AppError.validation({
+      newPassword: ['Choose a password that is different from your current one'],
+    });
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+
+  // Both changes happen, or neither does.
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+    endAllSessions(userId, { sessionId }),
+  ]);
 }

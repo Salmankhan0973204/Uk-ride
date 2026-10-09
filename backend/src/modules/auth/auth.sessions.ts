@@ -10,9 +10,18 @@ import { AppError } from '../../shared/AppError.js';
  * A session is one sign-in on one device. It has an id that never changes.
  * A refresh token is a long random string, not a JWT. The browser keeps it in
  * an httpOnly cookie; the database keeps only its SHA-256 hash. Each token
- * works once: using it revokes it and issues the next one in the same session
- * (rotation). If a revoked token ever comes back, it was copied, so every
+ * works once: using it marks it as used and issues the next one in the same
+ * session (rotation). If a used token ever comes back, it was copied, so every
  * session of that user is ended.
+ *
+ * Two different things can stop a token working, and they are kept apart:
+ *   - used    it was exchanged for a newer one. The row stays, marked with
+ *             `revokedAt`, as the evidence that lets a replay be recognised.
+ *   - ended   the session was signed out, or the password changed. The rows
+ *             are deleted. A browser that still holds such a token is told
+ *             "sign in again" and nothing else happens.
+ * Mixing the two up would let a signed-out phone, simply by retrying, sign
+ * out the laptop that had just changed the password.
  *
  * The access token carries the session id too. A protected request is only
  * accepted while its session is alive, so signing out works at once instead
@@ -39,11 +48,13 @@ export async function createSession(userId: string, sessionId: string = randomUU
   return { sessionId, refreshToken, expiresAt };
 }
 
-/** Signs a user out everywhere. */
-export function revokeAllSessions(userId: string) {
-  return prisma.refreshToken.updateMany({
-    where: { userId, revokedAt: null },
-    data: { revokedAt: new Date() },
+/**
+ * Signs a user out everywhere, or everywhere except one session. Returns the
+ * query without running it, so a caller can put it inside a transaction.
+ */
+export function endAllSessions(userId: string, except?: { sessionId: string }) {
+  return prisma.refreshToken.deleteMany({
+    where: { userId, ...(except ? { NOT: { sessionId: except.sessionId } } : {}) },
   });
 }
 
@@ -59,11 +70,11 @@ export async function rotateSession(refreshToken: string | undefined) {
   });
   if (!stored) throw sessionEnded();
 
-  // A token that was already used or signed out is being presented again.
-  // Either it was stolen or the real owner is replaying it; nobody can tell
-  // which, so all of the user's sessions end.
+  // A token that was already exchanged for a newer one is being presented
+  // again. Either it was stolen or the real owner is replaying it; nobody can
+  // tell which, so all of the user's sessions end.
   if (stored.revokedAt) {
-    await revokeAllSessions(stored.userId);
+    await endAllSessions(stored.userId);
     throw sessionEnded();
   }
 
@@ -91,15 +102,13 @@ export async function endSession(refreshToken: string | undefined) {
   });
   if (!stored) return;
 
-  await prisma.refreshToken.updateMany({
-    where: { sessionId: stored.sessionId, revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
+  // Every token of the session goes, the used ones included.
+  await prisma.refreshToken.deleteMany({ where: { sessionId: stored.sessionId } });
 }
 
 /**
  * Is this session still signed in? True while it has a refresh token that is
- * neither revoked nor expired. Asked on every protected request.
+ * neither used up nor expired. Asked on every protected request.
  */
 export async function isSessionActive(sessionId: string) {
   const live = await prisma.refreshToken.findFirst({
@@ -112,8 +121,7 @@ export async function isSessionActive(sessionId: string) {
 /**
  * Deletes refresh tokens that have expired, and returns how many.
  *
- * A token that was used or signed out but has not expired yet is kept on
- * purpose: if it shows up again, rotateSession() must still be able to
+ * A token that was used but has not expired yet is kept on purpose: if it shows up again, rotateSession() must still be able to
  * recognise it as a replay. Once expired it is useless to everyone.
  */
 export async function deleteExpiredSessions() {

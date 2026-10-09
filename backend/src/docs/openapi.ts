@@ -383,6 +383,36 @@ export const openApiDocument = {
         },
       },
     },
+    '/users/me/password': {
+      post: {
+        tags: ['Users'],
+        summary: 'Change your password',
+        description:
+          'Asks for the current password again, even though you are signed in. On success ' +
+          'every other device is signed out and this one stays signed in. A wrong current ' +
+          'password answers 400 under `details.currentPassword`, not 401.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/ChangePasswordRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Password changed',
+            successEnvelope({ type: 'object', nullable: true }),
+          ),
+          400: jsonResponse(
+            'The current password is wrong, or the new one breaks the rules or equals the old one',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -486,6 +516,15 @@ export const openApiDocument = {
             description: 'null until the person opens the confirmation link',
           },
           createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      ChangePasswordRequest: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['currentPassword', 'newPassword'],
+        properties: {
+          currentPassword: { type: 'string', example: 'secret-pass-1' },
+          newPassword: { type: 'string', minLength: 8, maxLength: 72, example: 'a-brand-new-pass' },
         },
       },
       UpdateProfileRequest: {

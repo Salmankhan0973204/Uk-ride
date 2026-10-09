@@ -85,3 +85,14 @@ export const linkLimiter = rateLimiter({
   limit: 20,
   message: `Too many attempts. ${TRY_LATER}`,
 });
+
+/**
+ * Changing a password asks for the current one. Without a limit, someone at
+ * an unlocked laptop could use that to guess it. Only wrong attempts count.
+ */
+export const passwordLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 10,
+  failuresOnly: true,
+  message: `Too many attempts. ${TRY_LATER}`,
+});

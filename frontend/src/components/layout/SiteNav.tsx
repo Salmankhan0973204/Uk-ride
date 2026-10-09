@@ -10,7 +10,8 @@ export function SiteNav() {
   const { data: user } = useMe();
 
   const link = (href: string, label: string, className = '') => {
-    const active = pathname === href;
+    // A section stays highlighted on its own sub-pages: /account covers /account/edit.
+    const active = pathname === href || pathname.startsWith(`${href}/`);
     return (
       <Link
         href={href}

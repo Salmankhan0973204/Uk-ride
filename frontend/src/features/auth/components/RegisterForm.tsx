@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/Select';
 import { Spinner } from '@/components/ui/Spinner';
 import type { ApiError } from '@/lib/api/client';
 import { checkMobile, formatMobile, normaliseMobile } from '@/lib/phone/mobile';
+import { checkName } from '../validation';
 import { useRegister } from '../hooks/useRegister';
 import { GENDER_OPTIONS } from '../types';
 import type { FieldErrors, Gender, RegisterInput } from '../types';
@@ -31,17 +32,6 @@ const EMPTY: Values = {
   gender: '',
   password: '',
 };
-
-// The same rules as the API, so most mistakes never leave the browser.
-const NAME_PATTERN = /^[\p{L}\p{M}][\p{L}\p{M}' .-]*$/u;
-
-function checkName(value: string, label: string) {
-  const name = value.trim();
-  if (!name) return `Enter your ${label}.`;
-  if (name.length > 50) return `Use at most 50 characters for your ${label}.`;
-  if (!NAME_PATTERN.test(name))
-    return 'Use letters only. Spaces, hyphens and apostrophes are fine.';
-}
 
 function checkField(name: FieldName, values: Values): string | undefined {
   const value = values[name];

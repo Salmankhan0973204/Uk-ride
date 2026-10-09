@@ -11,16 +11,16 @@ and runs on a local machine.
 
 ## Status
 
-**Modules 0 and 1 of 17 are complete.** You can create an account, sign in, stay signed in
-and sign out. Profile management is next. The full tracker is in
-[docs/PROGRESS.md](docs/PROGRESS.md).
+**Modules 0, 1 and 2 of 17 are complete.** You can create an account, sign in, confirm your
+email, reset a forgotten password, edit your profile and change your password. Vehicle types
+are next. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                                        | Status   |
 | --- | --------------------------------------------- | -------- |
 | 0   | Foundation: health check + first screen       | Complete |
 | 1   | Authentication: register, login, current user | Complete |
-| 2   | Profile management                            | Next     |
-| 3   | Vehicle types: admin CRUD + customer catalog  | Planned  |
+| 2   | Profile management                            | Complete |
+| 3   | Vehicle types: admin CRUD + customer catalog  | Next     |
 | 4   | Fleet vehicles                                | Planned  |
 | 5   | Pricing rules + quote engine                  | Planned  |
 | 6   | Booking creation                              | Planned  |
@@ -144,7 +144,8 @@ npm run dev
 
 Open http://localhost:3000/system-status. Stop the API to see the offline state. Start it again
 and the page recovers by itself. Create an account at http://localhost:3000/register, sign in at http://localhost:3000/login,
-and see your details at http://localhost:3000/account.
+and see your profile at http://localhost:3000/account, where you can edit it and change your
+password.
 
 ## Scripts
 

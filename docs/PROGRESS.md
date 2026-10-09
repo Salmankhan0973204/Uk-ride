@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 2 - Profile Management
-- **Last completed:** Module 1 - Authentication
-- **Next step:** 2.4 - Profile page
-- **Steps done:** 17 of 113
+- **Current module:** none in progress
+- **Last completed:** Module 2 - Profile Management
+- **Next step:** 3.1 - `VehicleType` model and seed data
+- **Steps done:** 20 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
-| --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 3/6   | In progress | In progress | -           | -              | -                            | In progress |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
-| 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -           | -           | -              | -                            | -           |
-| 6   | Booking Creation                                   | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 7   | My Bookings: List + Detail                         | 0/5   | -           | -           | -           | -              | -                            | -           |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -           | -           | -              | -                            | -           |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -           | -           | -              | -                            | -           |
-| 11  | Notifications + Email                              | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -           | -           | -              | -                            | -           |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -           | -           | -              | -                            | -           |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -           | -           | -              | -                            | -           |
+| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
+| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -       | -          | -           | -              | -                            | Next     |
+| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
 
 ## Steps
 
@@ -74,9 +74,9 @@ runs.
       _Learn: changing a schema with a migration._
 - [x] 2.2 `PATCH /users/me`. _Learn: partial updates._
 - [x] 2.3 Change password endpoint. _Learn: re-checking the current password._
-- [ ] 2.4 Profile page. _Learn: reading cached data._
-- [ ] 2.5 Edit profile form. _Learn: updating the cache after a mutation._
-- [ ] 2.6 Change password form, design pass.
+- [x] 2.4 Profile page. _Learn: reading cached data._
+- [x] 2.5 Edit profile form. _Learn: updating the cache after a mutation._
+- [x] 2.6 Change password form, design pass.
 
 ### Module 3 - Vehicle Types
 
@@ -997,7 +997,7 @@ Still open, by choice or by the free-tools rule
   (Module 11) are the place for both.
 - Nothing runs the tests automatically yet. Continuous integration is step 17.4.
 
-### Module 2 - Profile Management (in progress)
+### Module 2 - Profile Management (completed 2026-10-09)
 
 #### Step 2.1 - `GET /users/me` (done 2026-10-09)
 
@@ -1132,3 +1132,73 @@ Learning notes
 - One column meaning two things is a bug waiting for the right sequence of events. This one
   needed two devices and a password change to show itself, which is why checking the real
   flow end to end matters.
+
+#### Steps 2.4, 2.5 and 2.6 - Profile page, edit form, change password form (done 2026-10-09)
+
+Built
+
+- `/account` is the profile page. It makes no request of its own: it shows the user already
+  in the `useMe()` cache, and offers Edit profile, Change password and Sign out.
+- `/account/edit`: first name, last name, mobile number and gender, starting from the current
+  values. It sends only the fields that changed, and nothing at all when nothing changed. The
+  email is shown, not editable.
+- `/account/password`: current password and new password, each with Show / Hide.
+- `useUpdateProfile()` writes the user the API returns straight into the `auth.me` cache, so
+  the name in the navigation and the profile page update at once.
+- Shared pieces: `AccountGate` (the guard for every signed-in page), `PasswordInput`, the
+  form checks in `features/auth/validation.ts`.
+
+Verified
+
+- Lint, typecheck and the production build (11 routes) pass. No automated tests were written.
+- Driven in a real browser against the running API and the real database:
+  - signed out, `/account/edit` and `/account/password` redirect to `/login`;
+  - the edit form opened with the current values; a bad name was caught in the browser;
+    another account's mobile and a landline were refused by the API, each on the mobile field;
+  - changing the first name and gender returned to the profile with "Your profile has been
+    updated", and the navigation showed the new name without a reload;
+  - saving with nothing changed went straight back to the profile;
+  - on the password form, empty fields, a new password equal to the current one and a wrong
+    current password each showed the right message; the wrong one cleared the field;
+  - a successful change returned to the profile, the page was still signed in after a reload,
+    the old password then failed to sign in and the new one worked.
+- No horizontal scrolling at 1440px, 390px and 360px.
+
+Design pass (step 2.6)
+
+- A manual pass against `DESIGN.md`: one accent button per page, divider rows, glass controls,
+  the shared dropdown, 44px targets, three widths.
+- Fixed: a one-word last line in the edit page's intro, and the navigation not highlighting
+  the account link on the edit and password pages.
+- `DESIGN.md` gained the success notice, the shared password field and the navigation rule.
+- The independent finish review was not run for these three screens.
+
+Open items
+
+- The email address cannot be changed yet.
+- The older forms (register, sign in, reset password) still carry their own copy of the
+  Show / Hide button. Only the new form uses `PasswordInput`.
+- "Your profile has been updated" stays on screen while `?done=profile` is in the address,
+  so reloading that address shows it again.
+
+Learning notes
+
+- Reading from the cache: a page does not have to fetch what the app already knows. The
+  profile page shows `useMe()`'s data and is instant.
+- After a mutation, either invalidate the query (ask again) or write the answer into the
+  cache (already have it). When the API returns the updated record, writing it is one fewer
+  request and no flash of old data.
+- A form's starting values are read once. If they kept following the cache, saving would
+  overwrite what the person was typing.
+- React forbids changing a ref while rendering. The guard's "I am leaving on purpose" flag
+  became state for that reason.
+
+### Module 2 summary
+
+Built: `GET /users/me`, `PATCH /users/me`, `POST /users/me/password`; the profile page, the
+edit form and the change password form. Along the way a Module 1 flaw was fixed: a signed-out
+device retrying its refresh no longer ends the other sessions.
+
+Checks at completion: typecheck and lint pass for both apps, the frontend builds, and every
+endpoint and screen was checked by hand against the running system. There are no automated
+tests in the local code.

@@ -174,6 +174,12 @@ components:
     typography: "{typography.body-sm}"
     rounded: "{rounded.notice}"
     padding: "12px 16px"
+  notice-success:
+    backgroundColor: "rgb(110 231 183 / 0.12)"
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
+    rounded: "{rounded.notice}"
+    padding: "12px 16px"
   accent-tile:
     backgroundColor: "{colors.accent}"
     textColor: "{colors.ink}"
@@ -324,17 +330,17 @@ Icons are drawn inline as SVG on a 24 unit grid: one stroke in the current text 
 - **Field:** a visible label above (8px gap), then the control, then one line below it: a hint in Muted Ink, replaced by the error when there is one.
 - **Hover / Focus:** the border brightens on hover. On focus the border turns Focus Lavender, the fill brightens to 14% and the 4px Focus Halo appears.
 - **Error:** Rose border and a Rose 4px ring on the control; under it, a small alert icon and the message in Rose, medium weight.
-- **Password:** a "Show" / "Hide" text control sits inside the right end of the input.
+- **Password:** a "Show" / "Hide" text control sits inside the right end of the input. New forms use the shared `PasswordInput` component (`frontend/src/components/ui/PasswordInput.tsx`).
 - **Autofill:** the browser's yellow or blue autofill colour is suppressed so the field stays glass.
 
 ### Dropdown (Select)
 The project's own dropdown, not the browser's list. The trigger looks like an input with a chevron that turns over when open. The list opens 8px below the trigger on the Menu Surface, with 16px corners and 6px of padding. Each option is a 44px row with 12px corners; the highlighted row is Strong Glass, and the chosen row shows a Focus Lavender tick. A "No answer" row in Muted Ink clears an optional field. It is fully keyboard operable (arrows, Home, End, Enter, Space, Escape, type a letter to jump).
 
 ### Navigation
-A floating glass bar, fully rounded, as wide as the content column. Brand mark and name on the left; links on the right. A link is a 44px tall, fully rounded target in Muted Ink at label size; hover gives it a Glass fill and white text, and the current page gets a Strong Glass fill. On screens narrower than 640px the "Status" link is hidden. When signed in, the links collapse to one link named after the person.
+A floating glass bar, fully rounded, as wide as the content column. Brand mark and name on the left; links on the right. A link is a 44px tall, fully rounded target in Muted Ink at label size; hover gives it a Glass fill and white text, and the current page gets a Strong Glass fill. On screens narrower than 640px the "Status" link is hidden. When signed in, the links collapse to one link named after the person. A link stays highlighted on the sub-pages of its section.
 
 ### Notices
-A tinted box inside a panel for a message about the whole form or page: 16px corners, a 1px border in the status colour at 50%, and a fill of the same colour at about 12%. An error notice sets its text in Rose, medium weight, small size. A warning notice keeps white text and may hold one compact ghost button.
+A tinted box inside a panel for a message about the whole form or page: 16px corners, a 1px border in the status colour at 50%, and a fill of the same colour at about 12%. An error notice sets its text in Rose, medium weight, small size. A warning notice keeps white text and may hold one compact ghost button. A success notice (Mint border and tint, white text, medium weight) sits at the top of a panel to confirm something that was just saved.
 
 ### Accent tiles
 A small rounded square filled with the same Accent Indigo to Accent Violet gradient as the primary button, with the Lift shadow. Three uses: the brand mark (28px, 8px corners), the open step number (40px, 12px corners) and the account avatar (56px, 16px corners). A step that is not open is the same size with a Line outline and no fill. A neutral tile (Strong Glass fill, Glass Border, 48px, 16px corners) holds the Mint tick on success screens.

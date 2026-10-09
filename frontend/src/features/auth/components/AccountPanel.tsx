@@ -1,77 +1,47 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { formatMobile } from '@/lib/phone/mobile';
 import { useResendVerification } from '../hooks/useEmailActions';
 import { useLogout } from '../hooks/useLogout';
-import { useMe } from '../hooks/useMe';
 import { GENDER_OPTIONS } from '../types';
+import type { User } from '../types';
+import { AccountGate } from './AccountGate';
 
 const memberSince = (value: string) =>
   new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
+/** What the page says after coming back from one of its forms. */
+const DONE: Record<string, string> = {
+  profile: 'Your profile has been updated.',
+  password: 'Your password has been changed. Other devices have been signed out.',
+};
+
 /**
- * The account page: a protected screen. It shows only for a signed-in user.
- * Anyone else is sent to the sign-in page, and nothing private is drawn while
- * the check is still running.
+ * The profile page. It makes no request of its own: the user is already in
+ * the cache, put there by `useMe()` when the app loaded or by signing in.
+ * Editing the profile updates that same cache, so this page is current the
+ * moment the form sends you back.
  */
 export function AccountPanel() {
+  return <AccountGate>{(user, leave) => <Profile user={user} onSigningOut={leave} />}</AccountGate>;
+}
+
+function Profile({ user, onSigningOut }: { user: User; onSigningOut: () => void }) {
   const router = useRouter();
-  const { data: user, isPending, isError, refetch, isFetching } = useMe();
+  const done = DONE[useSearchParams().get('done') ?? ''];
   const logout = useLogout();
   const resend = useResendVerification();
-  // True from the moment "Sign out" is pressed. Signing out also makes
-  // `user` null, and without this the guard below would send the person to
-  // the sign-in page instead of home.
-  const signingOut = useRef(false);
-
-  // The route guard. `user === null` means the check finished and nobody is signed in.
-  useEffect(() => {
-    if (user === null && !signingOut.current) router.replace('/login');
-  }, [user, router]);
 
   function signOut() {
-    signingOut.current = true;
+    // Signing out empties the user, and the gate would send the person to the
+    // sign-in page. Telling it first lets this page send them home instead.
+    onSigningOut();
     logout.mutate(undefined, { onSettled: () => router.replace('/') });
-  }
-
-  // The API could not be reached, so we do not know. Do not guess "signed out".
-  if (isError) {
-    return (
-      <Card className="mx-auto max-w-xl">
-        <div role="alert" className="space-y-5">
-          <h1 className="text-2xl font-semibold tracking-tight">We could not load your account</h1>
-          <p className="text-base leading-relaxed text-ink-muted">
-            The server did not answer. You are still signed in; this page will work again when the
-            connection is back.
-          </p>
-          <button
-            type="button"
-            onClick={() => refetch()}
-            disabled={isFetching}
-            className="btn btn-primary"
-          >
-            {isFetching ? 'Trying again' : 'Try again'}
-          </button>
-        </div>
-      </Card>
-    );
-  }
-
-  // Still checking, or about to leave for the sign-in page.
-  if (isPending || !user) {
-    return (
-      <Card className="mx-auto max-w-xl">
-        <div role="status" className="flex items-center gap-3">
-          <Spinner />
-          <p className="text-base text-ink-muted">Loading your account</p>
-        </div>
-      </Card>
-    );
   }
 
   const gender = GENDER_OPTIONS.find((option) => option.value === user.gender)?.label;
@@ -85,6 +55,15 @@ export function AccountPanel() {
   return (
     <Card className="rise mx-auto max-w-xl">
       <div className="space-y-7">
+        {done ? (
+          <p
+            role="status"
+            className="rounded-2xl border border-success/50 bg-[rgb(110_231_183/0.12)] px-4 py-3 text-sm leading-relaxed font-medium"
+          >
+            {done}
+          </p>
+        ) : null}
+
         <div className="flex items-center gap-4">
           <span
             aria-hidden="true"
@@ -118,7 +97,7 @@ export function AccountPanel() {
         </dl>
 
         {user.emailVerifiedAt ? null : (
-          <div className="space-y-3 rounded-2xl border border-warning/50 bg-[rgb(252_211_77/0.1)] p-4">
+          <div className="space-y-3 rounded-2xl border border-warning/50 bg-[rgb(252_211_77/0.12)] px-4 py-3">
             <p className="text-sm leading-relaxed">
               Please confirm your email address. We sent a link to{' '}
               <span className="font-medium break-all">{user.email}</span> when you registered.
@@ -154,25 +133,34 @@ export function AccountPanel() {
           </div>
         )}
 
+        {/* One accent button: editing is what this page is for. */}
+        <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-center">
+          <Link href="/account/edit" className="btn btn-primary">
+            Edit profile
+          </Link>
+          <Link href="/account/password" className="btn btn-ghost">
+            Change password
+          </Link>
+          <button
+            type="button"
+            onClick={signOut}
+            disabled={logout.isPending}
+            className="btn btn-ghost sm:ml-auto"
+          >
+            {logout.isPending ? (
+              <>
+                <Spinner />
+                Signing you out
+              </>
+            ) : (
+              'Sign out'
+            )}
+          </button>
+        </div>
+
         <p className="text-sm leading-relaxed text-ink-muted">
           Prices, bookings and trip tracking will appear here as each part of UkRide opens.
         </p>
-
-        <button
-          type="button"
-          onClick={signOut}
-          disabled={logout.isPending}
-          className="btn btn-ghost"
-        >
-          {logout.isPending ? (
-            <>
-              <Spinner />
-              Signing you out
-            </>
-          ) : (
-            'Sign out'
-          )}
-        </button>
       </div>
     </Card>
   );

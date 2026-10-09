@@ -2,11 +2,17 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { AdminGate } from '@/features/auth/components/AdminGate';
-import { useAdminVehicleTypes } from '../hooks/useAdminVehicleTypes';
+import type { ApiError } from '@/lib/api/client';
+import {
+  useAdminVehicleTypes,
+  useDeactivateVehicleType,
+  useUpdateVehicleType,
+} from '../hooks/useAdminVehicleTypes';
 import type { AdminVehicleType } from '../types';
 import { plural } from './VehicleCatalogue';
 
@@ -129,41 +135,193 @@ function Status({ type }: { type: AdminVehicleType }) {
   return type.isActive ? <Badge variant="success">On offer</Badge> : <Badge>Switched off</Badge>;
 }
 
+const COLUMNS = 6;
+const COMPACT = 'btn btn-ghost min-h-11! px-4! py-0! text-sm';
+
+const problem = (error: ApiError, doing: string) =>
+  error.isNetworkError
+    ? `We could not reach the server, so nothing was ${doing}. Try again.`
+    : error.status === 403
+      ? 'Your account is not allowed to change vehicle types.'
+      : `We could not do that. Nothing was ${doing}. Try again in a moment.`;
+
+/**
+ * One vehicle type. Switching it off hides it from customers, so the button
+ * first opens a question under the row, and only the answer does it.
+ * Switching it back on harms nobody, so that happens at once.
+ */
 function Row({ type }: { type: AdminVehicleType }) {
+  const questionId = useId();
+  const [confirming, setConfirming] = useState(false);
+  const off = useDeactivateVehicleType();
+  const on = useUpdateVehicleType();
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const onRef = useRef<HTMLButtonElement>(null);
+
+  // The button that was pressed is replaced by its opposite. Focus follows
+  // it, so a keyboard user is not dropped back at the top of the page.
+  const focusNext = (ref: React.RefObject<HTMLButtonElement | null>) =>
+    requestAnimationFrame(() => ref.current?.focus());
+
+  // Opening the question moves focus into it, so a keyboard or screen reader
+  // user lands on the answer and hears the question it belongs to.
+  useEffect(() => {
+    if (confirming) confirmRef.current?.focus();
+  }, [confirming]);
+
+  function ask() {
+    on.reset();
+    off.reset();
+    setConfirming(true);
+  }
+
+  function cancel() {
+    setConfirming(false);
+    off.reset();
+    // Back to where the person was.
+    focusNext(triggerRef);
+  }
+
+  const failure = off.error ? problem(off.error, 'switched off') : undefined;
+  const onFailure = on.error ? problem(on.error, 'switched on') : undefined;
+
   return (
-    <tr className="align-top">
-      <th scope="row" className="py-4 pr-4 font-normal">
-        <div className="space-y-1">
-          <p className={`font-semibold break-words ${type.isActive ? '' : 'text-ink-muted'}`}>
-            {type.name}
-          </p>
-          <p className="font-mono text-sm break-all text-ink-muted">{type.slug}</p>
-          {/* On narrow screens the columns fold into the first cell. */}
-          <p className="text-sm text-ink-muted md:hidden">
-            {plural(type.passengers, 'passenger')}, {plural(type.suitcases, 'suitcase')}
-          </p>
-          <div className="pt-1 sm:hidden">
-            <Status type={type} />
+    <>
+      <tr className="align-top">
+        <th scope="row" className="py-4 pr-4 font-normal">
+          <div className="space-y-1">
+            <p className={`font-semibold break-words ${type.isActive ? '' : 'text-ink-muted'}`}>
+              {type.name}
+            </p>
+            <p className="font-mono text-sm break-all text-ink-muted">{type.slug}</p>
+            {/* On narrow screens the columns fold into the first cell. */}
+            <p className="text-sm text-ink-muted md:hidden">
+              <span className="whitespace-nowrap">{plural(type.passengers, 'passenger')},</span>{' '}
+              <span className="whitespace-nowrap">{plural(type.suitcases, 'suitcase')}</span>
+            </p>
+            <div className="pt-1 sm:hidden">
+              <Status type={type} />
+            </div>
           </div>
-        </div>
-      </th>
-      <td className="px-4 py-4 text-right max-md:hidden">{type.passengers}</td>
-      <td className="px-4 py-4 text-right max-md:hidden">{type.suitcases}</td>
-      <td className="px-4 py-4 text-right text-ink-muted max-lg:hidden">{type.sortOrder}</td>
-      <td className="px-4 py-4 max-sm:hidden">
-        <Status type={type} />
-      </td>
-      <td className="py-3 pl-4">
-        <div className="flex flex-wrap justify-end gap-2">
-          <Link
-            href={`/admin/vehicle-types/${type.id}/edit`}
-            aria-label={`Edit ${type.name}`}
-            className="btn btn-ghost min-h-11! px-4! py-0! text-sm"
-          >
-            Edit
-          </Link>
-        </div>
-      </td>
-    </tr>
+        </th>
+        <td className="px-4 py-4 text-right max-md:hidden">{type.passengers}</td>
+        <td className="px-4 py-4 text-right max-md:hidden">{type.suitcases}</td>
+        <td className="px-4 py-4 text-right text-ink-muted max-lg:hidden">{type.sortOrder}</td>
+        <td className="px-4 py-4 max-sm:hidden">
+          <Status type={type} />
+        </td>
+        <td className="py-3 pl-4">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Link
+              href={`/admin/vehicle-types/${type.id}/edit`}
+              aria-label={`Edit ${type.name}`}
+              className={COMPACT}
+            >
+              Edit
+            </Link>
+            {type.isActive ? (
+              <button
+                ref={triggerRef}
+                type="button"
+                onClick={ask}
+                aria-expanded={confirming}
+                aria-label={`Switch off ${type.name}`}
+                className={COMPACT}
+              >
+                Switch off
+              </button>
+            ) : (
+              <button
+                type="button"
+                ref={onRef}
+                onClick={() =>
+                  on.mutate(
+                    { id: type.id, changes: { isActive: true } },
+                    { onSuccess: () => focusNext(triggerRef) },
+                  )
+                }
+                disabled={on.isPending}
+                aria-label={`Switch on ${type.name}`}
+                className={COMPACT}
+              >
+                {on.isPending ? (
+                  <>
+                    <Spinner className="h-4 w-4" />
+                    Switching on
+                  </>
+                ) : (
+                  'Switch on'
+                )}
+              </button>
+            )}
+          </div>
+        </td>
+      </tr>
+
+      {confirming && type.isActive ? (
+        <tr>
+          <td colSpan={COLUMNS} className="pb-4">
+            <div
+              role="group"
+              aria-labelledby={questionId}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape' && !off.isPending) cancel();
+              }}
+              className="pop space-y-3 rounded-2xl border border-warning/50 bg-[rgb(252_211_77/0.12)] px-4 py-3"
+            >
+              <p id={questionId} className="text-sm leading-relaxed">
+                <span className="font-semibold">Switch off {type.name}?</span> Customers will no
+                longer see it. You can switch it back on at any time.
+              </p>
+              {failure ? (
+                <p role="alert" className="text-sm font-medium text-danger">
+                  {failure}
+                </p>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  ref={confirmRef}
+                  type="button"
+                  onClick={() =>
+                    off.mutate(type.id, {
+                      onSuccess: () => {
+                        setConfirming(false);
+                        focusNext(onRef);
+                      },
+                    })
+                  }
+                  disabled={off.isPending}
+                  aria-describedby={questionId}
+                  className={COMPACT}
+                >
+                  {off.isPending ? (
+                    <>
+                      <Spinner className="h-4 w-4" />
+                      Switching off
+                    </>
+                  ) : (
+                    'Yes, switch it off'
+                  )}
+                </button>
+                <button type="button" onClick={cancel} disabled={off.isPending} className={COMPACT}>
+                  Keep it on
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      ) : null}
+
+      {onFailure ? (
+        <tr>
+          <td colSpan={COLUMNS} className="pb-4">
+            <p role="alert" className="text-sm font-medium text-danger">
+              {onFailure}
+            </p>
+          </td>
+        </tr>
+      ) : null}
+    </>
   );
 }

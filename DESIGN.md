@@ -331,16 +331,21 @@ Icons are drawn inline as SVG on a 24 unit grid: one stroke in the current text 
 - **Hover / Focus:** the border brightens on hover. On focus the border turns Focus Lavender, the fill brightens to 14% and the 4px Focus Halo appears.
 - **Error:** Rose border and a Rose 4px ring on the control; under it, a small alert icon and the message in Rose, medium weight.
 - **Password:** a "Show" / "Hide" text control sits inside the right end of the input. New forms use the shared `PasswordInput` component (`frontend/src/components/ui/PasswordInput.tsx`).
+- **Text area:** the same look, three lines tall to start, 12px of padding above and below, resizable downwards only.
+- **Numbers:** a text input with a numeric keyboard, not the browser's number spinner.
 - **Autofill:** the browser's yellow or blue autofill colour is suppressed so the field stays glass.
 
 ### Dropdown (Select)
 The project's own dropdown, not the browser's list. The trigger looks like an input with a chevron that turns over when open. The list opens 8px below the trigger on the Menu Surface, with 16px corners and 6px of padding. Each option is a 44px row with 12px corners; the highlighted row is Strong Glass, and the chosen row shows a Focus Lavender tick. A "No answer" row in Muted Ink clears an optional field. It is fully keyboard operable (arrows, Home, End, Enter, Space, Escape, type a letter to jump).
 
 ### Navigation
-A floating glass bar, fully rounded, as wide as the content column. Brand mark and name on the left; links on the right. A link is a 44px tall, fully rounded target in Muted Ink at label size; hover gives it a Glass fill and white text, and the current page gets a Strong Glass fill. On screens narrower than 640px the "Status" link is hidden. When signed in, the links collapse to one link named after the person. A link stays highlighted on the sub-pages of its section.
+A floating glass bar, fully rounded, as wide as the content column. Brand mark and name on the left; links on the right. A link is a 44px tall, fully rounded target in Muted Ink at label size; hover gives it a Glass fill and white text, and the current page gets a Strong Glass fill. On screens narrower than 640px the "Vehicles" link is hidden, and "Status" below 768px; the home page links to both. When signed in, the links collapse to one link named after the person. A link stays highlighted on the sub-pages of its section.
 
 ### Notices
-A tinted box inside a panel for a message about the whole form or page: 16px corners, a 1px border in the status colour at 50%, and a fill of the same colour at about 12%. An error notice sets its text in Rose, medium weight, small size. A warning notice keeps white text and may hold one compact ghost button. A success notice (Mint border and tint, white text, medium weight) sits at the top of a panel to confirm something that was just saved.
+A tinted box inside a panel for a message about the whole form or page: 16px corners, a 1px border in the status colour at 50%, and a fill of the same colour at about 12%. An error notice sets its text in Rose, medium weight, small size. A warning notice keeps white text and may hold one compact ghost button. A confirmation is a warning notice that asks a question in its first, semibold sentence and holds two compact ghost buttons: the answer that does it ("Yes, switch it off") and the one that does not ("Keep it on"). It opens under the row it is about, takes focus, and closes on Escape. A success notice (Mint border and tint, white text, medium weight) sits at the top of a panel to confirm something that was just saved.
+
+### Tables
+For staff screens, where rows are compared. A real `table` inside a panel: a header row in Muted Ink at label size between two 1px lines, then rows split by 1px lines. Numbers are right-aligned with tabular figures. The first cell holds the name in semibold with its slug below in Geist Mono and Muted Ink; a row that is switched off sets its name in Muted Ink. The last cell holds compact ghost buttons, right-aligned. Status is a pill. As the screen narrows, columns are hidden and their values fold into the first cell (position below 1024px, counts below 768px, status below 640px), so the page never scrolls sideways.
 
 ### Accent tiles
 A small rounded square filled with the same Accent Indigo to Accent Violet gradient as the primary button, with the Lift shadow. Three uses: the brand mark (28px, 8px corners), the open step number (40px, 12px corners) and the account avatar (56px, 16px corners). A step that is not open is the same size with a Line outline and no fill. A neutral tile (Strong Glass fill, Glass Border, 48px, 16px corners) holds the Mint tick on success screens.

@@ -11,17 +11,18 @@ and runs on a local machine.
 
 ## Status
 
-**Modules 0, 1 and 2 of 17 are complete.** You can create an account, sign in, confirm your
-email, reset a forgotten password, edit your profile and change your password. Vehicle types
-are next. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
+**Modules 0 to 3 of 17 are complete.** You can create an account, sign in, confirm your
+email, reset a forgotten password, edit your profile, change your password and browse the
+vehicle types. An admin can add, edit and switch off vehicle types. Fleet vehicles are next.
+The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                                        | Status   |
 | --- | --------------------------------------------- | -------- |
 | 0   | Foundation: health check + first screen       | Complete |
 | 1   | Authentication: register, login, current user | Complete |
 | 2   | Profile management                            | Complete |
-| 3   | Vehicle types: admin CRUD + customer catalog  | Next     |
-| 4   | Fleet vehicles                                | Planned  |
+| 3   | Vehicle types: admin CRUD + customer catalog  | Complete |
+| 4   | Fleet vehicles                                | Next     |
 | 5   | Pricing rules + quote engine                  | Planned  |
 | 6   | Booking creation                              | Planned  |
 | 7   | My bookings: list + detail                    | Planned  |
@@ -146,7 +147,9 @@ npm run dev
 Open http://localhost:3000/system-status. Stop the API to see the offline state. Start it again
 and the page recovers by itself. Create an account at http://localhost:3000/register, sign in at http://localhost:3000/login,
 and see your profile at http://localhost:3000/account, where you can edit it and change your
-password.
+password. The vehicle types are at http://localhost:3000/vehicles. To manage them, make your
+account an admin with `npm run db:set-role -w backend -- you@example.com ADMIN`, sign in again
+and open http://localhost:3000/admin/vehicle-types.
 
 ## Scripts
 

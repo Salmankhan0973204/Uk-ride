@@ -52,3 +52,12 @@ export function useUpdateVehicleType() {
     onSuccess: refresh,
   });
 }
+
+/** Switches a vehicle type off. It leaves the public catalogue and stays in the table. */
+export function useDeactivateVehicleType() {
+  const refresh = useRefreshVehicleTypes();
+  return useMutation<One, ApiError, string>({
+    mutationFn: vehicleTypesApi.deactivate,
+    onSuccess: refresh,
+  });
+}

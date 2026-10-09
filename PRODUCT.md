@@ -48,8 +48,9 @@ Screens never ask a customer to compare or choose between operators.
 
 - Built so far: the app shell and the `/system-status` screen (Module 0); the `/register`,
   `/login`, `/verify-email`, `/forgot-password` and `/reset-password` screens (Module 1); the
-  `/account` profile page with `/account/edit` and `/account/password` (Module 2).
-- Planned, in order: vehicle types, fleet, pricing and quotes,
+  `/account` profile page with `/account/edit` and `/account/password` (Module 2); the public
+  `/vehicles` catalogue and the admin screens under `/admin/vehicle-types` (Module 3).
+- Planned, in order: fleet, pricing and quotes,
   bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
   real-time status and driver location, document uploads, reviews, admin reporting.
 - Prices, payment state and booking status always come from the server.
@@ -59,7 +60,8 @@ Screens never ask a customer to compare or choose between operators.
 
 ## Evidence on Hand
 
-Nothing real exists yet: no logo, photographs, prices, fleet data, reviews or customers.
+Nothing real exists yet: no logo, photographs, prices, fleet data, reviews or customers. The
+five seeded vehicle types are placeholder classes, not a real fleet.
 Future work must use clearly marked placeholders and must not invent testimonials, customer
 names, ratings, fares, licence numbers or coverage claims.
 

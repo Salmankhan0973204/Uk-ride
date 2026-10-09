@@ -21,4 +21,7 @@ export const vehicleTypesApi = {
       method: 'PATCH',
       body: JSON.stringify(changes),
     }),
+
+  /** A soft delete: the type is switched off, not removed. */
+  deactivate: (id: string) => authFetch<One>(`/admin/vehicle-types/${id}`, { method: 'DELETE' }),
 };

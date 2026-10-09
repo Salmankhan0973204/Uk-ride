@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 3 - Vehicle Types
-- **Last completed:** Module 2 - Profile Management
-- **Next step:** 3.7 - Deactivate with confirmation, design pass
-- **Steps done:** 26 of 113
+- **Current module:** none in progress
+- **Last completed:** Module 3 - Vehicle Types
+- **Next step:** 4.1 - `Vehicle` model linked to `VehicleType`
+- **Steps done:** 27 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 6/7   | Done    | Done       | In progress | In progress    | -                            | In progress |
-| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -           |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -           |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -           |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -           |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
+| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | Next     |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
 
 ## Steps
 
@@ -86,7 +86,7 @@ runs.
 - [x] 3.4 Admin create, update and deactivate endpoints. _Learn: CRUD, soft delete._
 - [x] 3.5 Customer catalogue page. _Learn: list queries._
 - [x] 3.6 Admin table with create and edit form. _Learn: query invalidation._
-- [ ] 3.7 Deactivate with confirmation, design pass.
+- [x] 3.7 Deactivate with confirmation, design pass.
 
 ### Module 4 - Fleet Vehicles
 
@@ -1203,7 +1203,7 @@ Checks at completion: typecheck and lint pass for both apps, the frontend builds
 endpoint and screen was checked by hand against the running system. There are no automated
 tests in the local code.
 
-### Module 3 - Vehicle Types (in progress)
+### Module 3 - Vehicle Types (completed 2026-10-09)
 
 #### Step 3.1 - `VehicleType` model and seed data (done 2026-10-09)
 
@@ -1405,3 +1405,77 @@ Learning notes
   refuses `"4"`.
 - One form component serves both adding and editing: with a record it starts filled and
   sends a PATCH of the differences, without one it starts empty and sends a POST.
+
+#### Step 3.7 - Deactivate with confirmation, design pass (done 2026-10-09)
+
+Built
+
+- "Switch off" on each row of the admin table. It opens a question under the row: "Switch
+  off Executive? Customers will no longer see it. You can switch it back on at any time."
+  "Yes, switch it off" sends `DELETE /admin/vehicle-types/:id`; "Keep it on" or Escape closes
+  the question and nothing is sent.
+- "Switch on" on a row that is switched off. It sends `PATCH` with `isActive: true` and asks
+  nothing first, because it harms nobody.
+- Keyboard focus moves into the question when it opens, back to the button on cancel, and to
+  the opposite button after the change.
+- `useDeactivateVehicleType()`, which invalidates the same lists as the other two mutations.
+
+Verified
+
+- Lint, typecheck and the production build (16 routes) pass. No automated tests were written.
+- In a real browser against the running API:
+  - opening the question changed nothing: the type was still in the public list;
+  - "Keep it on" and Escape each closed it and returned focus to "Switch off";
+  - "Yes, switch it off" changed the row's status to "Switched off", removed the type from
+    `GET /vehicle-types` and from the `/vehicles` page without reloading the app, and left
+    focus on "Switch on";
+  - "Switch on" brought it back, and the question did not reappear.
+- No horizontal scrolling at 1440px, 390px and 360px, with the question open.
+
+Design pass
+
+- A manual pass over `/vehicles`, the admin table and the form against `DESIGN.md`: one
+  accent button per page, divider rows, no glass inside glass, 44px targets, status as words.
+  The Impeccable scanner reported nothing on the new files.
+- Fixed: the text area's padding (the shared `.control` rule overrode the utility class), a
+  long closing note on the catalogue, and the row summary on a phone breaking mid-phrase.
+- The confirmation reuses the warning notice with two compact glass buttons, so the page
+  keeps its single accent button.
+- `DESIGN.md` gained the table, the confirmation notice, the text area and the navigation
+  change.
+- The independent finish review was not run for these screens.
+
+Learning notes
+
+- Confirm before an action whose effect other people will see. Do not confirm an action
+  that is harmless: a question on every click teaches people to stop reading questions.
+- The confirm button says what it does ("Yes, switch it off"), not "OK".
+- A confirmation that opens in place needs its focus managed by hand: into it on open, back
+  out on close. A screen reader user is otherwise left where the button used to be.
+- All three mutations share one `invalidateQueries` call. Because the public and admin lists
+  sit under the same key, the customer's page is corrected by an admin's action in the same
+  browser with no extra code.
+
+### Module 3 summary
+
+Built: the `VehicleType` model with seed data; public `GET /vehicle-types` and
+`GET /vehicle-types/:slug`; user roles, `requireRole` and `db:set-role`; admin list, create,
+update and switch-off endpoints; the `/vehicles` catalogue; the admin table, form and
+confirmation.
+
+Checks at completion: typecheck and lint pass for both apps, the frontend builds, and every
+endpoint and screen was checked by hand against the running system. There are no automated
+tests in the local code.
+
+Open items
+
+- No detail page for one vehicle type. `GET /vehicle-types/:slug` exists and nothing in the
+  web app uses it yet.
+- No screen for giving someone a role. It is done with `npm run db:set-role`.
+- A vehicle type can never be deleted, only switched off. That is on purpose, and it means a
+  type created by mistake stays in the admin table.
+- The admin area has one screen and no navigation of its own. The way in is the link on an
+  admin's account page.
+- The web app's `User` type and the API now include `role`; the tests on GitHub do not know
+  about it, nor about any Module 3 endpoint.
+- The seeded vehicle types are placeholders, not a real fleet. There are no photographs.

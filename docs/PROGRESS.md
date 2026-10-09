@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 2 - Profile Management
 - **Last completed:** Module 1 - Authentication
-- **Next step:** 2.2 - `PATCH /users/me`
-- **Steps done:** 15 of 113
+- **Next step:** 2.3 - Change password endpoint
+- **Steps done:** 16 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -16,7 +16,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 1/6   | In progress | In progress | -           | -              | -                            | In progress |
+| 2   | Profile Management                                 | 2/6   | In progress | In progress | -           | -              | -                            | In progress |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
 | 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -           | -           | -              | -                            | -           |
@@ -72,7 +72,7 @@ runs.
 - [x] 2.1 Return the profile from `GET /users/me`. (Name and mobile were added to `User` early,
       with registration, on 2026-10-07.)
       _Learn: changing a schema with a migration._
-- [ ] 2.2 `PATCH /users/me`. _Learn: partial updates._
+- [x] 2.2 `PATCH /users/me`. _Learn: partial updates._
 - [ ] 2.3 Change password endpoint. _Learn: re-checking the current password._
 - [ ] 2.4 Profile page. _Learn: reading cached data._
 - [ ] 2.5 Edit profile form. _Learn: updating the cache after a mutation._
@@ -1032,3 +1032,46 @@ Learning notes
 - "me" in the address means the id comes from the token, never from the request. Nobody can
   ask for someone else's profile by changing a number in the URL.
 - One list of safe columns, shared by every query, is how the password hash stays private.
+
+#### Step 2.2 - `PATCH /users/me` (done 2026-10-09)
+
+Built
+
+- `PATCH /api/v1/users/me` changes `firstName`, `lastName`, `mobile` and `gender`. Send only
+  the fields to change; the rest are left alone. `gender: null` clears it.
+- The rules for each field are the ones from registration, imported from `auth.schemas.ts`,
+  not copied.
+- Any other field is refused with 400, so a request cannot change `email` or reach
+  `passwordHash`. An empty body is 400 "Nothing to update".
+- A mobile number that belongs to another account answers 409 with `details.field: "mobile"`.
+- The `validate` middleware now puts a whole-body problem in the error message, since it has
+  no field to sit under.
+
+Verified
+
+- Typecheck and lint pass. Checked by hand against the running API and the real database:
+  - changing the first name changed only that field and `updatedAt`;
+  - `null` cleared gender; two fields at once worked, with the mobile typed loosely
+    (`0044 (7400) 999-804`) stored as `+447400999804`;
+  - an empty body, no body, `email` and `passwordHash` each returned 400 with a clear message;
+  - a bad name, a landline and an unknown gender returned 400 under the right field;
+  - another account's mobile returned 409; sending your own current mobile returned 200;
+  - no token returned 401; the email in the database was unchanged throughout.
+
+Open items
+
+- The email address cannot be changed. Doing that safely means confirming the new address
+  before switching, which is its own piece of work.
+- Changing the mobile number does not prove the new one is yours (no SMS).
+
+Learning notes
+
+- PUT replaces a whole resource; PATCH changes part of it. A profile form that edits a few
+  fields is a PATCH.
+- "Not sent" and `null` are different. Not sent means leave it; `null` means clear it. The
+  schema uses `.optional()` for the first and `.nullable()` for the second.
+- By default a schema silently drops fields it does not know. A strict schema refuses them.
+  For an update endpoint, refusing is safer and tells the client the truth.
+- Never build an update from the raw request body. Validate first, then pass only what the
+  schema allowed. That one habit prevents "mass assignment", where a client sets a column it
+  was never meant to touch.

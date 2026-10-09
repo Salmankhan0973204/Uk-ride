@@ -1,0 +1,31 @@
+meta {
+  name: Update Profile
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{baseUrl}}/users/me
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "firstName": "Sarah"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.user.firstName: eq Sarah
+}
+
+docs {
+  Send only the fields to change. Try "gender": null to clear it,
+  an empty body {} for 400, or "email" for 400 (it cannot be changed here).
+}

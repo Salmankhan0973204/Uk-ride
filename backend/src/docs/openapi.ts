@@ -349,6 +349,39 @@ export const openApiDocument = {
           500: { $ref: '#/components/responses/Error' },
         },
       },
+      patch: {
+        tags: ['Users'],
+        summary: 'Change your profile',
+        description:
+          'A partial update: send only the fields to change. `gender: null` clears it. ' +
+          'The email cannot be changed here, and any field not listed is refused.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UpdateProfileRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Profile updated',
+            successEnvelope({
+              type: 'object',
+              required: ['user'],
+              properties: { user: { $ref: '#/components/schemas/Profile' } },
+            }),
+          ),
+          400: jsonResponse(
+            'A field breaks its rule, an unknown field was sent, or the body is empty',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          409: jsonResponse('The mobile number belongs to another account', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
     },
   },
   components: {
@@ -453,6 +486,21 @@ export const openApiDocument = {
             description: 'null until the person opens the confirmation link',
           },
           createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      UpdateProfileRequest: {
+        type: 'object',
+        additionalProperties: false,
+        minProperties: 1,
+        properties: {
+          firstName: { type: 'string', minLength: 1, maxLength: 50, example: 'Sara' },
+          lastName: { type: 'string', minLength: 1, maxLength: 50, example: 'Khan' },
+          mobile: { type: 'string', example: '+44 7400 123456' },
+          gender: {
+            allOf: [{ $ref: '#/components/schemas/Gender' }],
+            nullable: true,
+            description: 'null clears it',
+          },
         },
       },
       Profile: {

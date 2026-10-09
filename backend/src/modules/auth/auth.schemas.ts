@@ -8,7 +8,7 @@ export const GENDERS = ['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'] as const
 // An empty value passes here so it gets one message, "is required", not two.
 const NAME_PATTERN = /^([\p{L}\p{M}][\p{L}\p{M}' .-]*)?$/u;
 
-function name(label: string) {
+export function name(label: string) {
   return z
     .string(`${label} is required`)
     .trim()
@@ -32,7 +32,7 @@ const MOBILE_TYPES = new Set(['MOBILE', 'FIXED_LINE_OR_MOBILE', 'PERSONAL_NUMBER
  * than a landline. That proves the number could exist. Only sending a code
  * to it could prove that it does, and that this person holds it.
  */
-const mobile = z.string('Mobile number is required').transform((value, ctx) => {
+export const mobile = z.string('Mobile number is required').transform((value, ctx) => {
   const fail = (message: string) => {
     ctx.issues.push({ code: 'custom', message, input: value });
     return z.NEVER;
@@ -57,7 +57,7 @@ const mobile = z.string('Mobile number is required').transform((value, ctx) => {
 
 // bcrypt ignores everything after 72 bytes, so longer passwords are refused
 // instead of being silently shortened. Used wherever a password is chosen.
-const newPassword = z
+export const newPassword = z
   .string('Password is required')
   .min(8, 'Password must be at least 8 characters')
   .max(72, 'Password must be at most 72 characters');

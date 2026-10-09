@@ -393,3 +393,22 @@ Invoke-RestMethod http://localhost:4000/api/v1/users/me -Headers $headers | Conv
 
 Expect `200` with your details, `updatedAt`, and no password hash. Without the header:
 `401` "Sign in to continue".
+
+### 2.2 Change your profile
+
+Send only what you want to change:
+
+```powershell
+Invoke-RestMethod http://localhost:4000/api/v1/users/me -Method Patch -Headers $headers -ContentType 'application/json' -Body '{"firstName":"Sarah"}' | ConvertTo-Json -Depth 5
+```
+
+Expect `200`. Only `firstName` and `updatedAt` differ from before.
+
+| Body                              | Answer                                                                  |
+| --------------------------------- | ----------------------------------------------------------------------- |
+| `{"gender":null}`                 | `200`, gender cleared                                                   |
+| `{}`                              | `400` "Nothing to update"                                               |
+| `{"email":"new@example.com"}`     | `400` "Only firstName, lastName, mobile and gender can be changed here" |
+| `{"firstName":"S4ra"}`            | `400` with a message under `details.firstName`                          |
+| `{"mobile":"+44 20 7946 0000"}`   | `400`, a landline                                                       |
+| a mobile that another account has | `409` with `details.field` = `mobile`                                   |

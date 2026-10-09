@@ -125,6 +125,7 @@ Start PostgreSQL, create the tables from the migrations, and generate the Prisma
 npm run docker:up
 npm run db:migrate -w backend
 npm run db:generate -w backend
+npm run db:seed -w backend
 ```
 
 Run `db:generate` again after every `npm install` on a fresh clone, and after every change to
@@ -173,6 +174,7 @@ Database commands belong to the backend workspace.
 | `npm run db:migrate -w backend -- --name <why>` | Create a migration after a schema change, apply it |
 | `npm run db:generate -w backend`                | Regenerate the typed Prisma client                 |
 | `npm run db:studio -w backend`                  | Browse the data in Prisma Studio                   |
+| `npm run db:seed -w backend`                    | Add the starting vehicle types (safe to repeat)    |
 | `npm run db:cleanup -w backend`                 | Delete expired refresh tokens now                  |
 
 ## Environment variables

@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** none in progress
+- **Current module:** Module 3 - Vehicle Types
 - **Last completed:** Module 2 - Profile Management
-- **Next step:** 3.1 - `VehicleType` model and seed data
-- **Steps done:** 20 of 113
+- **Next step:** 3.2 - Public list and detail endpoints
+- **Steps done:** 21 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -17,7 +17,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
 | 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -       | -          | -           | -              | -                            | Next     |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 1/7   | In progress | -       | -           | -              | -                            | In progress |
 | 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -        |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -        |
 | 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
@@ -80,7 +80,7 @@ runs.
 
 ### Module 3 - Vehicle Types
 
-- [ ] 3.1 `VehicleType` model and seed data. _Learn: database seeding._
+- [x] 3.1 `VehicleType` model and seed data. _Learn: database seeding._
 - [ ] 3.2 Public list and detail endpoints. _Learn: public read endpoints._
 - [ ] 3.3 User roles and an admin-only guard. _Learn: role-based access._
 - [ ] 3.4 Admin create, update and deactivate endpoints. _Learn: CRUD, soft delete._
@@ -1202,3 +1202,34 @@ device retrying its refresh no longer ends the other sessions.
 Checks at completion: typecheck and lint pass for both apps, the frontend builds, and every
 endpoint and screen was checked by hand against the running system. There are no automated
 tests in the local code.
+
+### Module 3 - Vehicle Types (in progress)
+
+#### Step 3.1 - `VehicleType` model and seed data (done 2026-10-09)
+
+Built
+
+- `VehicleType` in `backend/prisma/schema.prisma` (table `vehicle_types`): `slug` (unique),
+  `name`, `description`, `passengers`, `suitcases`, `sortOrder`, `isActive`, timestamps.
+  Migration `add_vehicle_types`.
+- `backend/src/db/seed.ts`, run with `npm run db:seed -w backend` (also wired to
+  `prisma db seed` in `prisma.config.ts`). It adds five placeholder classes: Saloon, Estate,
+  Executive, People carrier, Minibus.
+- No prices on a vehicle type. Fares belong to the pricing rules of Module 5.
+
+Verified
+
+- The migration applied; typecheck and lint pass.
+- The seed created 5 rows on the first run and 0 on the second, and the rows were read back
+  from PostgreSQL in list order.
+
+Learning notes
+
+- Seed data is the data an app needs before anyone has used it. It lives in code, so every
+  developer and every fresh database gets the same starting point.
+- A seed must be safe to run twice. This one matches rows on `slug` and only creates the
+  missing ones, so it never overwrites what an admin changed later.
+- A slug is a stable, readable key (`executive`). The id stays the real key; the slug is for
+  addresses and for code that needs to name one row.
+- `isActive` is a soft delete: a type is switched off, not removed, because old bookings will
+  still point at it.

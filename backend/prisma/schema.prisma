@@ -84,3 +84,24 @@ model EmailToken {
   @@index([userId])
   @@map("email_tokens")
 }
+
+// A class of car a customer can book, for example Saloon or Executive.
+// It describes the class, not one car: the cars themselves come in Module 4.
+model VehicleType {
+  id          String   @id @default(uuid())
+  // Short, stable name for addresses and code, for example "executive".
+  slug        String   @unique
+  name        String
+  description String
+  // How many passengers and suitcases fit. Bookings will check against these.
+  passengers  Int
+  suitcases   Int
+  // Lower numbers are listed first.
+  sortOrder   Int      @default(0) @map("sort_order")
+  // Switched off instead of deleted, so old bookings keep their vehicle type.
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("vehicle_types")
+}

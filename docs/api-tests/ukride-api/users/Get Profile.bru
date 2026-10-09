@@ -1,0 +1,26 @@
+meta {
+  name: Get Profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/users/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.user.email: isString
+  res.body.data.user.updatedAt: isString
+  res.body.data.user.passwordHash: isUndefined
+}
+
+docs {
+  Run Login first and copy data.accessToken into the accessToken variable.
+}

@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** none in progress
+- **Current module:** Module 2 - Profile Management
 - **Last completed:** Module 1 - Authentication
-- **Next step:** 2.1 - Return the profile from `GET /users/me`
-- **Steps done:** 14 of 113
+- **Next step:** 2.2 - `PATCH /users/me`
+- **Steps done:** 15 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 2   | Profile Management                                 | 0/6   | -       | -          | -           | -              | -                            | Next     |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| #   | Module                                             | Steps | Backend     | API Tested  | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
+| --- | -------------------------------------------------- | ----- | ----------- | ----------- | ----------- | -------------- | ---------------------------- | ----------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done        | Done        | Done           | Done (manual pass)           | Complete    |
+| 2   | Profile Management                                 | 1/6   | In progress | In progress | -           | -              | -                            | In progress |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 0/7   | -           | -           | -           | -              | -                            | -           |
+| 4   | Fleet Vehicles                                     | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -           | -           | -              | -                            | -           |
+| 6   | Booking Creation                                   | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 7   | My Bookings: List + Detail                         | 0/5   | -           | -           | -           | -              | -                            | -           |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -           | -           | -              | -                            | -           |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -           | -           | -              | -                            | -           |
+| 11  | Notifications + Email                              | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -           | -           | -              | -                            | -           |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -           | -           | -              | -                            | -           |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -           | -           | -              | -                            | -           |
 
 ## Steps
 
@@ -69,7 +69,7 @@ runs.
 
 ### Module 2 - Profile Management
 
-- [ ] 2.1 Return the profile from `GET /users/me`. (Name and mobile were added to `User` early,
+- [x] 2.1 Return the profile from `GET /users/me`. (Name and mobile were added to `User` early,
       with registration, on 2026-10-07.)
       _Learn: changing a schema with a migration._
 - [ ] 2.2 `PATCH /users/me`. _Learn: partial updates._
@@ -996,3 +996,39 @@ Still open, by choice or by the free-tools rule
 - Rate-limit counts and the clean-up timer live in the API process. Redis and the queue
   (Module 11) are the place for both.
 - Nothing runs the tests automatically yet. Continuous integration is step 17.4.
+
+### Module 2 - Profile Management (in progress)
+
+#### Step 2.1 - `GET /users/me` (done 2026-10-09)
+
+Built
+
+- A `users` module in `backend/src/modules/users/`, laid out like `auth`: routes, controller,
+  service.
+- `GET /api/v1/users/me` returns the signed-in user's profile: the same safe fields as sign-in,
+  plus `updatedAt`. Every route under `/users` requires a signed-in user.
+- `users.select.ts` holds the two lists of columns that may leave the server. The auth module
+  now imports its list from there instead of keeping a copy.
+
+Verified
+
+- Typecheck and lint pass. No automated tests were written: the local test files were removed
+  on 2026-10-09, so steps are checked by hand against the running API.
+- Against the running API and the real database: a valid token returned 200 with the profile,
+  `Cache-Control: no-store`, and no password hash; no token and a bad token returned 401;
+  `GET /auth/me` still works.
+
+Open items
+
+- The test on GitHub that lists every API path does not know about `/users/me`, so it no
+  longer matches the code. Nothing runs it.
+- The API's watch mode did not reload after these files changed and had to be restarted by
+  hand. If an endpoint answers 404 right after you add it, restart `npm run dev:api`.
+
+Learning notes
+
+- `/auth/me` answers "who is signed in". `/users/me` is the profile as a thing you can read
+  and change. Same data today, different jobs.
+- "me" in the address means the id comes from the token, never from the request. Nobody can
+  ask for someone else's profile by changing a number in the URL.
+- One list of safe columns, shared by every query, is how the password hash stays private.

@@ -375,3 +375,21 @@ Read the mailbox from the command line:
 ```powershell
 (Invoke-RestMethod http://localhost:8025/api/v1/messages).messages | Select-Object Subject, Created
 ```
+
+## Module 2 - Profile
+
+Sign in first (step 1.3), which leaves the answer in `$login`. Every request below sends the
+access token:
+
+```powershell
+$headers = @{ Authorization = "Bearer $($login.data.accessToken)" }
+```
+
+### 2.1 Read your profile
+
+```powershell
+Invoke-RestMethod http://localhost:4000/api/v1/users/me -Headers $headers | ConvertTo-Json -Depth 5
+```
+
+Expect `200` with your details, `updatedAt`, and no password hash. Without the header:
+`401` "Sign in to continue".

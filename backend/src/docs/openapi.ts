@@ -48,6 +48,7 @@ export const openApiDocument = {
   tags: [
     { name: 'Health', description: 'Service status checks' },
     { name: 'Auth', description: 'Accounts and sign-in' },
+    { name: 'Users', description: 'Your own profile' },
   ],
   paths: {
     '/health': {
@@ -327,6 +328,28 @@ export const openApiDocument = {
         },
       },
     },
+    '/users/me': {
+      get: {
+        tags: ['Users'],
+        summary: 'Your profile',
+        description:
+          'The profile of the signed-in user. There is no user id in the address: "me" is ' +
+          'whoever the access token names.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'Your profile',
+            successEnvelope({
+              type: 'object',
+              required: ['user'],
+              properties: { user: { $ref: '#/components/schemas/Profile' } },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -431,6 +454,22 @@ export const openApiDocument = {
           },
           createdAt: { type: 'string', format: 'date-time' },
         },
+      },
+      Profile: {
+        allOf: [
+          { $ref: '#/components/schemas/User' },
+          {
+            type: 'object',
+            required: ['updatedAt'],
+            properties: {
+              updatedAt: {
+                type: 'string',
+                format: 'date-time',
+                description: 'When the profile was last changed',
+              },
+            },
+          },
+        ],
       },
       HealthInfo: {
         type: 'object',

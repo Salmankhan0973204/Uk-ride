@@ -3,6 +3,7 @@ import { prisma } from '../../config/db.js';
 import { isTest } from '../../config/env.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
+import { publicUser } from '../users/users.select.js';
 import { sendInBackground, sendVerificationEmail } from './auth.emails.js';
 import type { LoginInput, RegisterInput } from './auth.schemas.js';
 
@@ -11,18 +12,6 @@ import type { LoginInput, RegisterInput } from './auth.schemas.js';
  * 12 is slow enough to make guessing expensive; tests use the minimum.
  */
 const HASH_COST = isTest ? 4 : 12;
-
-/** The user fields that are safe to send to a client. Never the hash. */
-const publicUser = {
-  id: true,
-  email: true,
-  firstName: true,
-  lastName: true,
-  mobile: true,
-  gender: true,
-  emailVerifiedAt: true,
-  createdAt: true,
-} satisfies Prisma.UserSelect;
 
 /**
  * Throws 409 when the email or the mobile number belongs to an account.

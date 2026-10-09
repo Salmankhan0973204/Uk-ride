@@ -12,3 +12,12 @@ export const publicVehicleType = {
   passengers: true,
   suitcases: true,
 } satisfies Prisma.VehicleTypeSelect;
+
+/** What an admin sees: the same, plus what is needed to manage the catalogue. */
+export const adminVehicleType = {
+  ...publicVehicleType,
+  sortOrder: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.VehicleTypeSelect;

@@ -1,6 +1,6 @@
 import { prisma } from '../../config/db.js';
 import { AppError } from '../../shared/AppError.js';
-import { publicVehicleType } from './vehicle-types.select.js';
+import { adminVehicleType, publicVehicleType } from './vehicle-types.select.js';
 
 const noSuchType = () => AppError.notFound('There is no vehicle type with this name');
 
@@ -28,4 +28,12 @@ export async function getVehicleType(slug: string) {
 
   if (!vehicleType) throw noSuchType();
   return vehicleType;
+}
+
+/** Every vehicle type, switched off or not, with the fields needed to manage them. */
+export function listAllVehicleTypes() {
+  return prisma.vehicleType.findMany({
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+    select: adminVehicleType,
+  });
 }

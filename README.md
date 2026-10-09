@@ -168,14 +168,15 @@ Run these from the repository root.
 
 Database commands belong to the backend workspace.
 
-| Command                                         | What it does                                       |
-| ----------------------------------------------- | -------------------------------------------------- |
-| `npm run db:migrate -w backend`                 | Apply migrations to the local database             |
-| `npm run db:migrate -w backend -- --name <why>` | Create a migration after a schema change, apply it |
-| `npm run db:generate -w backend`                | Regenerate the typed Prisma client                 |
-| `npm run db:studio -w backend`                  | Browse the data in Prisma Studio                   |
-| `npm run db:seed -w backend`                    | Add the starting vehicle types (safe to repeat)    |
-| `npm run db:cleanup -w backend`                 | Delete expired refresh tokens now                  |
+| Command                                           | What it does                                       |
+| ------------------------------------------------- | -------------------------------------------------- |
+| `npm run db:migrate -w backend`                   | Apply migrations to the local database             |
+| `npm run db:migrate -w backend -- --name <why>`   | Create a migration after a schema change, apply it |
+| `npm run db:generate -w backend`                  | Regenerate the typed Prisma client                 |
+| `npm run db:studio -w backend`                    | Browse the data in Prisma Studio                   |
+| `npm run db:seed -w backend`                      | Add the starting vehicle types (safe to repeat)    |
+| `npm run db:set-role -w backend -- <email> ADMIN` | Give an account a role                             |
+| `npm run db:cleanup -w backend`                   | Delete expired refresh tokens now                  |
 
 ## Environment variables
 
@@ -229,6 +230,7 @@ Base URL: `http://localhost:4000/api/v1`
 | POST   | `/users/me/password`        | Change your password; signs out other devices             |
 | GET    | `/vehicle-types`            | The catalogue of vehicle types (public)                   |
 | GET    | `/vehicle-types/:slug`      | One vehicle type, for example `executive` (public)        |
+| GET    | `/admin/vehicle-types`      | Every vehicle type, including switched-off ones (admin)   |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

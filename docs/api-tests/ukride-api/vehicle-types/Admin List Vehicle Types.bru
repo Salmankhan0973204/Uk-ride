@@ -1,0 +1,26 @@
+meta {
+  name: Admin List Vehicle Types
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/admin/vehicle-types
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.vehicleTypes: isArray
+}
+
+docs {
+  Needs an admin's access token. Make an account an admin with
+  "npm run db:set-role -w backend -- you@example.com ADMIN", then run Login.
+  A customer's token answers 403; no token answers 401.
+}

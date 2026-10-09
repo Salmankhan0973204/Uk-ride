@@ -50,6 +50,7 @@ export const openApiDocument = {
     { name: 'Auth', description: 'Accounts and sign-in' },
     { name: 'Users', description: 'Your own profile' },
     { name: 'Vehicle types', description: 'The classes of car on offer' },
+    { name: 'Admin', description: "For the operator's staff. Needs the ADMIN role" },
   ],
   paths: {
     '/health': {
@@ -469,6 +470,36 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/vehicle-types': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Every vehicle type',
+        description:
+          'The whole catalogue, including types that are switched off, with the fields ' +
+          'needed to manage it.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'All vehicle types',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleTypes'],
+              properties: {
+                vehicleTypes: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/AdminVehicleType' },
+                },
+              },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -551,6 +582,7 @@ export const openApiDocument = {
           'email',
           'mobile',
           'gender',
+          'role',
           'emailVerifiedAt',
           'createdAt',
         ],
@@ -564,6 +596,11 @@ export const openApiDocument = {
             allOf: [{ $ref: '#/components/schemas/Gender' }],
             nullable: true,
             description: 'null when the customer left it out',
+          },
+          role: {
+            type: 'string',
+            enum: ['CUSTOMER', 'DRIVER', 'DISPATCHER', 'ADMIN'],
+            description: 'CUSTOMER for everyone who registers',
           },
           emailVerifiedAt: {
             type: 'string',
@@ -656,6 +693,21 @@ export const openApiDocument = {
           passengers: { type: 'integer', example: 4 },
           suitcases: { type: 'integer', example: 2 },
         },
+      },
+      AdminVehicleType: {
+        allOf: [
+          { $ref: '#/components/schemas/VehicleType' },
+          {
+            type: 'object',
+            required: ['sortOrder', 'isActive', 'createdAt', 'updatedAt'],
+            properties: {
+              sortOrder: { type: 'integer', example: 30, description: 'Lower is listed first' },
+              isActive: { type: 'boolean', description: 'false when switched off' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+        ],
       },
       ApiFailure: {
         type: 'object',

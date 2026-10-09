@@ -443,3 +443,23 @@ Invoke-RestMethod http://localhost:4000/api/v1/vehicle-types/executive | Convert
 
 Expect `200` from both, with no token. The list holds five types in order and
 `meta.count` = 5. An unknown slug such as `/vehicle-types/limo` answers `404`.
+
+### 3.3 Roles and the admin guard
+
+Everyone who registers is a `CUSTOMER`. Make your own account an admin once, from a terminal:
+
+```powershell
+npm run db:set-role -w backend -- you@example.com ADMIN
+```
+
+Then sign in (step 1.3), set `$headers` as in Module 2, and ask for the admin's list:
+
+```powershell
+Invoke-RestMethod http://localhost:4000/api/v1/admin/vehicle-types -Headers $headers | ConvertTo-Json -Depth 5
+```
+
+| Who asks             | Answer                                            |
+| -------------------- | ------------------------------------------------- |
+| nobody (no header)   | `401` "Sign in to continue"                       |
+| a signed-in customer | `403` "You do not have permission to do this"     |
+| a signed-in admin    | `200` with every type, `isActive` and `sortOrder` |

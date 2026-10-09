@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 3 - Vehicle Types
 - **Last completed:** Module 2 - Profile Management
-- **Next step:** 3.3 - User roles and an admin-only guard
-- **Steps done:** 22 of 113
+- **Next step:** 3.4 - Admin create, update and deactivate endpoints
+- **Steps done:** 23 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -17,7 +17,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 2/7   | In progress | -          | -           | -              | -                            | In progress |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 3/7   | In progress | -          | -           | -              | -                            | In progress |
 | 4   | Fleet Vehicles                                     | 0/6   | -           | -          | -           | -              | -                            | -           |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -          | -           | -              | -                            | -           |
 | 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
@@ -82,7 +82,7 @@ runs.
 
 - [x] 3.1 `VehicleType` model and seed data. _Learn: database seeding._
 - [x] 3.2 Public list and detail endpoints. _Learn: public read endpoints._
-- [ ] 3.3 User roles and an admin-only guard. _Learn: role-based access._
+- [x] 3.3 User roles and an admin-only guard. _Learn: role-based access._
 - [ ] 3.4 Admin create, update and deactivate endpoints. _Learn: CRUD, soft delete._
 - [ ] 3.5 Customer catalogue page. _Learn: list queries._
 - [ ] 3.6 Admin table with create and edit form. _Learn: query invalidation._
@@ -1262,3 +1262,39 @@ Learning notes
 - "Switched off" and "never existed" give the same 404, so the answer does not reveal what is
   kept in the back office.
 - The address uses the slug, not the id: `/vehicle-types/executive` can be read and shared.
+
+#### Step 3.3 - User roles and an admin-only guard (done 2026-10-09)
+
+Built
+
+- `Role` enum (`CUSTOMER`, `DRIVER`, `DISPATCHER`, `ADMIN`) and `User.role`, default
+  `CUSTOMER`. Migration `add_user_role`. The role is now part of the user the API returns.
+- `requireRole(...roles)` in `backend/src/middleware/requireRole.ts`, and
+  `AppError.forbidden()` (403).
+- The first guarded route: `GET /admin/vehicle-types`, every type including switched-off
+  ones, with `sortOrder`, `isActive` and the timestamps.
+- `npm run db:set-role -w backend -- <email> <ROLE>` to give an account a role. There is no
+  screen for it: the first admin cannot be made by an admin.
+
+Verified (by hand against the running API; no automated tests)
+
+- No token: 401. A customer's token: 403. An admin's token: 200 with all five types.
+- The same access token went from 403 to 200 after the account was made an admin, and back
+  to 403 after it was demoted, with no new sign-in.
+- `PATCH /users/me` with `{"role":"ADMIN"}` answered 400, and registering with a `role` field
+  created a `CUSTOMER`. A person cannot give themselves a role.
+- `db:set-role` refused an unknown email and an unknown role.
+
+Learning notes
+
+- 401 and 403 are different answers. 401: we do not know who you are, sign in. 403: we know
+  who you are, and this is not yours to do.
+- Authentication (who) comes before authorisation (may they). `requireAuth` then
+  `requireRole`, in that order.
+- The role is read from the database on each request instead of being put in the token. A
+  token cannot be taken back for 15 minutes; a database row can be changed now.
+- A role is never accepted from a request body. It is changed only from the server side.
+
+Open items
+
+- The tests on GitHub that compare the returned user field by field do not know about `role`.

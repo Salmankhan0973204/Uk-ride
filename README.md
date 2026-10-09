@@ -231,6 +231,9 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/vehicle-types`            | The catalogue of vehicle types (public)                   |
 | GET    | `/vehicle-types/:slug`      | One vehicle type, for example `executive` (public)        |
 | GET    | `/admin/vehicle-types`      | Every vehicle type, including switched-off ones (admin)   |
+| POST   | `/admin/vehicle-types`      | Add a vehicle type (admin)                                |
+| PATCH  | `/admin/vehicle-types/:id`  | Change a vehicle type, or switch it back on (admin)       |
+| DELETE | `/admin/vehicle-types/:id`  | Switch a vehicle type off; the row is kept (admin)        |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

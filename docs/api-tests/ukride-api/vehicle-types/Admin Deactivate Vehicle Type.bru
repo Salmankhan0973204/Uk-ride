@@ -1,0 +1,23 @@
+meta {
+  name: Admin Deactivate Vehicle Type
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/admin/vehicle-types/{{vehicleTypeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  A soft delete: the type leaves the public list and stays in the admin list.
+}

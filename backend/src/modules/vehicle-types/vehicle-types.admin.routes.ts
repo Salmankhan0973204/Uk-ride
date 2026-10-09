@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { requireRole } from '../../middleware/requireRole.js';
-import { listAll } from './vehicle-types.admin.controller.js';
+import { validate } from '../../middleware/validate.js';
+import { create, deactivate, listAll, update } from './vehicle-types.admin.controller.js';
+import { createVehicleTypeSchema, updateVehicleTypeSchema } from './vehicle-types.schemas.js';
 
 export const adminVehicleTypesRouter = Router();
 
@@ -10,3 +12,8 @@ export const adminVehicleTypesRouter = Router();
 adminVehicleTypesRouter.use(requireAuth, requireRole('ADMIN'));
 
 adminVehicleTypesRouter.get('/', listAll);
+adminVehicleTypesRouter.post('/', validate(createVehicleTypeSchema), create);
+adminVehicleTypesRouter.patch('/:id', validate(updateVehicleTypeSchema), update);
+// DELETE switches the type off; it does not remove the row. PATCH with
+// { "isActive": true } switches it back on.
+adminVehicleTypesRouter.delete('/:id', deactivate);

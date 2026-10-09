@@ -499,6 +499,117 @@ export const openApiDocument = {
           500: { $ref: '#/components/responses/Error' },
         },
       },
+      post: {
+        tags: ['Admin'],
+        summary: 'Add a vehicle type',
+        description:
+          'Without a slug, one is made from the name ("People carrier" becomes ' +
+          '"people-carrier"). Without a sort order, the type goes to the end of the list.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CreateVehicleTypeRequest' },
+            },
+          },
+        },
+        responses: {
+          201: jsonResponse(
+            'Vehicle type created',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleType'],
+              properties: { vehicleType: { $ref: '#/components/schemas/AdminVehicleType' } },
+            }),
+          ),
+          400: jsonResponse('A field breaks its rule, or an unknown field was sent', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          409: jsonResponse('Another vehicle type already uses this slug', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/vehicle-types/{id}': {
+      patch: {
+        tags: ['Admin'],
+        summary: 'Change a vehicle type',
+        description:
+          'A partial update: send only the fields to change. The slug cannot be changed. ' +
+          '`isActive: true` switches a type back on.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/UpdateVehicleTypeRequest' },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Vehicle type updated',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleType'],
+              properties: { vehicleType: { $ref: '#/components/schemas/AdminVehicleType' } },
+            }),
+          ),
+          400: jsonResponse(
+            'A field breaks its rule, an unknown field was sent, or the body is empty',
+            {
+              $ref: '#/components/schemas/ApiFailure',
+            },
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No vehicle type has this id', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+      delete: {
+        tags: ['Admin'],
+        summary: 'Switch a vehicle type off',
+        description:
+          'A soft delete: the type leaves the public catalogue and the row is kept. ' +
+          'Calling it again changes nothing.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          200: jsonResponse(
+            'Vehicle type switched off',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleType'],
+              properties: { vehicleType: { $ref: '#/components/schemas/AdminVehicleType' } },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No vehicle type has this id', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
     },
   },
   components: {
@@ -708,6 +819,38 @@ export const openApiDocument = {
             },
           },
         ],
+      },
+      CreateVehicleTypeRequest: {
+        type: 'object',
+        required: ['name', 'description', 'passengers', 'suitcases'],
+        additionalProperties: false,
+        properties: {
+          name: { type: 'string', maxLength: 40, example: 'Luxury MPV' },
+          slug: {
+            type: 'string',
+            maxLength: 40,
+            example: 'luxury-mpv',
+            description: 'Letters, numbers and hyphens. Made from the name when left out.',
+          },
+          description: { type: 'string', maxLength: 200, example: 'Seven seats with legroom.' },
+          passengers: { type: 'integer', minimum: 1, maximum: 8, example: 7 },
+          suitcases: { type: 'integer', minimum: 0, maximum: 20, example: 5 },
+          sortOrder: { type: 'integer', minimum: 0, maximum: 9999 },
+        },
+      },
+      UpdateVehicleTypeRequest: {
+        type: 'object',
+        additionalProperties: false,
+        minProperties: 1,
+        properties: {
+          name: { type: 'string', maxLength: 40 },
+          description: { type: 'string', maxLength: 200 },
+          passengers: { type: 'integer', minimum: 1, maximum: 8 },
+          suitcases: { type: 'integer', minimum: 0, maximum: 20 },
+          sortOrder: { type: 'integer', minimum: 0, maximum: 9999 },
+          isActive: { type: 'boolean' },
+        },
+        example: { suitcases: 6 },
       },
       ApiFailure: {
         type: 'object',

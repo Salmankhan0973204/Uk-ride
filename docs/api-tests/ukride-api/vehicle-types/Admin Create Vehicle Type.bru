@@ -1,0 +1,33 @@
+meta {
+  name: Admin Create Vehicle Type
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/admin/vehicle-types
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "name": "Luxury MPV",
+    "description": "Seven seats with extra legroom.",
+    "passengers": 7,
+    "suitcases": 5
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Needs an admin's token. Copy data.vehicleType.id into the vehicleTypeId variable.
+  Run it twice: the second call answers 409, because the slug is taken.
+}

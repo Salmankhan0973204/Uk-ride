@@ -1,0 +1,29 @@
+meta {
+  name: Admin Update Vehicle Type
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/admin/vehicle-types/{{vehicleTypeId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "suitcases": 6
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Send only what changes. {"isActive": true} switches a type back on.
+}

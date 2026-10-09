@@ -463,3 +463,30 @@ Invoke-RestMethod http://localhost:4000/api/v1/admin/vehicle-types -Headers $hea
 | nobody (no header)   | `401` "Sign in to continue"                       |
 | a signed-in customer | `403` "You do not have permission to do this"     |
 | a signed-in admin    | `200` with every type, `isActive` and `sortOrder` |
+
+### 3.4 Add, change and switch off a vehicle type (admin)
+
+With an admin's token in `$headers`:
+
+```powershell
+$body = '{"name":"Luxury MPV","description":"Seven seats with extra legroom.","passengers":7,"suitcases":5}'
+$made = Invoke-RestMethod http://localhost:4000/api/v1/admin/vehicle-types -Method Post -Headers $headers -ContentType 'application/json' -Body $body
+$id = $made.data.vehicleType.id
+
+Invoke-RestMethod "http://localhost:4000/api/v1/admin/vehicle-types/$id" -Method Patch -Headers $headers -ContentType 'application/json' -Body '{"suitcases":6}'
+Invoke-RestMethod "http://localhost:4000/api/v1/admin/vehicle-types/$id" -Method Delete -Headers $headers
+Invoke-RestMethod "http://localhost:4000/api/v1/admin/vehicle-types/$id" -Method Patch -Headers $headers -ContentType 'application/json' -Body '{"isActive":true}'
+```
+
+Expect `201` with the slug `luxury-mpv`, then `200` three times. After the `Delete` the type is
+gone from `/vehicle-types` and still in `/admin/vehicle-types` with `isActive` false.
+
+| Request                                    | Answer                                      |
+| ------------------------------------------ | ------------------------------------------- |
+| create with a slug that exists             | `409` with `details.field` = `slug`         |
+| create with `"passengers":9`               | `400` "Passengers must be at most 8"        |
+| create with `"passengers":"4"`             | `400` "Passengers must be a number"         |
+| create or change with an unknown field     | `400`, the message lists the allowed fields |
+| change with `{}`                           | `400` "Nothing to update"                   |
+| change or delete an id that does not exist | `404`                                       |
+| any of them with a customer's token        | `403`                                       |

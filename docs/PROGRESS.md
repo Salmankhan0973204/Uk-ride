@@ -4,34 +4,34 @@ Update this file after every coding session.
 
 - **Current module:** Module 3 - Vehicle Types
 - **Last completed:** Module 2 - Profile Management
-- **Next step:** 3.4 - Admin create, update and deactivate endpoints
-- **Steps done:** 23 of 113
+- **Next step:** 3.5 - Customer catalogue page
+- **Steps done:** 24 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend     | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
-| --- | -------------------------------------------------- | ----- | ----------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 3/7   | In progress | -          | -           | -              | -                            | In progress |
-| 4   | Fleet Vehicles                                     | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -          | -           | -              | -                            | -           |
-| 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -          | -           | -              | -                            | -           |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -          | -           | -              | -                            | -           |
-| 11  | Notifications + Email                              | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -          | -           | -              | -                            | -           |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
+| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 4/7   | Done    | Done       | -           | -              | -                            | In progress |
+| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -           |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -           |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -           |
+| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -           |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -           |
 
 ## Steps
 
@@ -83,7 +83,7 @@ runs.
 - [x] 3.1 `VehicleType` model and seed data. _Learn: database seeding._
 - [x] 3.2 Public list and detail endpoints. _Learn: public read endpoints._
 - [x] 3.3 User roles and an admin-only guard. _Learn: role-based access._
-- [ ] 3.4 Admin create, update and deactivate endpoints. _Learn: CRUD, soft delete._
+- [x] 3.4 Admin create, update and deactivate endpoints. _Learn: CRUD, soft delete._
 - [ ] 3.5 Customer catalogue page. _Learn: list queries._
 - [ ] 3.6 Admin table with create and edit form. _Learn: query invalidation._
 - [ ] 3.7 Deactivate with confirmation, design pass.
@@ -1298,3 +1298,38 @@ Learning notes
 Open items
 
 - The tests on GitHub that compare the returned user field by field do not know about `role`.
+
+#### Step 3.4 - Admin create, update and deactivate endpoints (done 2026-10-09)
+
+Built
+
+- `POST /admin/vehicle-types`: 201 with a `Location` header. The slug is made from the name
+  when it is left out; the sort order defaults to the end of the list.
+- `PATCH /admin/vehicle-types/:id`: a partial update of name, description, passengers,
+  suitcases, sort order and `isActive`. The slug cannot be changed.
+- `DELETE /admin/vehicle-types/:id`: sets `isActive` to false and keeps the row.
+- Rules in `vehicle-types.schemas.ts`: passengers 1 to 8, suitcases 0 to 20, whole numbers
+  only, unknown fields refused.
+
+Verified (by hand against the running API; no automated tests)
+
+- Create answered 201 with slug `luxury-mpv-7-seats` made from "Luxury MPV (7 seats)" and
+  sort order 60, after the seeded five.
+- A taken slug answered 409 on `slug`. Bad values answered 400 with one message per field:
+  empty name, a slug with spaces, `"4"` as text, `-1`, 9 passengers. An unknown field (`price`)
+  and an empty PATCH answered 400.
+- PATCH changed only the field sent. An unknown id answered 404 for PATCH and DELETE.
+- After DELETE the public list held 5 and the public detail answered 404, while the admin
+  list held 6. A second DELETE answered 200. `{"isActive":true}` brought it back.
+- A customer's token answered 403. The test row was deleted afterwards.
+
+Learning notes
+
+- CRUD maps onto HTTP: POST creates (201), GET reads, PATCH changes part, DELETE removes.
+- A soft delete marks a row instead of removing it. Use it when other rows will point at
+  this one: a booking must still be able to say which vehicle type it was for.
+- DELETE is idempotent: calling it twice leaves the same result as calling it once.
+- The slug is fixed at creation because it is an address. Names can change; addresses that
+  people have saved should not.
+- JSON has real numbers, so `"4"` is refused rather than converted. The form in step 3.6
+  will have to turn its text inputs into numbers before sending.

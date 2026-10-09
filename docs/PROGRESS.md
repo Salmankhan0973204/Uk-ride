@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 3 - Vehicle Types
 - **Last completed:** Module 2 - Profile Management
-- **Next step:** 3.6 - Admin table with create and edit form
-- **Steps done:** 25 of 113
+- **Next step:** 3.7 - Deactivate with confirmation, design pass
+- **Steps done:** 26 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -17,7 +17,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 5/7   | Done    | Done       | In progress | In progress    | -                            | In progress |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 6/7   | Done    | Done       | In progress | In progress    | -                            | In progress |
 | 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | -           |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -           |
 | 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
@@ -85,7 +85,7 @@ runs.
 - [x] 3.3 User roles and an admin-only guard. _Learn: role-based access._
 - [x] 3.4 Admin create, update and deactivate endpoints. _Learn: CRUD, soft delete._
 - [x] 3.5 Customer catalogue page. _Learn: list queries._
-- [ ] 3.6 Admin table with create and edit form. _Learn: query invalidation._
+- [x] 3.6 Admin table with create and edit form. _Learn: query invalidation._
 - [ ] 3.7 Deactivate with confirmation, design pass.
 
 ### Module 4 - Fleet Vehicles
@@ -1361,3 +1361,47 @@ Learning notes
   minute saves a request on every visit to the page.
 - A public page uses `apiFetch`. `authFetch` is for requests that need the access token.
 - A list has four states to design, not one: loading, error, empty, and filled.
+
+#### Step 3.6 - Admin table with create and edit form (done 2026-10-09)
+
+Built
+
+- `/admin/vehicle-types`: a table of every type with name, slug, passengers, suitcases,
+  position and status. On narrow screens the columns fold into the first cell.
+- `/admin/vehicle-types/new` and `/admin/vehicle-types/[id]/edit`: one form component for
+  both. Editing sends only the fields that changed; the slug is shown and cannot be changed.
+- `AdminGate`: signed-out visitors go to sign-in; a signed-in customer sees "This page is
+  for staff".
+- `useAdminVehicleTypes`, `useCreateVehicleType`, `useUpdateVehicleType`. Both mutations
+  invalidate `vehicleTypes.all`, which refreshes the admin table and the public catalogue.
+- An admin sees a "Manage vehicle types" link on the account page. A customer does not.
+
+Verified
+
+- Typecheck and lint pass.
+- In a real browser against the running API:
+  - signed out, the page redirected to `/login`; a customer saw "This page is for staff" on
+    the table and on the form, and had no admin link;
+  - an empty form showed four messages and focused the name; a bad slug, 9 passengers and
+    "two" suitcases were each caught in the browser;
+  - a slug that exists was refused by the API and shown on the slug field;
+  - adding "Luxury MPV" with no slug returned to the table with "The vehicle type has been
+    added", the new row last, slug `luxury-mpv`;
+  - the edit form opened with the current values; changing the name and position moved the
+    row, and the public catalogue showed the same change without reloading the app;
+  - saving with nothing changed went straight back; an unknown id said so.
+- No horizontal scrolling at 1440px, 820px, 390px and 360px.
+
+Learning notes
+
+- Invalidation is the other way to keep the cache right after a mutation: mark the queries
+  stale and let them ask again. Module 2 wrote the answer into the cache instead. Write when
+  one record changed and you hold it; invalidate when a change can reorder, add or hide rows.
+- Query keys form a tree. Invalidating `['vehicleTypes']` reaches `['vehicleTypes','list']`
+  and `['vehicleTypes','admin']` in one call.
+- Returning the invalidation promise from `onSuccess` keeps the mutation pending until the
+  fresh list has arrived, so the table is already right when the form sends you back.
+- Form inputs hold text. The form converts to numbers before sending, because the API
+  refuses `"4"`.
+- One form component serves both adding and editing: with a record it starts filled and
+  sends a PATCH of the differences, without one it starts empty and sends a POST.

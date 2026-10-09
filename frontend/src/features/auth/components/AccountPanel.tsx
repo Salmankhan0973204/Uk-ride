@@ -133,6 +133,18 @@ function Profile({ user, onSigningOut }: { user: User; onSigningOut: () => void 
           </div>
         )}
 
+        {user.role === 'ADMIN' ? (
+          <p className="text-base leading-relaxed">
+            You are an administrator.{' '}
+            <Link
+              href="/admin/vehicle-types"
+              className="font-medium underline decoration-ring/70 decoration-2 underline-offset-4 hover:decoration-ring"
+            >
+              Manage vehicle types
+            </Link>
+          </p>
+        ) : null}
+
         {/* One accent button: editing is what this page is for. */}
         <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-center">
           <Link href="/account/edit" className="btn btn-primary">

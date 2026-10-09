@@ -203,6 +203,14 @@ body::before {
     box-shadow 160ms ease-out;
 }
 
+/* A text area grows downwards, so the user may resize it that way only. */
+textarea.control {
+  display: block;
+  padding: 0.75rem 1rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
 .control::placeholder {
   color: var(--ink-muted);
 }

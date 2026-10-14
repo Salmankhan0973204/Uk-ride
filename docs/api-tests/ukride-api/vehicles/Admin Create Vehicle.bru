@@ -1,0 +1,35 @@
+meta {
+  name: Admin Create Vehicle
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/admin/vehicles
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "registration": "AB12 CDE",
+    "make": "Mercedes-Benz",
+    "model": "E-Class",
+    "colour": "Black",
+    "year": 2023,
+    "vehicleTypeId": "{{vehicleTypeId}}"
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Needs an admin's token and a vehicleTypeId (from List Vehicle Types).
+  Copy data.vehicle.id into the vehicleId variable. A second run answers 409.
+}

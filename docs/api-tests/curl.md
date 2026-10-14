@@ -490,3 +490,33 @@ gone from `/vehicle-types` and still in `/admin/vehicle-types` with `isActive` f
 | change with `{}`                           | `400` "Nothing to update"                   |
 | change or delete an id that does not exist | `404`                                       |
 | any of them with a customer's token        | `403`                                       |
+
+## Module 4 - Fleet vehicles
+
+All of these need an admin's token in `$headers` (see 3.3).
+
+### 4.2 Add, read and change a vehicle
+
+Find a vehicle type's id first, then add a car of that type:
+
+```powershell
+$types = Invoke-RestMethod http://localhost:4000/api/v1/vehicle-types
+$exec = ($types.data.vehicleTypes | Where-Object slug -eq 'executive').id
+
+$body = @{ registration = 'ab12 cde'; make = 'Mercedes-Benz'; model = 'E-Class'; colour = 'Black'; year = 2023; vehicleTypeId = $exec } | ConvertTo-Json
+$car = Invoke-RestMethod http://localhost:4000/api/v1/admin/vehicles -Method Post -Headers $headers -ContentType 'application/json' -Body $body
+$id = $car.data.vehicle.id
+
+Invoke-RestMethod "http://localhost:4000/api/v1/admin/vehicles/$id" -Headers $headers | ConvertTo-Json -Depth 5
+Invoke-RestMethod "http://localhost:4000/api/v1/admin/vehicles/$id" -Method Patch -Headers $headers -ContentType 'application/json' -Body '{"colour":"Silver"}'
+```
+
+Expect `201` with `registration` = `AB12CDE` and `status` = `ACTIVE`, then `200` twice.
+
+| Request                                     | Answer                                        |
+| ------------------------------------------- | --------------------------------------------- |
+| add `AB12CDE` again, with or without spaces | `409` with `details.field` = `registration`   |
+| `"year": 2031`                              | `400` "Year cannot be in the future"          |
+| a vehicle type that is switched off         | `400` on `vehicleTypeId`                      |
+| `{"status":"RETIRED"}` in the add or change | `400`: status has its own endpoint (step 4.6) |
+| an id that does not exist                   | `404`                                         |

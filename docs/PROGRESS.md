@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 4 - Fleet Vehicles
 - **Last completed:** Module 3 - Vehicle Types
-- **Next step:** 4.2 - Admin CRUD endpoints
-- **Steps done:** 28 of 113
+- **Next step:** 4.3 - List with pagination, filter and search
+- **Steps done:** 29 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -18,7 +18,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 4   | Fleet Vehicles                                     | 1/6   | In progress | -          | -           | -              | -                            | In progress |
+| 4   | Fleet Vehicles                                     | 2/6   | In progress | -          | -           | -              | -                            | In progress |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -          | -           | -              | -                            | -           |
 | 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
 | 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
@@ -91,7 +91,7 @@ runs.
 ### Module 4 - Fleet Vehicles
 
 - [x] 4.1 `Vehicle` model linked to `VehicleType`. _Learn: relations, unique constraints._
-- [ ] 4.2 Admin CRUD endpoints.
+- [x] 4.2 Admin CRUD endpoints.
 - [ ] 4.3 List with pagination, filter and search. _Learn: query parameters, `meta`._
 - [ ] 4.4 Admin vehicles table with pages. _Learn: paginated queries._
 - [ ] 4.5 Create and edit form with a vehicle type select. _Learn: dependent data._
@@ -1518,3 +1518,44 @@ Learning notes
   can still lose a race between two requests; the database cannot.
 - An index makes filtering by a column fast. Unique columns get one automatically; foreign
   keys in PostgreSQL do not, so it is added by hand.
+
+#### Step 4.2 - Admin CRUD endpoints (done 2026-10-14)
+
+Built
+
+- `backend/src/modules/vehicles/`: select, schemas, service, controller, routes; mounted at
+  `/api/v1/admin/vehicles` behind `requireAuth` and `requireRole('ADMIN')`.
+- `POST /admin/vehicles` (201 with a `Location` header), `GET /admin/vehicles/:id`,
+  `PATCH /admin/vehicles/:id`.
+- Every answer includes the vehicle's type (`id`, `slug`, `name`, `isActive`), selected
+  through the relation in the same query.
+- The registration is cleaned before it is stored: spaces removed, capitals.
+- A new vehicle, or a vehicle moved to another type, needs a type that is on offer. A vehicle
+  keeps its type if that type is switched off later.
+- No DELETE: a vehicle leaves the fleet by being retired in step 4.6. Status cannot be sent
+  to the add or change endpoints.
+
+Verified (by hand against the running API; no automated tests)
+
+- A customer's token answered 403.
+- Adding " ab12 cde " answered 201 with `AB12CDE`, status `ACTIVE` and the type "Executive".
+  Adding "AB12CDE" again answered 409 on `registration`.
+- One request with a one-letter plate, an empty make, the year 2031 and a malformed type id
+  answered 400 with a message for each of the four fields.
+- A type id that does not exist, and a type that was switched off, answered 400 on
+  `vehicleTypeId`. Sending `status` answered 400.
+- GET answered 200 with the type, and 404 for an unknown id. PATCH changed the colour and
+  type, and stored "cd34 efg" as `CD34EFG`; an empty PATCH answered 400.
+- After the vehicle's own type was switched off, changing its colour still worked.
+
+Learning notes
+
+- Data is cleaned before it reaches the unique index. If "AB12 CDE" and "AB12CDE" were stored
+  as written, the database would see two different plates.
+- A Zod `transform` followed by `pipe` cleans first, then checks the cleaned value.
+- A `select` can follow a relation (`vehicleType: { select: {...} }`). Prisma fetches both in
+  one go, so a list never makes one extra query per row.
+- The database's refusals have codes: `P2002` unique, `P2003` foreign key, `P2025` no such
+  row. Each becomes an answer that names the field to fix.
+- Not every resource needs DELETE. When other records will point at a row, a status that
+  says "no longer in use" is safer than removing it.

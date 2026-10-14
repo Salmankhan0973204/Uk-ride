@@ -611,6 +611,110 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/vehicles': {
+      post: {
+        tags: ['Admin'],
+        summary: 'Add a vehicle to the fleet',
+        description:
+          'The registration is stored in capitals without spaces ("ab12 cde" becomes ' +
+          '"AB12CDE"). The vehicle type must be on offer. A new vehicle is always ACTIVE.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/CreateVehicleRequest' } },
+          },
+        },
+        responses: {
+          201: jsonResponse(
+            'Vehicle added',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicle'],
+              properties: { vehicle: { $ref: '#/components/schemas/Vehicle' } },
+            }),
+          ),
+          400: jsonResponse(
+            'A field breaks its rule, the type is not on offer, or an unknown field was sent',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          409: jsonResponse('Another vehicle already has this registration', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/vehicles/{id}': {
+      get: {
+        tags: ['Admin'],
+        summary: 'One vehicle',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          200: jsonResponse(
+            'Vehicle',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicle'],
+              properties: { vehicle: { $ref: '#/components/schemas/Vehicle' } },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No vehicle has this id', { $ref: '#/components/schemas/ApiFailure' }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+      patch: {
+        tags: ['Admin'],
+        summary: 'Change a vehicle',
+        description:
+          'A partial update. Status cannot be changed here. Moving the vehicle to another ' +
+          'type needs that type to be on offer.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UpdateVehicleRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Vehicle updated',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicle'],
+              properties: { vehicle: { $ref: '#/components/schemas/Vehicle' } },
+            }),
+          ),
+          400: jsonResponse(
+            'A field breaks its rule, an unknown field was sent, or the body is empty',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No vehicle has this id', { $ref: '#/components/schemas/ApiFailure' }),
+          409: jsonResponse('Another vehicle already has this registration', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -851,6 +955,74 @@ export const openApiDocument = {
           isActive: { type: 'boolean' },
         },
         example: { suitcases: 6 },
+      },
+      Vehicle: {
+        type: 'object',
+        required: [
+          'id',
+          'registration',
+          'make',
+          'model',
+          'colour',
+          'year',
+          'status',
+          'vehicleType',
+        ],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          registration: { type: 'string', example: 'AB12CDE' },
+          make: { type: 'string', example: 'Mercedes-Benz' },
+          model: { type: 'string', example: 'E-Class' },
+          colour: { type: 'string', example: 'Black' },
+          year: { type: 'integer', example: 2023 },
+          status: { type: 'string', enum: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] },
+          vehicleType: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              slug: { type: 'string', example: 'executive' },
+              name: { type: 'string', example: 'Executive' },
+              isActive: { type: 'boolean' },
+            },
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      CreateVehicleRequest: {
+        type: 'object',
+        required: ['registration', 'make', 'model', 'colour', 'year', 'vehicleTypeId'],
+        additionalProperties: false,
+        properties: {
+          registration: {
+            type: 'string',
+            example: 'AB12 CDE',
+            description: '2 to 8 letters and numbers; spaces are removed',
+          },
+          make: { type: 'string', maxLength: 40, example: 'Mercedes-Benz' },
+          model: { type: 'string', maxLength: 40, example: 'E-Class' },
+          colour: { type: 'string', maxLength: 30, example: 'Black' },
+          year: { type: 'integer', minimum: 1990, example: 2023 },
+          vehicleTypeId: { type: 'string', format: 'uuid' },
+        },
+      },
+      UpdateVehicleRequest: {
+        type: 'object',
+        additionalProperties: false,
+        minProperties: 1,
+        properties: {
+          registration: {
+            type: 'string',
+            example: 'AB12 CDE',
+            description: '2 to 8 letters and numbers; spaces are removed',
+          },
+          make: { type: 'string', maxLength: 40, example: 'Mercedes-Benz' },
+          model: { type: 'string', maxLength: 40, example: 'E-Class' },
+          colour: { type: 'string', maxLength: 30, example: 'Black' },
+          year: { type: 'integer', minimum: 1990, example: 2023 },
+          vehicleTypeId: { type: 'string', format: 'uuid' },
+        },
+        example: { colour: 'Silver' },
       },
       ApiFailure: {
         type: 'object',

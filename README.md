@@ -237,6 +237,9 @@ Base URL: `http://localhost:4000/api/v1`
 | POST   | `/admin/vehicle-types`      | Add a vehicle type (admin)                                |
 | PATCH  | `/admin/vehicle-types/:id`  | Change a vehicle type, or switch it back on (admin)       |
 | DELETE | `/admin/vehicle-types/:id`  | Switch a vehicle type off; the row is kept (admin)        |
+| POST   | `/admin/vehicles`           | Add a vehicle to the fleet (admin)                        |
+| GET    | `/admin/vehicles/:id`       | One vehicle with its type (admin)                         |
+| PATCH  | `/admin/vehicles/:id`       | Change a vehicle's details (admin)                        |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

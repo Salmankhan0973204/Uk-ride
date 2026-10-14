@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** none in progress
+- **Current module:** Module 4 - Fleet Vehicles
 - **Last completed:** Module 3 - Vehicle Types
-- **Next step:** 4.1 - `Vehicle` model linked to `VehicleType`
-- **Steps done:** 27 of 113
+- **Next step:** 4.2 - Admin CRUD endpoints
+- **Steps done:** 28 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 4   | Fleet Vehicles                                     | 0/6   | -       | -          | -           | -              | -                            | Next     |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| #   | Module                                             | Steps | Backend     | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
+| --- | -------------------------------------------------- | ----- | ----------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 4   | Fleet Vehicles                                     | 1/6   | In progress | -          | -           | -              | -                            | In progress |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -          | -           | -              | -                            | -           |
+| 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -          | -           | -              | -                            | -           |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -          | -           | -              | -                            | -           |
+| 11  | Notifications + Email                              | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -          | -           | -              | -                            | -           |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -          | -           | -              | -                            | -           |
 
 ## Steps
 
@@ -90,7 +90,7 @@ runs.
 
 ### Module 4 - Fleet Vehicles
 
-- [ ] 4.1 `Vehicle` model linked to `VehicleType`. _Learn: relations, unique constraints._
+- [x] 4.1 `Vehicle` model linked to `VehicleType`. _Learn: relations, unique constraints._
 - [ ] 4.2 Admin CRUD endpoints.
 - [ ] 4.3 List with pagination, filter and search. _Learn: query parameters, `meta`._
 - [ ] 4.4 Admin vehicles table with pages. _Learn: paginated queries._
@@ -1479,3 +1479,42 @@ Open items
 - The web app's `User` type and the API now include `role`; the tests on GitHub do not know
   about it, nor about any Module 3 endpoint.
 - The seeded vehicle types are placeholders, not a real fleet. There are no photographs.
+
+### Module 4 - Fleet Vehicles (in progress)
+
+#### Step 4.1 - `Vehicle` model linked to `VehicleType` (done 2026-10-14)
+
+Built
+
+- `Vehicle` in `backend/prisma/schema.prisma` (table `vehicles`): `registration` (unique),
+  `make`, `model`, `colour`, `year`, `status`, `vehicleTypeId`, timestamps.
+  Migration `add_vehicles`.
+- `VehicleStatus` enum: `ACTIVE` (can be given jobs), `MAINTENANCE` (in the garage for now),
+  `RETIRED` (left the fleet, kept for history).
+- The relation: one vehicle type has many vehicles (`VehicleType.vehicles`), each vehicle has
+  exactly one type. The foreign key uses `onDelete: Restrict`.
+- Indexes on `vehicle_type_id` and `status`, the two columns the admin list will filter by.
+- No seed data for vehicles: the operator has no real fleet yet.
+
+Verified (directly in PostgreSQL; no automated tests)
+
+- A vehicle linked to "Executive" was inserted and read back joined to its type.
+- A second car with the same plate was refused by `vehicles_registration_key`.
+- A vehicle with a type id that does not exist was refused by the foreign key.
+- Deleting a vehicle type that still had a car was refused (`RESTRICT`).
+- The test row was deleted.
+
+Learning notes
+
+- A relation is a column that holds another row's id (`vehicle_type_id`) plus a foreign key
+  that makes the database check it. Prisma adds the fields on both sides (`vehicle.vehicleType`
+  and `vehicleType.vehicles`) so queries can follow it either way.
+- One-to-many: the "many" side holds the id. A vehicle names its type; the type does not list
+  its vehicles in a column.
+- `onDelete` decides what happens to the cars when their type is deleted: `Cascade` deletes
+  them too, `SetNull` empties the link, `Restrict` refuses. Cars must never vanish with a
+  type, so `Restrict`.
+- A unique constraint is the only reliable guard against duplicates. Checking first in code
+  can still lose a race between two requests; the database cannot.
+- An index makes filtering by a column fast. Unique columns get one automatically; foreign
+  keys in PostgreSQL do not, so it is added by hand.

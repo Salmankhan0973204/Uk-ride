@@ -113,5 +113,42 @@ model VehicleType {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  // The cars of this class. One type has many vehicles; a vehicle has one type.
+  vehicles Vehicle[]
+
   @@map("vehicle_types")
+}
+
+// Where a car is in its working life.
+enum VehicleStatus {
+  // Can be given jobs.
+  ACTIVE
+  // In the garage for now. Comes back to ACTIVE.
+  MAINTENANCE
+  // Left the fleet. Kept, because past bookings will name it.
+  RETIRED
+}
+
+// One real car in the operator's fleet.
+model Vehicle {
+  id            String        @id @default(uuid())
+  // The number plate without spaces, in capitals: "AB12CDE". Two cars
+  // cannot share a plate, so the database refuses a second one.
+  registration  String        @unique
+  make          String
+  model         String
+  colour        String
+  year          Int
+  status        VehicleStatus @default(ACTIVE)
+  vehicleTypeId String        @map("vehicle_type_id")
+  // Restrict: a vehicle type that still has cars cannot be deleted. Types are
+  // only switched off anyway, so this is a second line of defence.
+  vehicleType   VehicleType   @relation(fields: [vehicleTypeId], references: [id], onDelete: Restrict)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  // The admin list filters by these two, so they get indexes.
+  @@index([vehicleTypeId])
+  @@index([status])
+  @@map("vehicles")
 }

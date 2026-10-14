@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 4 - Fleet Vehicles
 - **Last completed:** Module 3 - Vehicle Types
-- **Next step:** 4.4 - Admin vehicles table with pages
-- **Steps done:** 30 of 113
+- **Next step:** 4.5 - Create and edit form with a vehicle type select
+- **Steps done:** 31 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -18,7 +18,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 4   | Fleet Vehicles                                     | 3/6   | Done    | Done       | -           | -              | -                            | In progress |
+| 4   | Fleet Vehicles                                     | 4/6   | Done    | Done       | In progress | In progress    | -                            | In progress |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -           |
 | 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
 | 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
@@ -93,7 +93,7 @@ runs.
 - [x] 4.1 `Vehicle` model linked to `VehicleType`. _Learn: relations, unique constraints._
 - [x] 4.2 Admin CRUD endpoints.
 - [x] 4.3 List with pagination, filter and search. _Learn: query parameters, `meta`._
-- [ ] 4.4 Admin vehicles table with pages. _Learn: paginated queries._
+- [x] 4.4 Admin vehicles table with pages. _Learn: paginated queries._
 - [ ] 4.5 Create and edit form with a vehicle type select. _Learn: dependent data._
 - [ ] 4.6 Change vehicle status (active, maintenance), design pass.
 
@@ -1596,3 +1596,52 @@ Learning notes
   is treated as "not sent" so an empty search box does not filter.
 - Filters are built by adding pieces to one `where` object. A filter that was not sent adds
   nothing.
+
+#### Step 4.4 - Admin vehicles table with pages (done 2026-10-14)
+
+Built
+
+- `/admin/vehicles`: the fleet as a table (registration, vehicle, type, status), 20 rows a
+  page, with "21 to 25 of 25 vehicles, page 2 of 2" and Previous / Next links.
+- A search box, a status dropdown and a vehicle type dropdown. Every filter and the page
+  number live in the address (`?page=2&status=MAINTENANCE&type=mpv&search=skoda`).
+- Designed states: loading, error, no vehicles yet, no match (with "Clear the filters"), and
+  a page past the end (with "Go to the last page").
+- `useVehicles(query)` with `placeholderData: keepPreviousData`: the current page stays on
+  screen, faded and marked busy, while the next one loads.
+- `authFetchWithMeta()` in `frontend/src/lib/api/client.ts` returns `meta` beside `data`;
+  `authFetch()` and `apiFetch()` are unchanged for their callers.
+- An admin area: `app/admin/layout.tsx` runs the admin check once for every page under
+  `/admin` and shows an "Admin" menu (Vehicles, Vehicle types). The vehicle type pages no
+  longer guard themselves. `/admin` opens the fleet. The account page's link now reads
+  "Open the admin area".
+
+Verified
+
+- Typecheck and lint pass.
+- In a real browser against the running API, with 25 test vehicles:
+  - signed out, the page redirected to `/login`; a customer saw "This page is for staff" and
+    no admin menu;
+  - the account page link opened `/admin/vehicles`; `/admin` redirected there;
+  - Next went to `?page=2` with the last 5 rows, Previous came back;
+  - choosing "In maintenance" on page 2 went to `?status=MAINTENANCE` (page 1) with 3 rows;
+    adding "People carrier" narrowed it to 1; clearing the status left the type filter;
+  - searching "ts05 abc" found `TS05 ABC`, "skoda" found 6, a nonsense search showed
+    "No vehicles match these filters", and "Clear the filters" emptied the box;
+  - the browser's back button undid a filter;
+  - `?page=9` said there is no page 9 and offered the last page;
+  - the vehicle types page still worked inside the admin layout.
+- No horizontal scrolling at 1440px, 820px, 390px and 360px.
+- Fixed in passing: the search label sat lower than the two dropdown labels.
+
+Learning notes
+
+- The query object is part of the query key, so each page and filter is cached on its own.
+  Going back to a page already seen shows it at once.
+- `keepPreviousData` keeps the old page visible while the new one loads. Without it the table
+  would vanish into a spinner on every click.
+- State that describes what is being looked at belongs in the address. Reload, back button
+  and shared links all keep working, and the component has less state to manage.
+- A filter change resets to page 1: page 4 of the old list means nothing in the new one.
+- A layout wraps every page below it. Putting the admin check there means a new admin page
+  cannot forget it.

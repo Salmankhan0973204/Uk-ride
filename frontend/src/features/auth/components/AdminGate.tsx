@@ -6,7 +6,7 @@ import type { User } from '../types';
 import { AccountGate } from './AccountGate';
 
 /**
- * The guard for admin pages. AccountGate answers "is someone signed in";
+ * The guard for admin pages, used once by the /admin layout. AccountGate answers "is someone signed in";
  * this adds "and are they an admin". A signed-in customer is told plainly
  * that the page is not theirs, instead of being bounced to the sign-in page.
  *

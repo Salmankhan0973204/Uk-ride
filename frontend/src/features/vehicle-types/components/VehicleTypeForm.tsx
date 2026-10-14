@@ -6,7 +6,6 @@ import { useId, useRef, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Field, describedBy } from '@/components/ui/Field';
 import { Spinner } from '@/components/ui/Spinner';
-import { AdminGate } from '@/features/auth/components/AdminGate';
 import type { ApiError } from '@/lib/api/client';
 import {
   useAdminVehicleTypes,
@@ -141,20 +140,16 @@ function readApiError(error: ApiError): { fields: Errors; form?: string } {
 
 /** The page for adding a vehicle type. */
 export function NewVehicleTypeForm() {
-  return <AdminGate>{() => <Form />}</AdminGate>;
+  return <Form />;
 }
 
 /** The page for changing one. Which one comes from the address. */
-export function EditVehicleTypeForm() {
-  return <AdminGate>{() => <Loader />}</AdminGate>;
-}
-
 /**
  * Finds the vehicle type to edit in the admin list. Coming from the table,
  * the list is already in the cache and the form opens at once; opening the
  * address directly fetches it first.
  */
-function Loader() {
+export function EditVehicleTypeForm() {
   const { id } = useParams<{ id: string }>();
   const { data: vehicleTypes, isPending, isError, refetch, isFetching } = useAdminVehicleTypes();
 

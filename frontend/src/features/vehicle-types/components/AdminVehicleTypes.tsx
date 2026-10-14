@@ -6,7 +6,6 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
-import { AdminGate } from '@/features/auth/components/AdminGate';
 import type { ApiError } from '@/lib/api/client';
 import {
   useAdminVehicleTypes,
@@ -23,10 +22,6 @@ const DONE: Record<string, string> = {
 };
 
 export function AdminVehicleTypes() {
-  return <AdminGate>{() => <Table />}</AdminGate>;
-}
-
-function Table() {
   const done = DONE[useSearchParams().get('done') ?? ''];
   const {
     data: vehicleTypes,

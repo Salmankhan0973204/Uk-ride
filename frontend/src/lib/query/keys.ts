@@ -19,4 +19,10 @@ export const queryKeys = {
     list: () => [...queryKeys.vehicleTypes.all, 'list'] as const,
     admin: () => [...queryKeys.vehicleTypes.all, 'admin'] as const,
   },
+  vehicles: {
+    all: ['vehicles'] as const,
+    // Each page and filter is its own cache entry.
+    list: (query: object) => [...queryKeys.vehicles.all, 'list', query] as const,
+    detail: (id: string) => [...queryKeys.vehicles.all, 'detail', id] as const,
+  },
 };

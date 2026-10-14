@@ -1,5 +1,5 @@
 import { getAccessToken, hasSessionHint, setAccessToken, setSessionHint } from '@/lib/auth/session';
-import type { ApiEnvelope } from './types';
+import type { ApiEnvelope, ApiSuccessEnvelope } from './types';
 
 export const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000'
@@ -45,6 +45,19 @@ export class ApiError extends Error {
  * @param path Path after /api/v1, for example "/health".
  */
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return (await request<T>(path, init)).data;
+}
+
+/**
+ * The whole success envelope, for the few answers that carry `meta` beside
+ * `data`, such as one page of a list and its page numbers.
+ */
+export function apiFetchWithMeta<T>(path: string, init: RequestInit = {}) {
+  return request<T>(path, init);
+}
+
+/** Sends the request and checks the envelope. Both functions above use it. */
+async function request<T>(path: string, init: RequestInit): Promise<ApiSuccessEnvelope<T>> {
   let response: Response;
 
   try {
@@ -91,7 +104,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     throw new ApiError(response.status, 'UNEXPECTED_RESPONSE', 'The API request failed.');
   }
 
-  return body.data;
+  return body;
 }
 
 /** The error used when there is no session to act on. */
@@ -135,21 +148,34 @@ export function refreshAccessToken(): Promise<string> {
  * has expired (after 15 minutes) it gets a new one and tries once more. The
  * caller only sees a 401 when the session is really over.
  */
-export async function authFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const call = (token: string) =>
-    apiFetch<T>(path, { ...init, headers: { ...init.headers, Authorization: `Bearer ${token}` } });
+export function authFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return withAccessToken((headers) =>
+    apiFetch<T>(path, { ...init, headers: { ...init.headers, ...headers } }),
+  );
+}
+
+/** authFetch that returns the whole envelope, `meta` included. */
+export function authFetchWithMeta<T>(path: string, init: RequestInit = {}) {
+  return withAccessToken((headers) =>
+    apiFetchWithMeta<T>(path, { ...init, headers: { ...init.headers, ...headers } }),
+  );
+}
+
+/** Runs `call` with the access token, refreshing it once when it is missing or expired. */
+async function withAccessToken<R>(call: (headers: { Authorization: string }) => Promise<R>) {
+  const send = (token: string) => call({ Authorization: `Bearer ${token}` });
 
   let token = getAccessToken();
   if (!token) {
     if (!hasSessionHint()) throw signedOut();
     token = await refreshAccessToken();
-    return call(token);
+    return send(token);
   }
 
   try {
-    return await call(token);
+    return await send(token);
   } catch (error) {
     if (!(error instanceof ApiError) || error.status !== 401) throw error;
-    return call(await refreshAccessToken());
+    return send(await refreshAccessToken());
   }
 }

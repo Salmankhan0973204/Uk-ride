@@ -137,10 +137,10 @@ function Profile({ user, onSigningOut }: { user: User; onSigningOut: () => void 
           <p className="text-base leading-relaxed">
             You are an administrator.{' '}
             <Link
-              href="/admin/vehicle-types"
+              href="/admin/vehicles"
               className="font-medium underline decoration-ring/70 decoration-2 underline-offset-4 hover:decoration-ring"
             >
-              Manage vehicle types
+              Open the admin area
             </Link>
           </p>
         ) : null}

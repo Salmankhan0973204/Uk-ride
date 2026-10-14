@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="pt-2 sm:pt-6">
+    <>
       {/* The table reads "?done=" from the address, which is only known in the browser. */}
       <Suspense fallback={null}>
         <AdminVehicleTypes />
       </Suspense>
-    </div>
+    </>
   );
 }

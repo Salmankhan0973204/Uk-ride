@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="pt-2 sm:pt-6">
+    <>
       <NewVehicleTypeForm />
-    </div>
+    </>
   );
 }

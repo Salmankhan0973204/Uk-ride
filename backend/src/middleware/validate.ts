@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { RequestHandler, Response } from 'express';
 import { z } from 'zod';
 import { AppError } from '../shared/AppError.js';
 
@@ -25,4 +25,31 @@ export function validate(schema: z.ZodType): RequestHandler {
     req.body = result.data;
     next();
   };
+}
+
+/**
+ * The same check for the query string: `?page=2&status=ACTIVE`.
+ *
+ * Everything in a query string is text, so the schema converts what it needs
+ * (`z.coerce.number()` turns "2" into 2). Express 5 does not let `req.query`
+ * be replaced, so the parsed values go in `res.locals.query`; read them with
+ * `validQuery(res)`.
+ */
+export function validateQuery(schema: z.ZodType): RequestHandler {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.query);
+
+    if (!result.success) {
+      const { fieldErrors, formErrors } = z.flattenError(result.error);
+      throw AppError.validation(fieldErrors, formErrors[0] ?? 'The query string is not valid');
+    }
+
+    res.locals.query = result.data;
+    next();
+  };
+}
+
+/** The query string as checked by validateQuery. */
+export function validQuery<T>(res: Response): T {
+  return res.locals.query as T;
 }

@@ -520,3 +520,22 @@ Expect `201` with `registration` = `AB12CDE` and `status` = `ACTIVE`, then `200`
 | a vehicle type that is switched off         | `400` on `vehicleTypeId`                      |
 | `{"status":"RETIRED"}` in the add or change | `400`: status has its own endpoint (step 4.6) |
 | an id that does not exist                   | `404`                                         |
+
+### 4.3 The fleet, page by page
+
+```powershell
+$list = Invoke-RestMethod 'http://localhost:4000/api/v1/admin/vehicles?page=1&pageSize=10&status=ACTIVE&type=executive&search=ab12' -Headers $headers
+$list.meta
+$list.data.vehicles | Select-Object registration, make, model, status
+```
+
+`meta` holds `page`, `pageSize`, `total` and `totalPages`. Every part of the query is optional.
+
+| Query                | Answer                                                      |
+| -------------------- | ----------------------------------------------------------- |
+| `?page=0`            | `400` "Page must be 1 or more"                              |
+| `?pageSize=500`      | `400` "Page size must be at most 100"                       |
+| `?status=broken`     | `400` "Status must be ACTIVE, MAINTENANCE or RETIRED"       |
+| `?statu=ACTIVE`      | `400` "Use only page, pageSize, status, type and search"    |
+| `?search=ab12%20cde` | finds `AB12CDE`: spaces and case are ignored for plates     |
+| a page past the last | `200` with no rows; `meta.totalPages` says where the end is |

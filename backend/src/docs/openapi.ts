@@ -612,6 +612,61 @@ export const openApiDocument = {
       },
     },
     '/admin/vehicles': {
+      get: {
+        tags: ['Admin'],
+        summary: 'The fleet, one page at a time',
+        description:
+          'Sorted by registration. Filters combine. `search` looks in the registration ' +
+          '(spaces and case ignored), make, model and colour. A page past the last one ' +
+          'answers 200 with no rows.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } },
+          {
+            name: 'pageSize',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+          },
+          {
+            name: 'status',
+            in: 'query',
+            schema: { type: 'string', enum: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] },
+          },
+          {
+            name: 'type',
+            in: 'query',
+            description: "A vehicle type's slug",
+            schema: { type: 'string', example: 'executive' },
+          },
+          { name: 'search', in: 'query', schema: { type: 'string', maxLength: 40 } },
+        ],
+        responses: {
+          200: jsonResponse('Vehicles', {
+            allOf: [
+              successEnvelope({
+                type: 'object',
+                required: ['vehicles'],
+                properties: {
+                  vehicles: { type: 'array', items: { $ref: '#/components/schemas/Vehicle' } },
+                },
+              }),
+              {
+                type: 'object',
+                required: ['meta'],
+                properties: { meta: { $ref: '#/components/schemas/PageMeta' } },
+              },
+            ],
+          }),
+          400: jsonResponse('A query value is not valid, or an unknown name was used', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
       post: {
         tags: ['Admin'],
         summary: 'Add a vehicle to the fleet',
@@ -1023,6 +1078,16 @@ export const openApiDocument = {
           vehicleTypeId: { type: 'string', format: 'uuid' },
         },
         example: { colour: 'Silver' },
+      },
+      PageMeta: {
+        type: 'object',
+        required: ['page', 'pageSize', 'total', 'totalPages'],
+        properties: {
+          page: { type: 'integer', example: 2 },
+          pageSize: { type: 'integer', example: 20 },
+          total: { type: 'integer', example: 25, description: 'Rows matching the filters' },
+          totalPages: { type: 'integer', example: 2 },
+        },
       },
       ApiFailure: {
         type: 'object',

@@ -1,0 +1,32 @@
+meta {
+  name: Admin List Vehicles
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/admin/vehicles?page=1&pageSize=20&status=ACTIVE&search=
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  pageSize: 20
+  status: ACTIVE
+  search:
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.vehicles: isArray
+  res.body.meta.totalPages: isNumber
+}
+
+docs {
+  Add type=executive to filter by vehicle type. Every query parameter is optional.
+}

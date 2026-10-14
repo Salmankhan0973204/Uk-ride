@@ -69,3 +69,44 @@ export const updateVehicleSchema = z
 
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
 export type UpdateVehicleInput = z.infer<typeof updateVehicleSchema>;
+
+export const VEHICLE_STATUSES = ['ACTIVE', 'MAINTENANCE', 'RETIRED'] as const;
+export const MAX_PAGE_SIZE = 100;
+
+/** An empty value (`?search=`) counts as not sent. */
+const blankToUndefined = (value: unknown) => (value === '' ? undefined : value);
+
+/**
+ * GET /admin/vehicles?page=2&pageSize=20&status=ACTIVE&type=executive&search=ab12
+ *
+ * Every part is optional. Unknown names are refused, so a typo such as
+ * `?statu=ACTIVE` is reported instead of silently showing every vehicle.
+ */
+export const listVehiclesQuery = z.strictObject(
+  {
+    page: z.coerce
+      .number('Page must be a number')
+      .int('Page must be a whole number')
+      .min(1, 'Page must be 1 or more')
+      .default(1),
+    pageSize: z.coerce
+      .number('Page size must be a number')
+      .int('Page size must be a whole number')
+      .min(1, 'Page size must be 1 or more')
+      .max(MAX_PAGE_SIZE, `Page size must be at most ${MAX_PAGE_SIZE}`)
+      .default(20),
+    status: z.preprocess(
+      blankToUndefined,
+      z.enum(VEHICLE_STATUSES, 'Status must be ACTIVE, MAINTENANCE or RETIRED').optional(),
+    ),
+    // A vehicle type's slug, as in the public catalogue.
+    type: z.preprocess(blankToUndefined, z.string().trim().toLowerCase().max(40).optional()),
+    search: z.preprocess(
+      blankToUndefined,
+      z.string().trim().max(40, 'Search must be at most 40 characters').optional(),
+    ),
+  },
+  'Use only page, pageSize, status, type and search',
+);
+
+export type ListVehiclesQuery = z.infer<typeof listVehiclesQuery>;

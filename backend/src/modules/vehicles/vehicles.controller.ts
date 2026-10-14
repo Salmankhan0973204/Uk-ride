@@ -1,9 +1,21 @@
 import type { RequestHandler } from 'express';
 import { sendSuccess } from '../../shared/response.js';
-import type { CreateVehicleInput, UpdateVehicleInput } from './vehicles.schemas.js';
-import { createVehicle, getVehicle, updateVehicle } from './vehicles.service.js';
+import { validQuery } from '../../middleware/validate.js';
+import type {
+  CreateVehicleInput,
+  ListVehiclesQuery,
+  UpdateVehicleInput,
+} from './vehicles.schemas.js';
+import { createVehicle, getVehicle, listVehicles, updateVehicle } from './vehicles.service.js';
 
 type ById = { id: string };
+
+/** One page of the fleet. The page numbers go in `meta`, beside the rows. */
+export const list: RequestHandler = async (_req, res) => {
+  const { vehicles, meta } = await listVehicles(validQuery<ListVehiclesQuery>(res));
+  res.set('Cache-Control', 'no-store');
+  sendSuccess(res, { message: 'Vehicles', data: { vehicles }, meta });
+};
 
 /** One vehicle. */
 export const getOne: RequestHandler<ById> = async (req, res) => {

@@ -4,34 +4,34 @@ Update this file after every coding session.
 
 - **Current module:** Module 4 - Fleet Vehicles
 - **Last completed:** Module 3 - Vehicle Types
-- **Next step:** 4.3 - List with pagination, filter and search
-- **Steps done:** 29 of 113
+- **Next step:** 4.4 - Admin vehicles table with pages
+- **Steps done:** 30 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend     | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
-| --- | -------------------------------------------------- | ----- | ----------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 4   | Fleet Vehicles                                     | 2/6   | In progress | -          | -           | -              | -                            | In progress |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -           | -          | -           | -              | -                            | -           |
-| 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -          | -           | -              | -                            | -           |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -          | -           | -              | -                            | -           |
-| 11  | Notifications + Email                              | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -          | -           | -              | -                            | -           |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
+| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 4   | Fleet Vehicles                                     | 3/6   | Done    | Done       | -           | -              | -                            | In progress |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -           |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -           |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -           |
+| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -           |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -           |
 
 ## Steps
 
@@ -92,7 +92,7 @@ runs.
 
 - [x] 4.1 `Vehicle` model linked to `VehicleType`. _Learn: relations, unique constraints._
 - [x] 4.2 Admin CRUD endpoints.
-- [ ] 4.3 List with pagination, filter and search. _Learn: query parameters, `meta`._
+- [x] 4.3 List with pagination, filter and search. _Learn: query parameters, `meta`._
 - [ ] 4.4 Admin vehicles table with pages. _Learn: paginated queries._
 - [ ] 4.5 Create and edit form with a vehicle type select. _Learn: dependent data._
 - [ ] 4.6 Change vehicle status (active, maintenance), design pass.
@@ -1559,3 +1559,40 @@ Learning notes
   row. Each becomes an answer that names the field to fix.
 - Not every resource needs DELETE. When other records will point at a row, a status that
   says "no longer in use" is safer than removing it.
+
+#### Step 4.3 - List with pagination, filter and search (done 2026-10-14)
+
+Built
+
+- `GET /admin/vehicles?page=&pageSize=&status=&type=&search=`. Every part is optional:
+  page 1 and 20 per page by default, at most 100 per page.
+- `status` filters by `ACTIVE`, `MAINTENANCE` or `RETIRED`; `type` by a vehicle type's slug;
+  `search` looks in the registration (spaces and case ignored), make, model and colour.
+  Filters combine.
+- `meta`: `page`, `pageSize`, `total` (rows matching the filters), `totalPages`.
+- `validateQuery()` and `validQuery()` in `backend/src/middleware/validate.ts`: the query
+  string is checked by a Zod schema like a body, and unknown names are refused.
+
+Verified (by hand against the running API, with 25 vehicles; no automated tests)
+
+- No query: page 1 of 2, 20 rows sorted by registration, `total` 25. Page 2 held the last 5.
+  `pageSize=10&page=3` held the last 5 of 3 pages.
+- `status=MAINTENANCE` found the 3 cars in maintenance, `status=RETIRED` the 1 retired;
+  `type=mpv` the 8 people carriers; `type=MPV&status=ACTIVE&pageSize=5` 7 rows on 2 pages.
+- `search=ts05 abc` found `TS05ABC`; `search=skoda` found 6; combined with `type=mpv`, 2.
+  A search with no match answered `total` 0. `?search=&status=` counted as no filter.
+- `page=0`, `pageSize=500`, `page=two`, `status=broken` and the typo `statu=` each answered
+  400 with the reason. `page=99` answered 200 with no rows and `totalPages` 2.
+- A customer's token answered 403.
+
+Learning notes
+
+- Pagination is `skip` and `take`: page 3 of 10 per page skips 20 rows and takes 10.
+- The client cannot draw "page 2 of 5" from the rows alone, so the totals go in `meta`. A
+  count and a page with the same `where`, in one transaction, keep the two in agreement.
+- A paginated list needs a fixed `orderBy`. Without one, the database may return rows in a
+  different order each time, and a row could appear on two pages or on none.
+- Query string values are always text. `z.coerce.number()` turns "2" into 2; an empty value
+  is treated as "not sent" so an empty search box does not filter.
+- Filters are built by adding pieces to one `where` object. A filter that was not sent adds
+  nothing.

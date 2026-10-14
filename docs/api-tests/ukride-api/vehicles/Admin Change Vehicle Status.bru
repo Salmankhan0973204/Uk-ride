@@ -1,0 +1,30 @@
+meta {
+  name: Admin Change Vehicle Status
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/admin/vehicles/{{vehicleId}}/status
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "status": "MAINTENANCE"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.vehicle.status: eq MAINTENANCE
+}
+
+docs {
+  ACTIVE, MAINTENANCE or RETIRED. Every move is allowed, including back from RETIRED.
+}

@@ -1,5 +1,12 @@
 import { authFetch, authFetchWithMeta } from '@/lib/api/client';
-import type { NewVehicle, PageMeta, Vehicle, VehicleChanges, VehicleListQuery } from '../types';
+import type {
+  NewVehicle,
+  PageMeta,
+  Vehicle,
+  VehicleChanges,
+  VehicleListQuery,
+  VehicleStatus,
+} from '../types';
 
 type One = { vehicle: Vehicle };
 
@@ -35,5 +42,11 @@ export const vehiclesApi = {
     authFetch<One>(`/admin/vehicles/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify(changes),
+    }),
+
+  changeStatus: (id: string, status: VehicleStatus) =>
+    authFetch<One>(`/admin/vehicles/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
     }),
 };

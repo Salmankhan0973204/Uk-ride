@@ -49,8 +49,9 @@ Screens never ask a customer to compare or choose between operators.
 - Built so far: the app shell and the `/system-status` screen (Module 0); the `/register`,
   `/login`, `/verify-email`, `/forgot-password` and `/reset-password` screens (Module 1); the
   `/account` profile page with `/account/edit` and `/account/password` (Module 2); the public
-  `/vehicles` catalogue and the admin screens under `/admin/vehicle-types` (Module 3).
-- Planned, in order: fleet, pricing and quotes,
+  `/vehicles` catalogue and the admin screens under `/admin/vehicle-types` (Module 3); the
+  fleet screens under `/admin/vehicles` (Module 4).
+- Planned, in order: pricing and quotes,
   bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
   real-time status and driver location, document uploads, reviews, admin reporting.
 - Prices, payment state and booking status always come from the server.

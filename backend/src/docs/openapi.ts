@@ -770,6 +770,54 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/vehicles/{id}/status': {
+      patch: {
+        tags: ['Admin'],
+        summary: "Change a vehicle's status",
+        description:
+          'ACTIVE (can be given jobs), MAINTENANCE (in the garage) or RETIRED (left the ' +
+          'fleet, kept for history). Every move is allowed, including back from RETIRED. ' +
+          'Asking for the status the vehicle already has changes nothing.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status'],
+                additionalProperties: false,
+                properties: {
+                  status: { type: 'string', enum: ['ACTIVE', 'MAINTENANCE', 'RETIRED'] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Vehicle status changed',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicle'],
+              properties: { vehicle: { $ref: '#/components/schemas/Vehicle' } },
+            }),
+          ),
+          400: jsonResponse('Not one of the three statuses, or another field was sent', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No vehicle has this id', { $ref: '#/components/schemas/ApiFailure' }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {

@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 4 - Fleet Vehicles
-- **Last completed:** Module 3 - Vehicle Types
-- **Next step:** 4.6 - Change vehicle status, design pass
-- **Steps done:** 32 of 113
+- **Current module:** none in progress
+- **Last completed:** Module 4 - Fleet Vehicles
+- **Next step:** 5.1 - `PricingRule` model per vehicle type
+- **Steps done:** 33 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 4   | Fleet Vehicles                                     | 5/6   | Done    | Done       | In progress | In progress    | -                            | In progress |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -           |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -           |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -           |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -           |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
+| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 4   | Fleet Vehicles                                     | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | Next     |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
 
 ## Steps
 
@@ -95,7 +95,7 @@ runs.
 - [x] 4.3 List with pagination, filter and search. _Learn: query parameters, `meta`._
 - [x] 4.4 Admin vehicles table with pages. _Learn: paginated queries._
 - [x] 4.5 Create and edit form with a vehicle type select. _Learn: dependent data._
-- [ ] 4.6 Change vehicle status (active, maintenance), design pass.
+- [x] 4.6 Change vehicle status (active, maintenance), design pass.
 
 ### Module 5 - Pricing Rules + Quote Engine
 
@@ -1480,7 +1480,7 @@ Open items
   about it, nor about any Module 3 endpoint.
 - The seeded vehicle types are placeholders, not a real fleet. There are no photographs.
 
-### Module 4 - Fleet Vehicles (in progress)
+### Module 4 - Fleet Vehicles (completed 2026-10-14)
 
 #### Step 4.1 - `Vehicle` model linked to `VehicleType` (done 2026-10-14)
 
@@ -1690,3 +1690,70 @@ Learning notes
   the car may not be on any page in the cache, so it is fetched by id.
 - Options can depend on the record: a switched-off type is shown only to a car that already
   has it.
+
+#### Step 4.6 - Change vehicle status, design pass (done 2026-10-14)
+
+Built
+
+- `PATCH /admin/vehicles/:id/status` with `{ "status": "ACTIVE" | "MAINTENANCE" | "RETIRED" }`.
+  Every move is allowed, including back from retired; the same status again changes nothing.
+- A "Status" section at the bottom of a vehicle's edit page: the current status as a pill,
+  three choice rows that say what each status means, and one glass button that names the
+  action ("Send to maintenance", "Retire SK24 SUP", "Bring back into service"). Choosing
+  retired adds a warning that says what it means. The section saves on its own, at once.
+- `useChangeVehicleStatus()`, which invalidates `vehicles.all` like the other mutations.
+
+Verified
+
+- Lint, typecheck and the production build (22 routes) pass. No automated tests were written.
+- By hand against the running API: each status, the same status twice, retired back to active
+  (all 200); an unknown status, an extra field and an empty body (400); an unknown id (404); a
+  customer's token (403).
+- In a real browser: the section opened on "Active" with the button disabled and saying
+  "Choose a new status"; choosing "In maintenance" changed the button to "Send to
+  maintenance", saved, and showed "The status is now in maintenance"; choosing "Retired"
+  showed the warning and "Retire SK24 SUP"; the table's "Retired" filter then listed the car;
+  "Bring back into service" returned it to active; picking another status and then the
+  current one again disabled the button; arrow keys moved between the choices.
+- No horizontal scrolling at 1440px, 390px and 360px.
+
+Design pass
+
+- A manual pass over the fleet table, the form and the status section against `DESIGN.md`:
+  one accent button per page, divider rows, no glass inside glass, 44px targets, status as
+  words. The Impeccable scanner reported nothing on the new files.
+- Fixed: the search label sat lower than the dropdown labels; the table was 30px too wide at
+  360px; the browser's radio buttons were dark discs that were hard to see on glass, now drawn
+  by hand.
+- `DESIGN.md` gained the filter bar, pagination, choice rows, the admin menu and how plates
+  are shown.
+- The independent finish review was not run for these screens.
+
+Learning notes
+
+- Status gets its own endpoint because it is an action, not a field. Later modules will add
+  rules (a car with a trip today cannot be retired), and they will live in one place.
+- A two-step choice (pick, then press a button that names the action) protects against a
+  slip, without the interruption of a confirmation dialog.
+- A disabled button must say why it is disabled. "Choose a new status" does.
+
+### Module 4 summary
+
+Built: the `Vehicle` model linked to `VehicleType`; admin endpoints to add, read, change,
+list (with pages, filters and search) and change the status of vehicles; the fleet table,
+the add and edit form with a vehicle type select, and the status section; an `/admin` layout
+with one admin check and an admin menu.
+
+Checks at completion: typecheck and lint pass for both apps, the frontend builds, and every
+endpoint and screen was checked by hand against the running system. There are no automated
+tests in the local code.
+
+Open items
+
+- No real fleet: there is no seed data for vehicles, on purpose.
+- A vehicle cannot be deleted, only retired. A car added by mistake stays in the list.
+- Status changes are not recorded anywhere: there is no history of when a car went into
+  maintenance or who retired it. An audit trail fits Module 15.
+- The status rules are open: any move is allowed. Rules tied to bookings come with Module 6.
+- The list has 20 rows a page with no way to change it on screen; the API accepts up to 100.
+- The tests on GitHub know nothing about vehicles, roles or the admin area.

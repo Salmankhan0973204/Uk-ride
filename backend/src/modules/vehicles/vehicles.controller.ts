@@ -2,11 +2,18 @@ import type { RequestHandler } from 'express';
 import { sendSuccess } from '../../shared/response.js';
 import { validQuery } from '../../middleware/validate.js';
 import type {
+  ChangeStatusInput,
   CreateVehicleInput,
   ListVehiclesQuery,
   UpdateVehicleInput,
 } from './vehicles.schemas.js';
-import { createVehicle, getVehicle, listVehicles, updateVehicle } from './vehicles.service.js';
+import {
+  changeVehicleStatus,
+  createVehicle,
+  getVehicle,
+  listVehicles,
+  updateVehicle,
+} from './vehicles.service.js';
 
 type ById = { id: string };
 
@@ -35,4 +42,10 @@ export const create: RequestHandler = async (req, res) => {
 export const update: RequestHandler<ById> = async (req, res) => {
   const vehicle = await updateVehicle(req.params.id, req.body as UpdateVehicleInput);
   sendSuccess(res, { message: 'Vehicle updated', data: { vehicle } });
+};
+
+/** Changes a vehicle's status. */
+export const changeStatus: RequestHandler<ById> = async (req, res) => {
+  const vehicle = await changeVehicleStatus(req.params.id, req.body as ChangeStatusInput);
+  sendSuccess(res, { message: 'Vehicle status changed', data: { vehicle } });
 };

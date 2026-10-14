@@ -11,10 +11,11 @@ and runs on a local machine.
 
 ## Status
 
-**Modules 0 to 3 of 17 are complete.** You can create an account, sign in, confirm your
+**Modules 0 to 4 of 17 are complete.** You can create an account, sign in, confirm your
 email, reset a forgotten password, edit your profile, change your password and browse the
-vehicle types. An admin can add, edit and switch off vehicle types. Fleet vehicles are next.
-The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
+vehicle types. An admin can manage vehicle types and the fleet: add, edit, search, filter
+and page through vehicles, and move them between active, maintenance and retired. Pricing
+rules and quotes are next. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                                        | Status   |
 | --- | --------------------------------------------- | -------- |
@@ -22,8 +23,8 @@ The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 | 1   | Authentication: register, login, current user | Complete |
 | 2   | Profile management                            | Complete |
 | 3   | Vehicle types: admin CRUD + customer catalog  | Complete |
-| 4   | Fleet vehicles                                | Next     |
-| 5   | Pricing rules + quote engine                  | Planned  |
+| 4   | Fleet vehicles                                | Complete |
+| 5   | Pricing rules + quote engine                  | Next     |
 | 6   | Booking creation                              | Planned  |
 | 7   | My bookings: list + detail                    | Planned  |
 | 8   | Booking edit + cancellation                   | Planned  |
@@ -149,7 +150,7 @@ and the page recovers by itself. Create an account at http://localhost:3000/regi
 and see your profile at http://localhost:3000/account, where you can edit it and change your
 password. The vehicle types are at http://localhost:3000/vehicles. To manage them, make your
 account an admin with `npm run db:set-role -w backend -- you@example.com ADMIN`, sign in again
-and open http://localhost:3000/admin/vehicle-types.
+and open http://localhost:3000/admin, which leads to the fleet and the vehicle types.
 
 ## Scripts
 
@@ -214,33 +215,34 @@ Never commit `.env` or `.env.local`. Only the example files are tracked.
 
 Base URL: `http://localhost:4000/api/v1`
 
-| Method | Path                        | Purpose                                                   |
-| ------ | --------------------------- | --------------------------------------------------------- |
-| GET    | `/health`                   | Service name, version, environment, uptime                |
-| GET    | `/health/live`              | The process is alive                                      |
-| GET    | `/health/ready`             | The database answers; `503` when it cannot be reached     |
-| POST   | `/auth/register`            | Create an account: name, email, mobile number, password   |
-| POST   | `/auth/login`               | Sign in and receive an access token                       |
-| POST   | `/auth/refresh`             | New access token from the refresh cookie                  |
-| POST   | `/auth/logout`              | Sign out: revoke the refresh token, clear the cookie      |
-| GET    | `/auth/me`                  | The signed-in user; needs `Authorization: Bearer <token>` |
-| POST   | `/auth/verify-email`        | Confirm an email address with the emailed token           |
-| POST   | `/auth/resend-verification` | Send the confirmation link again (signed in)              |
-| POST   | `/auth/forgot-password`     | Ask for a password reset link                             |
-| POST   | `/auth/reset-password`      | Choose a new password with the emailed token              |
-| GET    | `/users/me`                 | Your profile (signed in)                                  |
-| PATCH  | `/users/me`                 | Change your name, mobile number or gender                 |
-| POST   | `/users/me/password`        | Change your password; signs out other devices             |
-| GET    | `/vehicle-types`            | The catalogue of vehicle types (public)                   |
-| GET    | `/vehicle-types/:slug`      | One vehicle type, for example `executive` (public)        |
-| GET    | `/admin/vehicle-types`      | Every vehicle type, including switched-off ones (admin)   |
-| POST   | `/admin/vehicle-types`      | Add a vehicle type (admin)                                |
-| PATCH  | `/admin/vehicle-types/:id`  | Change a vehicle type, or switch it back on (admin)       |
-| DELETE | `/admin/vehicle-types/:id`  | Switch a vehicle type off; the row is kept (admin)        |
-| GET    | `/admin/vehicles`           | The fleet: pages, status and type filters, search (admin) |
-| POST   | `/admin/vehicles`           | Add a vehicle to the fleet (admin)                        |
-| GET    | `/admin/vehicles/:id`       | One vehicle with its type (admin)                         |
-| PATCH  | `/admin/vehicles/:id`       | Change a vehicle's details (admin)                        |
+| Method | Path                         | Purpose                                                   |
+| ------ | ---------------------------- | --------------------------------------------------------- |
+| GET    | `/health`                    | Service name, version, environment, uptime                |
+| GET    | `/health/live`               | The process is alive                                      |
+| GET    | `/health/ready`              | The database answers; `503` when it cannot be reached     |
+| POST   | `/auth/register`             | Create an account: name, email, mobile number, password   |
+| POST   | `/auth/login`                | Sign in and receive an access token                       |
+| POST   | `/auth/refresh`              | New access token from the refresh cookie                  |
+| POST   | `/auth/logout`               | Sign out: revoke the refresh token, clear the cookie      |
+| GET    | `/auth/me`                   | The signed-in user; needs `Authorization: Bearer <token>` |
+| POST   | `/auth/verify-email`         | Confirm an email address with the emailed token           |
+| POST   | `/auth/resend-verification`  | Send the confirmation link again (signed in)              |
+| POST   | `/auth/forgot-password`      | Ask for a password reset link                             |
+| POST   | `/auth/reset-password`       | Choose a new password with the emailed token              |
+| GET    | `/users/me`                  | Your profile (signed in)                                  |
+| PATCH  | `/users/me`                  | Change your name, mobile number or gender                 |
+| POST   | `/users/me/password`         | Change your password; signs out other devices             |
+| GET    | `/vehicle-types`             | The catalogue of vehicle types (public)                   |
+| GET    | `/vehicle-types/:slug`       | One vehicle type, for example `executive` (public)        |
+| GET    | `/admin/vehicle-types`       | Every vehicle type, including switched-off ones (admin)   |
+| POST   | `/admin/vehicle-types`       | Add a vehicle type (admin)                                |
+| PATCH  | `/admin/vehicle-types/:id`   | Change a vehicle type, or switch it back on (admin)       |
+| DELETE | `/admin/vehicle-types/:id`   | Switch a vehicle type off; the row is kept (admin)        |
+| GET    | `/admin/vehicles`            | The fleet: pages, status and type filters, search (admin) |
+| POST   | `/admin/vehicles`            | Add a vehicle to the fleet (admin)                        |
+| GET    | `/admin/vehicles/:id`        | One vehicle with its type (admin)                         |
+| PATCH  | `/admin/vehicles/:id`        | Change a vehicle's details (admin)                        |
+| PATCH  | `/admin/vehicles/:id/status` | Active, in maintenance or retired (admin)                 |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

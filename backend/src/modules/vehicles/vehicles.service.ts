@@ -2,6 +2,7 @@ import { prisma } from '../../config/db.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
 import type {
+  ChangeStatusInput,
   CreateVehicleInput,
   ListVehiclesQuery,
   UpdateVehicleInput,
@@ -114,4 +115,23 @@ export async function listVehicles({ page, pageSize, status, type, search }: Lis
     vehicles,
     meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
   };
+}
+
+/**
+ * Moves a vehicle between ACTIVE, MAINTENANCE and RETIRED.
+ *
+ * Every move is allowed, including RETIRED back to ACTIVE: a car retired by
+ * mistake must be recoverable. Asking for the status it already has changes
+ * nothing and is not an error.
+ *
+ * Later modules will add rules here (a car with a booking today cannot be
+ * retired). That is why status has an endpoint of its own: the rules for an
+ * action live in one place.
+ */
+export async function changeVehicleStatus(id: string, { status }: ChangeStatusInput) {
+  try {
+    return await prisma.vehicle.update({ where: { id }, data: { status }, select: vehicleSelect });
+  } catch (err) {
+    explain(err);
+  }
 }

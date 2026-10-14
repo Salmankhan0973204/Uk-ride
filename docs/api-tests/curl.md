@@ -539,3 +539,12 @@ $list.data.vehicles | Select-Object registration, make, model, status
 | `?statu=ACTIVE`      | `400` "Use only page, pageSize, status, type and search"    |
 | `?search=ab12%20cde` | finds `AB12CDE`: spaces and case are ignored for plates     |
 | a page past the last | `200` with no rows; `meta.totalPages` says where the end is |
+
+### 4.6 Change a vehicle's status
+
+```powershell
+Invoke-RestMethod "http://localhost:4000/api/v1/admin/vehicles/$id/status" -Method Patch -Headers $headers -ContentType 'application/json' -Body '{"status":"MAINTENANCE"}'
+```
+
+Expect `200` with `status` = `MAINTENANCE`. `RETIRED` and back to `ACTIVE` work the same way.
+`{"status":"SCRAPPED"}` answers `400`, and so does sending any other field with it.

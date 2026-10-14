@@ -310,7 +310,7 @@ Icons are drawn inline as SVG on a 24 unit grid: one stroke in the current text 
 - **Primary:** the Accent Indigo to Accent Violet gradient at 135 degrees, white label, the primary button shadow. One per page.
 - **Ghost:** glass fill, glass border, white label, no shadow. Used for every secondary action and for "Sign up" in the navigation bar (there it is fully rounded and 44px tall).
 - **Hover / Active:** primary brightens by 10% and its shadow deepens; ghost switches to Strong Glass. Both shrink to 98% while pressed. Transitions take 180ms.
-- **Busy:** a button is disabled only while its own request is running. It fades to 70%, shows a spinner where there is room, and its label changes to say what is happening ("Signing you in").
+- **Busy:** a button is disabled while its own request is running, or when there is nothing for it to do yet, in which case its label says what is needed ("Choose a new status") and it fades to 50% with a not-allowed cursor. It fades to 70%, shows a spinner where there is room, and its label changes to say what is happening ("Signing you in").
 - **Compact:** a 44px tall ghost button with small text, for a secondary action inside a row or notice.
 
 ### Status pill
@@ -346,6 +346,21 @@ A tinted box inside a panel for a message about the whole form or page: 16px cor
 
 ### Tables
 For staff screens, where rows are compared. A real `table` inside a panel: a header row in Muted Ink at label size between two 1px lines, then rows split by 1px lines. Numbers are right-aligned with tabular figures. The first cell holds the name in semibold with its slug below in Geist Mono and Muted Ink; a row that is switched off sets its name in Muted Ink. The last cell holds compact ghost buttons, right-aligned. Status is a pill. As the screen narrows, columns are hidden and their values fold into the first cell (position below 1024px, counts below 768px, status below 640px), so the page never scrolls sideways.
+
+### Filter bar
+Above a long table: a search box with its own glass "Search" button, then one dropdown per filter, each with a visible label and an "Any ..." row that clears it. On wide screens they share one row, the search taking the most room; on a phone they stack. A filter applies as soon as it is chosen; search applies on the button or Enter. Every filter, and the page number, is kept in the address.
+
+### Pagination
+Under the table: "21 to 25 of 25 vehicles, page 2 of 2" in Muted Ink at small size on the left, compact glass "Previous" and "Next" links on the right. At either end the link that goes nowhere is shown at 40% and is not a link. While the next page loads, the table stays, fades to 60% and says "Loading page 3".
+
+### Choice rows
+For choosing one of a few options that each need a sentence of explanation, such as a vehicle's status: radio buttons in divider rows, the label in medium weight and the meaning below it in Muted Ink. The radio is drawn by hand: a 20px circle with a 2px Muted Ink outline, which becomes a 6px Focus Lavender ring when chosen. The current value is marked "(now)". Choosing changes nothing until the button below is pressed; that button names the action ("Retire SK24 SUP") and says "Choose a new status" while there is nothing to do. A choice with consequences adds a warning notice above the button.
+
+### Admin menu
+Above every admin panel, outside it: the word "Admin" in Muted Ink, then one fully rounded 44px link per admin screen. The current screen has a Strong Glass fill and a Glass Border; the others are Muted Ink until hovered.
+
+### Registration plates
+Shown in Geist Mono, semibold, slightly tracked, never wrapped. Current UK plates are shown with their space ("AB12 CDE") though they are stored without it.
 
 ### Accent tiles
 A small rounded square filled with the same Accent Indigo to Accent Violet gradient as the primary button, with the Lift shadow. Three uses: the brand mark (28px, 8px corners), the open step number (40px, 12px corners) and the account avatar (56px, 16px corners). A step that is not open is the same size with a Line outline and no fill. A neutral tile (Strong Glass fill, Glass Border, 48px, 16px corners) holds the Mint tick on success screens.

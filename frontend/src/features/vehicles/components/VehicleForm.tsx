@@ -13,6 +13,7 @@ import type { ApiError } from '@/lib/api/client';
 import { formatRegistration } from '../format';
 import { useCreateVehicle, useUpdateVehicle, useVehicle } from '../hooks/useVehicleActions';
 import type { NewVehicle, Vehicle, VehicleChanges } from '../types';
+import { VehicleStatusSection } from './VehicleStatusSection';
 
 const LIST = '/admin/vehicles';
 const MIN_YEAR = 1990;
@@ -433,6 +434,13 @@ function Form({ types, vehicle }: { types: AdminVehicleType[]; vehicle?: Vehicle
             </Link>
           </div>
         </form>
+
+        {vehicle ? (
+          <VehicleStatusSection
+            vehicle={vehicle}
+            plate={formatRegistration(vehicle.registration)}
+          />
+        ) : null}
       </div>
     </Card>
   );

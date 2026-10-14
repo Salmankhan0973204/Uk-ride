@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ApiError } from '@/lib/api/client';
 import { queryKeys } from '@/lib/query/keys';
 import { vehiclesApi } from '../api/vehicles.api';
-import type { NewVehicle, Vehicle, VehicleChanges } from '../types';
+import type { NewVehicle, Vehicle, VehicleChanges, VehicleStatus } from '../types';
 
 type One = { vehicle: Vehicle };
 
@@ -41,6 +41,15 @@ export function useUpdateVehicle() {
   const refresh = useRefreshVehicles();
   return useMutation<One, ApiError, { id: string; changes: VehicleChanges }>({
     mutationFn: ({ id, changes }) => vehiclesApi.update(id, changes),
+    onSuccess: refresh,
+  });
+}
+
+/** Moves a vehicle between active, in maintenance and retired. */
+export function useChangeVehicleStatus() {
+  const refresh = useRefreshVehicles();
+  return useMutation<One, ApiError, { id: string; status: VehicleStatus }>({
+    mutationFn: ({ id, status }) => vehiclesApi.changeStatus(id, status),
     onSuccess: refresh,
   });
 }

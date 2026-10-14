@@ -110,3 +110,11 @@ export const listVehiclesQuery = z.strictObject(
 );
 
 export type ListVehiclesQuery = z.infer<typeof listVehiclesQuery>;
+
+/** Body of PATCH /admin/vehicles/:id/status. */
+export const changeStatusSchema = z.strictObject(
+  { status: z.enum(VEHICLE_STATUSES, 'Status must be ACTIVE, MAINTENANCE or RETIRED') },
+  'Send status only',
+);
+
+export type ChangeStatusInput = z.infer<typeof changeStatusSchema>;

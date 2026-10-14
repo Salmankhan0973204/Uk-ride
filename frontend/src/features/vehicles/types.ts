@@ -37,3 +37,16 @@ export interface PageMeta {
   total: number;
   totalPages: number;
 }
+
+/** Body of POST /api/v1/admin/vehicles. */
+export interface NewVehicle {
+  registration: string;
+  make: string;
+  model: string;
+  colour: string;
+  year: number;
+  vehicleTypeId: string;
+}
+
+/** Body of PATCH /api/v1/admin/vehicles/:id. Send only the fields to change. */
+export type VehicleChanges = Partial<NewVehicle>;

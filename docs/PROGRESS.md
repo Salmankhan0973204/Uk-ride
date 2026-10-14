@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 4 - Fleet Vehicles
 - **Last completed:** Module 3 - Vehicle Types
-- **Next step:** 4.5 - Create and edit form with a vehicle type select
-- **Steps done:** 31 of 113
+- **Next step:** 4.6 - Change vehicle status, design pass
+- **Steps done:** 32 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -18,7 +18,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 4   | Fleet Vehicles                                     | 4/6   | Done    | Done       | In progress | In progress    | -                            | In progress |
+| 4   | Fleet Vehicles                                     | 5/6   | Done    | Done       | In progress | In progress    | -                            | In progress |
 | 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | -           |
 | 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
 | 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
@@ -94,7 +94,7 @@ runs.
 - [x] 4.2 Admin CRUD endpoints.
 - [x] 4.3 List with pagination, filter and search. _Learn: query parameters, `meta`._
 - [x] 4.4 Admin vehicles table with pages. _Learn: paginated queries._
-- [ ] 4.5 Create and edit form with a vehicle type select. _Learn: dependent data._
+- [x] 4.5 Create and edit form with a vehicle type select. _Learn: dependent data._
 - [ ] 4.6 Change vehicle status (active, maintenance), design pass.
 
 ### Module 5 - Pricing Rules + Quote Engine
@@ -1645,3 +1645,48 @@ Learning notes
 - A filter change resets to page 1: page 4 of the old list means nothing in the new one.
 - A layout wraps every page below it. Putting the admin check there means a new admin page
   cannot forget it.
+
+#### Step 4.5 - Create and edit form with a vehicle type select (done 2026-10-14)
+
+Built
+
+- `/admin/vehicles/new` and `/admin/vehicles/[id]/edit`: registration, make, model, colour,
+  year and vehicle type. One form component for both; editing sends only what changed.
+- The vehicle type dropdown lists the types on offer. When editing a car whose type was
+  switched off later, that type is also listed, marked "(switched off)", so the car can keep
+  it; no other car can be given it.
+- `useVehicle(id)` (`GET /admin/vehicles/:id`), `useCreateVehicle`, `useUpdateVehicle`. Both
+  mutations invalidate `vehicles.all`: every cached page and every open vehicle.
+- The table gained "Add vehicle" (the page's accent button), an Edit link on each row, and
+  a notice after saving. On phones the status folds into the first cell.
+- Designed states: loading, the types failing to load (with Try again), no type on offer
+  ("Add a vehicle type first"), an unknown vehicle, a server failure.
+
+Verified
+
+- Typecheck and lint pass.
+- In a real browser against the running API:
+  - the dropdown listed the five types on offer;
+  - an empty form showed six messages and focused the registration; a one-letter plate,
+    the year 2031 and "22" were each caught in the browser;
+  - "ts01 abc" was refused by the API as a taken plate, shown on the registration field;
+  - "sk24 sup" was saved as `SK24 SUP` and appeared in a search with its type;
+  - the edit form opened with its values; changing the colour and the type to Saloon was
+    saved and shown in the table;
+  - with Saloon switched off, the car's form showed "Saloon (switched off)" and saved a
+    colour change; a new car's dropdown no longer offered Saloon;
+  - an unknown id showed "There is no such vehicle"; saving with nothing changed went back.
+- Fixed: at 360px the new Edit column made the table 30px too wide; status now folds into
+  the first cell below 640px. No horizontal scrolling at 1440px, 820px, 390px and 360px.
+
+Learning notes
+
+- Dependent data: the form cannot be drawn until it knows the vehicle types, because they
+  are its dropdown's options. `WithTypes` waits for that query and handles its failure before
+  the form exists.
+- Two queries that do not need each other start together. The edit page asks for the vehicle
+  and the types at the same time instead of one after the other.
+- Module 3's edit form found its record in the list cache. That cannot work here: with pages,
+  the car may not be on any page in the cache, so it is fetched by id.
+- Options can depend on the record: a switched-off type is shown only to a car that already
+  has it.

@@ -1,5 +1,7 @@
-import { authFetchWithMeta } from '@/lib/api/client';
-import type { PageMeta, Vehicle, VehicleListQuery } from '../types';
+import { authFetch, authFetchWithMeta } from '@/lib/api/client';
+import type { NewVehicle, PageMeta, Vehicle, VehicleChanges, VehicleListQuery } from '../types';
+
+type One = { vehicle: Vehicle };
 
 /** "?page=2&status=ACTIVE". Empty values and page 1 are left out. */
 export function toQueryString({ page, status, type, search }: VehicleListQuery) {
@@ -22,4 +24,16 @@ export const vehiclesApi = {
     );
     return { vehicles: body.data.vehicles, meta: body.meta as unknown as PageMeta };
   },
+
+  get: (id: string, signal?: AbortSignal) =>
+    authFetch<One>(`/admin/vehicles/${encodeURIComponent(id)}`, { signal }),
+
+  create: (input: NewVehicle) =>
+    authFetch<One>('/admin/vehicles', { method: 'POST', body: JSON.stringify(input) }),
+
+  update: (id: string, changes: VehicleChanges) =>
+    authFetch<One>(`/admin/vehicles/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(changes),
+    }),
 };

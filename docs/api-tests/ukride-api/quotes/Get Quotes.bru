@@ -1,0 +1,29 @@
+meta {
+  name: Get Quotes
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/quotes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "distanceMiles": 12.4,
+    "pickupAt": "2026-11-02T23:30:00Z",
+    "airport": true
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.quotes: isArray
+}
+
+docs {
+  Public. Add "vehicleType": "executive" to price one type only. quotes is empty until an
+  admin has set prices (Admin Set Pricing).
+}

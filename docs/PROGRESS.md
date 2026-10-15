@@ -3,9 +3,9 @@
 Update this file after every coding session.
 
 - **Current module:** none in progress
-- **Last completed:** Module 4 - Fleet Vehicles
-- **Next step:** 5.1 - `PricingRule` model per vehicle type
-- **Steps done:** 33 of 113
+- **Last completed:** Module 5 - Pricing Rules + Quote Engine
+- **Next step:** 6.1 - first step of Module 6, Booking Creation
+- **Steps done:** 40 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -19,8 +19,8 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
 | 4   | Fleet Vehicles                                     | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | Next     |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 5   | Pricing Rules + Quote Engine                       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | Next     |
 | 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
 | 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
 | 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
@@ -44,6 +44,8 @@ runs.
 - Tick the step and make a small commit when it works. The module commit and tag come after
   the last step.
 - Steps of later modules are a first draft. Adjust them when the module starts.
+- From Module 5 on, each module is built on its own branch (`module-05-pricing`). Step
+  commits go to that branch; the finished module is merged into `main` and tagged there.
 
 ### Module 0 - Foundation
 
@@ -99,14 +101,14 @@ runs.
 
 ### Module 5 - Pricing Rules + Quote Engine
 
-- [ ] 5.1 `PricingRule` model per vehicle type. _Learn: money as integer pence._
-- [ ] 5.2 Admin pricing endpoints.
-- [ ] 5.3 Quote calculation as a pure function with unit tests.
+- [x] 5.1 `PricingRule` model per vehicle type. _Learn: money as integer pence._
+- [x] 5.2 Admin pricing endpoints.
+- [x] 5.3 Quote calculation as a pure function with unit tests.
       _Learn: business logic without HTTP._
-- [ ] 5.4 `POST /quotes` with the distance typed in by hand.
-- [ ] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
-- [ ] 5.6 Admin pricing screen.
-- [ ] 5.7 Customer quote form with the price breakdown, design pass.
+- [x] 5.4 `POST /quotes` with the distance typed in by hand.
+- [x] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
+- [x] 5.6 Admin pricing screen.
+- [x] 5.7 Customer quote form with the price breakdown, design pass.
 
 ### Module 6 - Booking Creation
 
@@ -1757,3 +1759,299 @@ Open items
 - The status rules are open: any move is allowed. Rules tied to bookings come with Module 6.
 - The list has 20 rows a page with no way to change it on screen; the API accepts up to 100.
 - The tests on GitHub know nothing about vehicles, roles or the admin area.
+
+### Module 5 - Pricing Rules + Quote Engine (completed 2026-10-15, branch `module-05-pricing`)
+
+#### Step 5.1 - `PricingRule` model per vehicle type (done 2026-10-15)
+
+Built
+
+- `PricingRule` in `backend/prisma/schema.prisma` (table `pricing_rules`):
+  `baseFarePence` (charged on every journey), `perMilePence`, `minimumFarePence`, timestamps.
+  Migration `add_pricing_rules`.
+- One rule per vehicle type: `vehicleTypeId` is unique, which makes the relation one-to-one.
+  `VehicleType.pricingRule` is optional: a type has no price until an admin sets one.
+- `onDelete: Cascade`: a rule means nothing without its type.
+- No seed prices. The operator's fares are not decided, and `PRODUCT.md` forbids inventing
+  them. Prices are entered by an admin (step 5.6).
+
+Verified (directly in PostgreSQL; no automated tests)
+
+- A rule for "Executive" was inserted and read back joined to its type.
+- A second rule for the same type was refused by `pricing_rules_vehicle_type_id_key`.
+- 3.5 put into a pence column was silently stored as 4. The API will have to refuse anything
+  that is not a whole number before it reaches the database.
+- The test rows were deleted.
+
+Learning notes
+
+- Money is stored as a whole number of the smallest unit: pence. Decimals in JavaScript are
+  floating point, where `0.1 + 0.2` is `0.30000000000000004`; whole numbers add exactly.
+  Pounds appear only on screen.
+- The column name says the unit (`base_fare_pence`), so nobody wonders whether 350 means
+  £350 or £3.50.
+- A unique foreign key turns one-to-many into one-to-one.
+- A database column of whole numbers rounds a decimal instead of refusing it. Checking that a
+  value is a whole number is the API's job.
+
+#### Step 5.2 - Admin pricing endpoints (done 2026-10-15)
+
+Built
+
+- `backend/src/modules/pricing/`, mounted at `/api/v1/admin/pricing` for admins only.
+- `GET /admin/pricing`: every vehicle type in list order with its rule, or `pricingRule: null`
+  where no prices are set. `meta` says the currency and unit: GBP, pence.
+- `PUT /admin/pricing/:vehicleTypeId`: the whole rule, every field required. Creates it the
+  first time and replaces it after that, with one `upsert`.
+- Amounts: whole pence only; base and minimum fare up to £1,000, price per mile up to £100.
+  A missing amount and a wrong one get different messages.
+
+Verified (by hand against the running API; no automated tests)
+
+- With no prices set, the list showed all five types with `none`.
+- PUT for Executive answered 200 with 350/210/1200; a second PUT replaced it with
+  400/225/1500; the same body again gave the same result, and the table held one row.
+- 3.5, -1 and "1200" answered 400 with one message each; a missing field said "is required";
+  100001 pence and an extra `currency` field answered 400.
+- An unknown vehicle type answered 404; a customer's token answered 403.
+
+Learning notes
+
+- PUT replaces the whole thing at an address you name; PATCH changes part of it; POST makes
+  something new at an address the server chooses. A price per vehicle type has a natural
+  address, so PUT.
+- PUT is idempotent: sending the same body twice leaves the same result as sending it once.
+  That makes it safe to retry after a timeout.
+- `upsert` is "update if it exists, create if not" in one statement. Checking first and
+  then creating could make two rules if two admins saved at once; the unique index and the
+  single statement prevent that.
+- The API speaks pence; pounds are a matter for the screen. The API rejects `3.5` rather than
+  guessing whether it meant £3.50 or 3.5p.
+
+#### Step 5.3 - Quote calculation as a pure function with unit tests (done 2026-10-15)
+
+Built
+
+- `backend/src/modules/quotes/quote.calculator.ts`: `calculateQuote(rule, trip)` returns the
+  charged distance, the breakdown lines and the total, all in whole pence. No database, no
+  HTTP, no clock.
+- The rules, in order: the distance is counted to the nearest tenth of a mile; the distance
+  charge is rounded to the nearest penny once; base fare plus distance; if that is below the
+  minimum fare, a "Minimum fare" line tops it up. The total is always the sum of the lines.
+- `formatPence(1250)` gives "£12.50", for labels only.
+- `quote.calculator.test.ts`: 10 unit tests with Vitest. The user chose on 2026-10-15 to have
+  tests for this calculation, although the other test files stay out of the local code.
+
+Verified
+
+- `npm test -w backend` runs the 10 tests and they pass. Typecheck and lint pass.
+- The tests were checked against a broken version: with the rounding changed to always round
+  down, all 10 still passed, because no case had to round up. A case at 368.5p was added;
+  the broken version then failed with "expected 368 to be 369", and the real one passes.
+
+Learning notes
+
+- Business logic without HTTP: the rule for a price lives in a plain function. The API calls
+  it, a booking will call it, a test calls it, and all get the same answer.
+- A pure function gives the same output for the same input and touches nothing outside
+  itself. That is what makes it easy to test: no server, no database, no waiting.
+- Count in the smallest whole unit (tenths of a mile, pence) and round once, at the end of
+  each line. Rounding at every step lets pennies drift.
+- A breakdown that does not add up loses the customer's trust. The total is computed from
+  the lines, never separately.
+- A passing test proves little until you have seen it fail. Breaking the code on purpose
+  showed a gap that a green run had hidden.
+
+#### Step 5.4 - `POST /quotes` with the distance typed in by hand (done 2026-10-15)
+
+Built
+
+- `POST /quotes` with `{ "distanceMiles": 12.4, "vehicleType": "executive" }`; the vehicle type
+  is optional. Public, with a limit of 120 quotes per 15 minutes from one address.
+- Without `vehicleType`, every type that is on offer and has prices is quoted, in list order.
+  With it, only that type; a type that is switched off or has no prices answers 404.
+- The answer: `distanceMiles` as sent, `chargedMiles`, `currency: "GBP"`, and per vehicle type
+  its public details, the breakdown lines and `totalPence`.
+- `quotes.service.ts` only reads the rules and hands them to `calculateQuote`. The rounding of
+  the distance moved into `chargedMilesFor()` in the calculator, so it is written once.
+- Nothing is saved: a quote is an answer, not a promise. The booking will work the price out
+  again.
+
+Verified (by hand against the running API, plus the unit tests)
+
+- With no prices set: 200 "No prices are published yet" and no quotes.
+- With Saloon, Executive and Minibus priced, 10 miles gave 2100p, 2450p and 3800p, matching
+  the rules by hand; 12.44 miles in Executive was charged as 12.4 and cost 2954p; 2 miles was
+  topped up to the 1200p minimum with its own line.
+- With Minibus switched off it was left out of the list, and asking for it answered 404; Estate,
+  which has no prices, answered 404.
+- 0, "10", nothing, 1001 and an extra field each answered 400 with a message. The answer
+  carried `Cache-Control: no-store` and the rate-limit header.
+- The 10 unit tests still pass.
+
+Learning notes
+
+- A thin outer layer around a pure core: the service does the input and output (database,
+  HTTP), the calculator does the thinking. The tested part is the part that matters.
+- A rule written twice will one day disagree with itself. The "nearest tenth of a mile" rule
+  now lives in one function that both use.
+- POST is used although nothing is created, because the question has a body and the answer is
+  worked out each time.
+
+#### Step 5.5 - Night and airport surcharges (done 2026-10-15)
+
+Built
+
+- Two columns on `PricingRule` (migration `add_surcharges`): `nightSurchargePercent` (whole
+  percent, 0 to 100) and `airportFeePence` (up to £100). Both default to 0, so existing
+  prices did not change. `PUT /admin/pricing/:id` now needs both.
+- The calculation, in this order: base fare and distance; the minimum fare top-up; the night
+  surcharge as a share of that; the airport fee last, not surcharged. Each is its own line.
+- Night is 22:00 up to 06:00 on the UK clock (`Europe/London`), which follows British Summer
+  Time. `isNight()` and `ukHour()` are exported and tested.
+- `POST /quotes` takes `pickupAt` (with a time zone; not in the past, at most a year ahead;
+  "now" when left out) and `airport` (default false), and answers with `pickupAt`, `night`
+  and `airport`. The clock is read in the service, never in the calculation.
+
+Verified
+
+- 18 unit tests pass, 8 of them new: the surcharge as a share of the fare, after the minimum,
+  the airport fee not surcharged, no lines for a surcharge of 0, the night boundaries at
+  21:59, 22:00, 05:59 and 06:00, and the same UTC time giving day in winter and night in
+  summer.
+- The new tests were checked against broken versions: night starting at 23:00 failed 2 tests;
+  the airport fee placed before the surcharge failed 1. Both were restored.
+- By hand against the running API, Executive at 25% and 500p, 10 miles: 2450p by day; 3063p
+  at night; 3563p at night to an airport. 21:30 UTC on 20 October (BST) was night, the same
+  time on 20 November (GMT) was day, and 22:30+01:00 was night. Types with no surcharges set
+  had no surcharge lines.
+- The old three-field PUT body answered 400 naming the two new fields; 12.5% and -5p answered 400. A past time, a time two years ahead, a time with no zone and `"airport":"yes"` each
+  answered 400.
+
+Learning notes
+
+- When rules combine, the order is part of the price. A percentage applied before or after
+  a flat fee gives different totals, so the order is written down and tested.
+- A time without a time zone is ambiguous: 23:30 where? The API refuses it. Stored and sent
+  times are UTC; the UK clock is used only to decide what counts as night.
+- Summer time is why "night" cannot be worked out with UTC hours. The tests pin both seasons.
+- Adding a column with a default is safe for existing rows: they get the default, here 0,
+  which means "no surcharge".
+- Keeping the clock out of the pure function means the tests choose the time, instead of
+  passing or failing depending on when they run.
+
+#### Step 5.6 - Admin pricing screen (done 2026-10-15)
+
+Built
+
+- `/admin/pricing`: every vehicle type with its base fare, price per mile, minimum fare,
+  night surcharge and airport fee. A type with no prices shows a "No prices" pill and a
+  "Set prices" button; a warning above the table counts the types on offer that cannot be
+  quoted. On narrow screens the prices fold into one sentence under the name.
+- `/admin/pricing/[vehicleTypeId]`: the form. Amounts are typed in pounds with a £ in the box;
+  the night surcharge as a whole percentage with a % in the box. A notice after saving says
+  new quotes use the prices at once.
+- `frontend/src/lib/money/money.ts`: `formatPence`, `penceToPounds` and `parsePounds`. Pounds
+  are read as digits ("3.50" is 3 and 50), never multiplied as decimals.
+- `usePricing` and `useSetPricing`; saving invalidates the pricing list and any cached quotes.
+- "Pricing" joined the admin menu. On phones the word "Admin" is hidden (still read by screen
+  readers) so the three links fit on one line.
+
+Verified
+
+- Typecheck and lint pass.
+- `parsePounds` checked on 16 inputs: "3.5", "£3.50", "1,250.00" and "0.07" were read exactly;
+  "3.505", "3.", ".50", "-1" and "abc" were refused. For comparison, `1.15 * 100` in JavaScript
+  is 114.99999999999999, while `parsePounds("1.15")` is 115.
+- In a real browser: the menu led to the table, which said 2 types on offer had no prices;
+  "Set prices for Estate" opened an empty form with 0 surcharges; empty fields, "3.505", "two",
+  £1,500, 12.5% and -1 were each caught in the browser; "£3.2", "1.15", "1,000", 20 and 4 were
+  stored as 320, 115, 100000, 20 and 400 pence; the edit form showed them back as pounds; an
+  unknown id said so.
+- After a change, a quote used the new price per mile at once (320p + 10 miles at 120p =
+  1520p).
+- No horizontal scrolling at 1440px, 820px, 390px and 360px.
+
+Learning notes
+
+- The screen speaks pounds, the API speaks pence, and the conversion happens in one place.
+  Turning "1.15" into pence by multiplying by 100 gives 114.99999999999999; reading the digits
+  gives exactly 115.
+- A form for a whole record pairs naturally with PUT: the form always sends every field.
+- A mutation can make more than one cache stale. New prices change every quote, so both the
+  pricing list and the quotes are invalidated.
+- An easy-to-make typo with money (£1,000 instead of £10.00) is a reason to show amounts back
+  in a familiar form: the table shows "£1,000.00", which stands out.
+
+#### Step 5.7 - Customer quote form with the price breakdown, design pass (done 2026-10-15)
+
+Built
+
+- `/quote`, public: distance in miles, an optional pick-up time (UK time; empty means now) and
+  "The journey starts or ends at an airport". "Get prices" shows a price for every vehicle
+  type that has prices, each with "How this price is worked out", which opens the breakdown
+  lines and the total. A "Night-time pick-up" pill shows when the pick-up is at night.
+- `frontend/src/lib/time/ukTime.ts`: the typed time is read as UK time, whatever the visitor's
+  computer is set to, and shown back on the UK clock.
+- `useQuote` is a query keyed by the question. Pressing "Get prices" again with the same
+  question asks the server again, so a price changed by an admin is never shown stale.
+- The home page's "Get an exact price" stage is now open and leads here. "Prices" joined the
+  navigation on wider screens.
+
+Verified
+
+- Lint, typecheck and the production build (25 routes) pass. The 18 unit tests pass.
+- `ukLocalToDate` checked in summer, in winter and across both clock changes; each time read
+  back as typed.
+- In a real browser, signed out:
+  - an empty distance, "12,5" and a time in the past were each caught on their field;
+  - 10 miles at midday gave Saloon £21.00, Estate £15.20, Executive £24.50, Minibus £38.00;
+  - at 23:30 to an airport, Executive became £35.63 and its breakdown read: base fare £3.50,
+    10 miles at £2.10 £21.00, night 25% £6.13, airport £5.00, total £35.63;
+  - 22:30 on 20 October (summer time) counted as night; an empty time was priced for now;
+  - after an admin raised Saloon to £2.00 a mile, asking the same question again showed
+    £23.00. On the first run it still showed £21.00 from the cache; fixed by asking the
+    server again on every press.
+- No horizontal scrolling at 1440px, 390px and 360px.
+
+Design pass
+
+- A manual pass over `/quote`, `/admin/pricing` and its form against `DESIGN.md`: one accent
+  button per page, divider rows, no glass inside glass, 44px targets, status as words. The
+  Impeccable scanner reported nothing on the new files.
+- Fixed: the stale repeated quote; the admin menu wrapping onto two lines at 360px; "Night-time
+  rate" renamed "Night-time pick-up", because only some vehicle types have a night rate.
+- `DESIGN.md` gained money, the price breakdown and the checkbox, and the navigation changes.
+- The independent finish review was not run for these screens.
+
+Learning notes
+
+- A POST can still be a query. Asking for a price changes nothing, so it is cached by its
+  question like a GET, and invalidated when prices change.
+- A cache answers the same question with the same answer. Where the answer can change behind
+  the user's back (a price), an explicit "ask again" must reach the server.
+- Times typed by a person need a time zone decided for them. Journeys are in the UK, so the
+  form reads UK time, not the visitor's computer's time.
+- The screen never calculates a price. It shows the server's lines and total, so what the
+  customer sees is exactly what the server will charge.
+
+### Module 5 summary
+
+Built: the `PricingRule` model with night and airport surcharges; admin endpoints to read and
+set prices; the quote calculation as a pure function with 18 unit tests; `POST /quotes`; the
+admin pricing screens; the public `/quote` page with the breakdown. The module was built on
+the branch `module-05-pricing` and merged into `main`.
+
+Checks at completion: typecheck and lint pass for both apps, the frontend builds, the unit
+tests pass, and every endpoint and screen was checked by hand against the running system.
+
+Open items
+
+- No real prices: the test prices were deleted. Until an admin sets them, `/quote` says prices
+  have not been published.
+- The distance is typed in by hand. Measuring it from addresses needs a maps service, which is
+  not free; to be decided.
+- Night hours (22:00 to 06:00) are fixed in code, not set by an admin.
+- A quote is not saved, and a price change is not recorded anywhere (no history of old prices).
+- Rate limits are per server process, as before.
+- The tests on GitHub are still out of date; locally, only the quote calculation's tests exist.

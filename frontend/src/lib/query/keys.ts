@@ -25,4 +25,11 @@ export const queryKeys = {
     list: (query: object) => [...queryKeys.vehicles.all, 'list', query] as const,
     detail: (id: string) => [...queryKeys.vehicles.all, 'detail', id] as const,
   },
+  pricing: {
+    all: ['pricing'] as const,
+    list: () => [...queryKeys.pricing.all, 'list'] as const,
+  },
+  quotes: {
+    all: ['quotes'] as const,
+  },
 };

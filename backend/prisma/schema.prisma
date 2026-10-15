@@ -114,7 +114,9 @@ model VehicleType {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   // The cars of this class. One type has many vehicles; a vehicle has one type.
-  vehicles Vehicle[]
+  vehicles    Vehicle[]
+  // How this class is priced. At most one rule; none until an admin sets prices.
+  pricingRule PricingRule?
 
   @@map("vehicle_types")
 }
@@ -151,4 +153,31 @@ model Vehicle {
   @@index([vehicleTypeId])
   @@index([status])
   @@map("vehicles")
+}
+
+// How a journey in one vehicle type is priced.
+//
+// Every amount is a whole number of pence: £12.50 is stored as 1250. Pounds
+// with decimals would be stored as floating point, and 0.1 + 0.2 is not 0.3
+// in floating point. Whole pence add up exactly.
+model PricingRule {
+  id                    String      @id @default(uuid())
+  // @unique makes the relation one-to-one: a vehicle type has at most one rule.
+  vehicleTypeId         String      @unique @map("vehicle_type_id")
+  // Cascade: the rule belongs to its type and means nothing without it.
+  vehicleType           VehicleType @relation(fields: [vehicleTypeId], references: [id], onDelete: Cascade)
+  // Charged on every journey, before the first mile.
+  baseFarePence         Int         @map("base_fare_pence")
+  // Charged for each mile driven.
+  perMilePence          Int         @map("per_mile_pence")
+  // The least a journey costs, however short.
+  minimumFarePence      Int         @map("minimum_fare_pence")
+  // Added to the fare for a pick-up between 10pm and 6am, UK time. 25 means 25%.
+  nightSurchargePercent Int         @default(0) @map("night_surcharge_percent")
+  // A flat amount for a journey to or from an airport, added after any night surcharge.
+  airportFeePence       Int         @default(0) @map("airport_fee_pence")
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+
+  @@map("pricing_rules")
 }

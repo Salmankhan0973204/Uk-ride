@@ -50,6 +50,7 @@ export const openApiDocument = {
     { name: 'Auth', description: 'Accounts and sign-in' },
     { name: 'Users', description: 'Your own profile' },
     { name: 'Vehicle types', description: 'The classes of car on offer' },
+    { name: 'Quotes', description: 'The price of a journey' },
     { name: 'Admin', description: "For the operator's staff. Needs the ADMIN role" },
   ],
   paths: {
@@ -818,6 +819,128 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/pricing': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Prices of every vehicle type',
+        description:
+          'Every vehicle type in list order, switched off or not, with its pricing rule, or ' +
+          'null where no prices are set yet. Amounts are whole pence.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'Pricing',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleTypes'],
+              properties: {
+                vehicleTypes: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/VehicleTypePricing' },
+                },
+              },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/pricing/{vehicleTypeId}': {
+      put: {
+        tags: ['Admin'],
+        summary: 'Set the prices of one vehicle type',
+        description:
+          'Creates the rule the first time and replaces it after that. Every field is ' +
+          'required. Amounts are whole pence: 350 is £3.50.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'vehicleTypeId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/PricingRuleRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Prices saved',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleType'],
+              properties: { vehicleType: { $ref: '#/components/schemas/VehicleTypePricing' } },
+            }),
+          ),
+          400: jsonResponse('An amount is missing, not whole pence, negative or too large', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No vehicle type has this id', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/quotes': {
+      post: {
+        tags: ['Quotes'],
+        summary: 'Price a journey',
+        description:
+          'Public. Prices the journey in every vehicle type that is on offer and has prices, ' +
+          'or only in `vehicleType`. The distance is charged to the nearest tenth of a mile. ' +
+          'Amounts are whole pence, and each total is the sum of its lines. Nothing is saved.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['distanceMiles'],
+                additionalProperties: false,
+                properties: {
+                  distanceMiles: { type: 'number', minimum: 0.1, maximum: 1000, example: 12.4 },
+                  pickupAt: {
+                    type: 'string',
+                    format: 'date-time',
+                    example: '2026-11-02T23:30:00Z',
+                    description: 'With a time zone. Left out: now. Not in the past.',
+                  },
+                  airport: { type: 'boolean', default: false },
+                  vehicleType: { type: 'string', example: 'executive' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Quotes, or none when no prices are published yet',
+            successEnvelope({ $ref: '#/components/schemas/QuoteResult' }),
+          ),
+          400: jsonResponse('The distance is missing, not a number, or out of range', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('The vehicle type asked for is not on offer or has no prices', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -1135,6 +1258,91 @@ export const openApiDocument = {
           pageSize: { type: 'integer', example: 20 },
           total: { type: 'integer', example: 25, description: 'Rows matching the filters' },
           totalPages: { type: 'integer', example: 2 },
+        },
+      },
+      PricingRuleRequest: {
+        type: 'object',
+        required: [
+          'baseFarePence',
+          'perMilePence',
+          'minimumFarePence',
+          'nightSurchargePercent',
+          'airportFeePence',
+        ],
+        additionalProperties: false,
+        properties: {
+          baseFarePence: { type: 'integer', minimum: 0, maximum: 100000, example: 350 },
+          perMilePence: { type: 'integer', minimum: 0, maximum: 10000, example: 210 },
+          minimumFarePence: { type: 'integer', minimum: 0, maximum: 100000, example: 1200 },
+          nightSurchargePercent: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 100,
+            example: 25,
+            description: 'Added for a pick-up from 22:00 to 06:00 UK time',
+          },
+          airportFeePence: { type: 'integer', minimum: 0, maximum: 10000, example: 500 },
+        },
+      },
+      VehicleTypePricing: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          slug: { type: 'string', example: 'executive' },
+          name: { type: 'string', example: 'Executive' },
+          isActive: { type: 'boolean' },
+          pricingRule: {
+            nullable: true,
+            allOf: [
+              { $ref: '#/components/schemas/PricingRuleRequest' },
+              {
+                type: 'object',
+                properties: { updatedAt: { type: 'string', format: 'date-time' } },
+              },
+            ],
+          },
+        },
+      },
+      QuoteLine: {
+        type: 'object',
+        required: ['code', 'label', 'amountPence'],
+        properties: {
+          code: {
+            type: 'string',
+            enum: [
+              'BASE_FARE',
+              'DISTANCE',
+              'MINIMUM_FARE_TOP_UP',
+              'NIGHT_SURCHARGE',
+              'AIRPORT_FEE',
+            ],
+          },
+          label: { type: 'string', example: '12.4 miles at £2.10 a mile' },
+          amountPence: { type: 'integer', example: 2604 },
+        },
+      },
+      QuoteResult: {
+        type: 'object',
+        required: ['distanceMiles', 'chargedMiles', 'currency', 'quotes'],
+        properties: {
+          distanceMiles: { type: 'number', example: 12.44 },
+          chargedMiles: { type: 'number', example: 12.4 },
+          pickupAt: { type: 'string', format: 'date-time' },
+          night: { type: 'boolean', description: 'Pick-up between 22:00 and 06:00 UK time' },
+          airport: { type: 'boolean' },
+          currency: { type: 'string', enum: ['GBP'] },
+          quotes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['vehicleType', 'lines', 'totalPence'],
+              properties: {
+                vehicleType: { $ref: '#/components/schemas/VehicleType' },
+                lines: { type: 'array', items: { $ref: '#/components/schemas/QuoteLine' } },
+                totalPence: { type: 'integer', example: 2954 },
+              },
+            },
+          },
         },
       },
       ApiFailure: {

@@ -339,7 +339,7 @@ Icons are drawn inline as SVG on a 24 unit grid: one stroke in the current text 
 The project's own dropdown, not the browser's list. The trigger looks like an input with a chevron that turns over when open. The list opens 8px below the trigger on the Menu Surface, with 16px corners and 6px of padding. Each option is a 44px row with 12px corners; the highlighted row is Strong Glass, and the chosen row shows a Focus Lavender tick. A "No answer" row in Muted Ink clears an optional field. It is fully keyboard operable (arrows, Home, End, Enter, Space, Escape, type a letter to jump).
 
 ### Navigation
-A floating glass bar, fully rounded, as wide as the content column. Brand mark and name on the left; links on the right. A link is a 44px tall, fully rounded target in Muted Ink at label size; hover gives it a Glass fill and white text, and the current page gets a Strong Glass fill. On screens narrower than 640px the "Vehicles" link is hidden, and "Status" below 768px; the home page links to both. When signed in, the links collapse to one link named after the person. A link stays highlighted on the sub-pages of its section.
+A floating glass bar, fully rounded, as wide as the content column. Brand mark and name on the left; links on the right. A link is a 44px tall, fully rounded target in Muted Ink at label size; hover gives it a Glass fill and white text, and the current page gets a Strong Glass fill. On screens narrower than 640px the "Prices" and "Vehicles" links are hidden, and "Status" below 1024px; the home page links to all three. When signed in, the links collapse to one link named after the person. A link stays highlighted on the sub-pages of its section.
 
 ### Notices
 A tinted box inside a panel for a message about the whole form or page: 16px corners, a 1px border in the status colour at 50%, and a fill of the same colour at about 12%. An error notice sets its text in Rose, medium weight, small size. A warning notice keeps white text and may hold one compact ghost button. A confirmation is a warning notice that asks a question in its first, semibold sentence and holds two compact ghost buttons: the answer that does it ("Yes, switch it off") and the one that does not ("Keep it on"). It opens under the row it is about, takes focus, and closes on Escape. A success notice (Mint border and tint, white text, medium weight) sits at the top of a panel to confirm something that was just saved.
@@ -357,10 +357,19 @@ Under the table: "21 to 25 of 25 vehicles, page 2 of 2" in Muted Ink at small si
 For choosing one of a few options that each need a sentence of explanation, such as a vehicle's status: radio buttons in divider rows, the label in medium weight and the meaning below it in Muted Ink. The radio is drawn by hand: a 20px circle with a 2px Muted Ink outline, which becomes a 6px Focus Lavender ring when chosen. The current value is marked "(now)". Choosing changes nothing until the button below is pressed; that button names the action ("Retire SK24 SUP") and says "Choose a new status" while there is nothing to do. A choice with consequences adds a warning notice above the button.
 
 ### Admin menu
-Above every admin panel, outside it: the word "Admin" in Muted Ink, then one fully rounded 44px link per admin screen. The current screen has a Strong Glass fill and a Glass Border; the others are Muted Ink until hovered.
+Above every admin panel, outside it: the word "Admin" in Muted Ink (hidden on phones, still read by screen readers), then one fully rounded 44px link per admin screen. The current screen has a Strong Glass fill and a Glass Border; the others are Muted Ink until hovered.
 
 ### Registration plates
 Shown in Geist Mono, semibold, slightly tracked, never wrapped. Current UK plates are shown with their space ("AB12 CDE") though they are stored without it.
+
+### Money
+Amounts are shown as pounds with two decimals ("£35.63"), in tabular figures, never rounded to whole pounds. A price that is the answer to a question (a quote) is large and semibold, at the right end of its row on wide screens and under the name on a phone. Inputs for money have a "£" inside the left of the box and take pounds and pence as typed ("3.50", "£3.5", "1,250"); a percentage has a "%" inside the right. Amounts reach and leave the API as whole pence; the screen converts.
+
+### Price breakdown
+Under each price, a disclosure link "How this price is worked out" with a chevron that turns over when open. Open, it lists each line of the price on the left in Muted Ink with its amount on the right, then a 1px line and a semibold Total. The lines always add up to the total shown above.
+
+### Checkbox
+Drawn by hand like the choice-row radio: a 20px square with 6px corners and a 2px Muted Ink outline; checked, it fills with Focus Lavender and shows a dark tick. The whole label is the target, at least 44px tall.
 
 ### Accent tiles
 A small rounded square filled with the same Accent Indigo to Accent Violet gradient as the primary button, with the Lift shadow. Three uses: the brand mark (28px, 8px corners), the open step number (40px, 12px corners) and the account avatar (56px, 16px corners). A step that is not open is the same size with a Line outline and no fill. A neutral tile (Strong Glass fill, Glass Border, 48px, 16px corners) holds the Mint tick on success screens.

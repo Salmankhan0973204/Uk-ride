@@ -1,0 +1,34 @@
+meta {
+  name: Admin Set Pricing
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/admin/pricing/{{vehicleTypeId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "baseFarePence": 350,
+    "perMilePence": 210,
+    "minimumFarePence": 1200,
+    "nightSurchargePercent": 25,
+    "airportFeePence": 500
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.vehicleType.pricingRule.perMilePence: eq 210
+}
+
+docs {
+  Whole pence: 350 is £3.50. Every field is required, because PUT replaces the whole rule.
+}

@@ -548,3 +548,71 @@ Invoke-RestMethod "http://localhost:4000/api/v1/admin/vehicles/$id/status" -Meth
 
 Expect `200` with `status` = `MAINTENANCE`. `RETIRED` and back to `ACTIVE` work the same way.
 `{"status":"SCRAPPED"}` answers `400`, and so does sending any other field with it.
+
+## Module 5 - Pricing and quotes
+
+### 5.2 Set the prices of a vehicle type (admin)
+
+Every amount is whole pence: 350 is £3.50. With an admin's token in `$headers` and a vehicle
+type's id in `$exec` (see 4.2):
+
+```powershell
+Invoke-RestMethod http://localhost:4000/api/v1/admin/pricing -Headers $headers | ConvertTo-Json -Depth 5
+
+$body = '{"baseFarePence":350,"perMilePence":210,"minimumFarePence":1200,"nightSurchargePercent":25,"airportFeePence":500}'
+Invoke-RestMethod "http://localhost:4000/api/v1/admin/pricing/$exec" -Method Put -Headers $headers -ContentType 'application/json' -Body $body
+```
+
+The list shows `pricingRule: null` for every type with no prices. The PUT answers `200`; sending
+it again with other amounts replaces them.
+
+| Body                                   | Answer                                                    |
+| -------------------------------------- | --------------------------------------------------------- |
+| `"baseFarePence": 3.5`                 | `400` "Base fare must be whole pence, like 350 for £3.50" |
+| `"perMilePence": -1`                   | `400` "Price per mile cannot be negative"                 |
+| a field left out                       | `400` "... is required": PUT replaces the whole rule      |
+| `"currency": "USD"` or any other field | `400`                                                     |
+| a vehicle type id that does not exist  | `404`                                                     |
+
+### 5.4 Price a journey (public)
+
+No token needed. Set prices for at least one vehicle type first (5.2).
+
+```powershell
+$q = Invoke-RestMethod http://localhost:4000/api/v1/quotes -Method Post -ContentType 'application/json' -Body '{"distanceMiles":12.44}'
+$q.data.chargedMiles
+$q.data.quotes | ForEach-Object { "{0}: {1}p" -f $_.vehicleType.name, $_.totalPence }
+$q.data.quotes[0].lines
+```
+
+With Executive at 350 / 210 / 1200, 12.44 miles is charged as 12.4 and costs 2954p: a base
+fare of 350p and 2604p for the distance. Add `"vehicleType":"executive"` to price only that
+type.
+
+| Body                                     | Answer                                                 |
+| ---------------------------------------- | ------------------------------------------------------ |
+| `{"distanceMiles":2}`                    | a "Minimum fare" line tops the price up to the minimum |
+| no vehicle type has prices yet           | `200` "No prices are published yet", `quotes` empty    |
+| a `vehicleType` switched off or unpriced | `404`                                                  |
+| `{"distanceMiles":0}` or `1001`          | `400`, out of range                                    |
+| `{"distanceMiles":"10"}`                 | `400` "Distance must be a number of miles"             |
+
+### 5.5 Night and airport surcharges
+
+Night is 22:00 to 06:00 on the UK clock. Give the pick-up time with its time zone:
+
+```powershell
+$body = '{"distanceMiles":10,"vehicleType":"executive","pickupAt":"2026-11-02T23:30:00Z","airport":true}'
+(Invoke-RestMethod http://localhost:4000/api/v1/quotes -Method Post -ContentType 'application/json' -Body $body).data
+```
+
+With Executive at 350 / 210 / 1200, 25% and 500p: 2450p for the fare, 613p night surcharge,
+500p airport fee, 3563p in all. The answer says `night` and `airport`.
+
+| Body                                         | Answer                                         |
+| -------------------------------------------- | ---------------------------------------------- |
+| no `pickupAt`                                | priced for now                                 |
+| `"pickupAt":"2026-10-20T21:30:00Z"`          | night: 22:30 in London, on British Summer Time |
+| `"pickupAt":"2026-11-20T21:30:00Z"`          | day: 21:30 in London, on GMT                   |
+| a time in the past, or more than a year away | `400`                                          |
+| a time with no zone, `"2026-11-02T23:30:00"` | `400`: it could mean any time zone             |

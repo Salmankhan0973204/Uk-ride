@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** none in progress
+- **Current module:** Module 5 - Pricing Rules + Quote Engine (branch `module-05-pricing`)
 - **Last completed:** Module 4 - Fleet Vehicles
-- **Next step:** 5.1 - `PricingRule` model per vehicle type
-- **Steps done:** 33 of 113
+- **Next step:** 5.2 - Admin pricing endpoints
+- **Steps done:** 34 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 4   | Fleet Vehicles                                     | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 5   | Pricing Rules + Quote Engine                       | 0/7   | -       | -          | -           | -              | -                            | Next     |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| #   | Module                                             | Steps | Backend     | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
+| --- | -------------------------------------------------- | ----- | ----------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 4   | Fleet Vehicles                                     | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 5   | Pricing Rules + Quote Engine                       | 1/7   | In progress | -          | -           | -              | -                            | In progress |
+| 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -          | -           | -              | -                            | -           |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -          | -           | -              | -                            | -           |
+| 11  | Notifications + Email                              | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -          | -           | -              | -                            | -           |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -          | -           | -              | -                            | -           |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -          | -           | -              | -                            | -           |
 
 ## Steps
 
@@ -44,6 +44,8 @@ runs.
 - Tick the step and make a small commit when it works. The module commit and tag come after
   the last step.
 - Steps of later modules are a first draft. Adjust them when the module starts.
+- From Module 5 on, each module is built on its own branch (`module-05-pricing`). Step
+  commits go to that branch; the finished module is merged into `main` and tagged there.
 
 ### Module 0 - Foundation
 
@@ -99,7 +101,7 @@ runs.
 
 ### Module 5 - Pricing Rules + Quote Engine
 
-- [ ] 5.1 `PricingRule` model per vehicle type. _Learn: money as integer pence._
+- [x] 5.1 `PricingRule` model per vehicle type. _Learn: money as integer pence._
 - [ ] 5.2 Admin pricing endpoints.
 - [ ] 5.3 Quote calculation as a pure function with unit tests.
       _Learn: business logic without HTTP._
@@ -1757,3 +1759,37 @@ Open items
 - The status rules are open: any move is allowed. Rules tied to bookings come with Module 6.
 - The list has 20 rows a page with no way to change it on screen; the API accepts up to 100.
 - The tests on GitHub know nothing about vehicles, roles or the admin area.
+
+### Module 5 - Pricing Rules + Quote Engine (in progress, branch `module-05-pricing`)
+
+#### Step 5.1 - `PricingRule` model per vehicle type (done 2026-10-15)
+
+Built
+
+- `PricingRule` in `backend/prisma/schema.prisma` (table `pricing_rules`):
+  `baseFarePence` (charged on every journey), `perMilePence`, `minimumFarePence`, timestamps.
+  Migration `add_pricing_rules`.
+- One rule per vehicle type: `vehicleTypeId` is unique, which makes the relation one-to-one.
+  `VehicleType.pricingRule` is optional: a type has no price until an admin sets one.
+- `onDelete: Cascade`: a rule means nothing without its type.
+- No seed prices. The operator's fares are not decided, and `PRODUCT.md` forbids inventing
+  them. Prices are entered by an admin (step 5.6).
+
+Verified (directly in PostgreSQL; no automated tests)
+
+- A rule for "Executive" was inserted and read back joined to its type.
+- A second rule for the same type was refused by `pricing_rules_vehicle_type_id_key`.
+- 3.5 put into a pence column was silently stored as 4. The API will have to refuse anything
+  that is not a whole number before it reaches the database.
+- The test rows were deleted.
+
+Learning notes
+
+- Money is stored as a whole number of the smallest unit: pence. Decimals in JavaScript are
+  floating point, where `0.1 + 0.2` is `0.30000000000000004`; whole numbers add exactly.
+  Pounds appear only on screen.
+- The column name says the unit (`base_fare_pence`), so nobody wonders whether 350 means
+  £350 or £3.50.
+- A unique foreign key turns one-to-many into one-to-one.
+- A database column of whole numbers rounds a decimal instead of refusing it. Checking that a
+  value is a whole number is the API's job.

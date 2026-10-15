@@ -13,7 +13,7 @@ const stages = [
     text: 'Sign up, then sign in to see your details.',
     href: '/register',
   },
-  { title: 'Get an exact price', text: 'The full fare before you commit.' },
+  { title: 'Get an exact price', text: 'The full fare before you commit.', href: '/quote' },
   { title: 'Book and pay', text: 'Choose the car and the time.' },
   { title: 'Follow your driver', text: 'See who is coming and where they are.' },
 ];

@@ -11,11 +11,11 @@ and runs on a local machine.
 
 ## Status
 
-**Modules 0 to 4 of 17 are complete.** You can create an account, sign in, confirm your
-email, reset a forgotten password, edit your profile, change your password and browse the
-vehicle types. An admin can manage vehicle types and the fleet: add, edit, search, filter
-and page through vehicles, and move them between active, maintenance and retired. Pricing
-rules and quotes are next. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
+**Modules 0 to 5 of 17 are complete.** You can create an account, sign in, confirm your
+email, reset a forgotten password, edit your profile, change your password, browse the
+vehicle types and get an exact price for a journey. An admin can manage vehicle types, the
+fleet and the prices. Booking is next. The full tracker is in
+[docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                                        | Status   |
 | --- | --------------------------------------------- | -------- |
@@ -24,8 +24,8 @@ rules and quotes are next. The full tracker is in [docs/PROGRESS.md](docs/PROGRE
 | 2   | Profile management                            | Complete |
 | 3   | Vehicle types: admin CRUD + customer catalog  | Complete |
 | 4   | Fleet vehicles                                | Complete |
-| 5   | Pricing rules + quote engine                  | Next     |
-| 6   | Booking creation                              | Planned  |
+| 5   | Pricing rules + quote engine                  | Complete |
+| 6   | Booking creation                              | Next     |
 | 7   | My bookings: list + detail                    | Planned  |
 | 8   | Booking edit + cancellation                   | Planned  |
 | 9   | Driver + dispatch operations                  | Planned  |
@@ -150,7 +150,9 @@ and the page recovers by itself. Create an account at http://localhost:3000/regi
 and see your profile at http://localhost:3000/account, where you can edit it and change your
 password. The vehicle types are at http://localhost:3000/vehicles. To manage them, make your
 account an admin with `npm run db:set-role -w backend -- you@example.com ADMIN`, sign in again
-and open http://localhost:3000/admin, which leads to the fleet and the vehicle types.
+and open http://localhost:3000/admin, which leads to the fleet, the vehicle types and the
+prices. No prices are set out of the box: set them under Pricing, then try
+http://localhost:3000/quote.
 
 ## Scripts
 
@@ -181,6 +183,7 @@ Database commands belong to the backend workspace.
 | `npm run db:seed -w backend`                      | Add the starting vehicle types (safe to repeat)    |
 | `npm run db:set-role -w backend -- <email> ADMIN` | Give an account a role                             |
 | `npm run db:cleanup -w backend`                   | Delete expired refresh tokens now                  |
+| `npm test -w backend`                             | Run the unit tests of the quote calculation        |
 
 ## Environment variables
 

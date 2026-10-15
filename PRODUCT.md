@@ -50,14 +50,15 @@ Screens never ask a customer to compare or choose between operators.
   `/login`, `/verify-email`, `/forgot-password` and `/reset-password` screens (Module 1); the
   `/account` profile page with `/account/edit` and `/account/password` (Module 2); the public
   `/vehicles` catalogue and the admin screens under `/admin/vehicle-types` (Module 3); the
-  fleet screens under `/admin/vehicles` (Module 4).
-- Planned, in order: pricing and quotes,
-  bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
+  fleet screens under `/admin/vehicles` (Module 4); the `/quote` page and the admin pricing
+  screens under `/admin/pricing` (Module 5).
+- Planned, in order: bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
   real-time status and driver location, document uploads, reviews, admin reporting.
 - Prices, payment state and booking status always come from the server.
 - Customer-facing copy uses British English.
 - Undecided: the operator's trading name and licensing details, service area, and the actual
-  fare rules.
+  fares. The fare rules are built (base fare, per mile, minimum, night and airport surcharges)
+  but no real amounts are set.
 
 ## Evidence on Hand
 

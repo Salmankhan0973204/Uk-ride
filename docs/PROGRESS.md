@@ -2,36 +2,36 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 5 - Pricing Rules + Quote Engine (branch `module-05-pricing`)
-- **Last completed:** Module 4 - Fleet Vehicles
-- **Next step:** 5.7 - Customer quote form with the price breakdown, design pass
-- **Steps done:** 39 of 113
+- **Current module:** none in progress
+- **Last completed:** Module 5 - Pricing Rules + Quote Engine
+- **Next step:** 6.1 - first step of Module 6, Booking Creation
+- **Steps done:** 40 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 4   | Fleet Vehicles                                     | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 5   | Pricing Rules + Quote Engine                       | 6/7   | Done    | Done       | In progress | In progress    | -                            | In progress |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -           |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -           |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -           |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -           |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
+| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 4   | Fleet Vehicles                                     | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 5   | Pricing Rules + Quote Engine                       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | Next     |
+| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
+| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
 
 ## Steps
 
@@ -108,7 +108,7 @@ runs.
 - [x] 5.4 `POST /quotes` with the distance typed in by hand.
 - [x] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
 - [x] 5.6 Admin pricing screen.
-- [ ] 5.7 Customer quote form with the price breakdown, design pass.
+- [x] 5.7 Customer quote form with the price breakdown, design pass.
 
 ### Module 6 - Booking Creation
 
@@ -1760,7 +1760,7 @@ Open items
 - The list has 20 rows a page with no way to change it on screen; the API accepts up to 100.
 - The tests on GitHub know nothing about vehicles, roles or the admin area.
 
-### Module 5 - Pricing Rules + Quote Engine (in progress, branch `module-05-pricing`)
+### Module 5 - Pricing Rules + Quote Engine (completed 2026-10-15, branch `module-05-pricing`)
 
 #### Step 5.1 - `PricingRule` model per vehicle type (done 2026-10-15)
 
@@ -1982,3 +1982,76 @@ Learning notes
   pricing list and the quotes are invalidated.
 - An easy-to-make typo with money (£1,000 instead of £10.00) is a reason to show amounts back
   in a familiar form: the table shows "£1,000.00", which stands out.
+
+#### Step 5.7 - Customer quote form with the price breakdown, design pass (done 2026-10-15)
+
+Built
+
+- `/quote`, public: distance in miles, an optional pick-up time (UK time; empty means now) and
+  "The journey starts or ends at an airport". "Get prices" shows a price for every vehicle
+  type that has prices, each with "How this price is worked out", which opens the breakdown
+  lines and the total. A "Night-time pick-up" pill shows when the pick-up is at night.
+- `frontend/src/lib/time/ukTime.ts`: the typed time is read as UK time, whatever the visitor's
+  computer is set to, and shown back on the UK clock.
+- `useQuote` is a query keyed by the question. Pressing "Get prices" again with the same
+  question asks the server again, so a price changed by an admin is never shown stale.
+- The home page's "Get an exact price" stage is now open and leads here. "Prices" joined the
+  navigation on wider screens.
+
+Verified
+
+- Lint, typecheck and the production build (25 routes) pass. The 18 unit tests pass.
+- `ukLocalToDate` checked in summer, in winter and across both clock changes; each time read
+  back as typed.
+- In a real browser, signed out:
+  - an empty distance, "12,5" and a time in the past were each caught on their field;
+  - 10 miles at midday gave Saloon £21.00, Estate £15.20, Executive £24.50, Minibus £38.00;
+  - at 23:30 to an airport, Executive became £35.63 and its breakdown read: base fare £3.50,
+    10 miles at £2.10 £21.00, night 25% £6.13, airport £5.00, total £35.63;
+  - 22:30 on 20 October (summer time) counted as night; an empty time was priced for now;
+  - after an admin raised Saloon to £2.00 a mile, asking the same question again showed
+    £23.00. On the first run it still showed £21.00 from the cache; fixed by asking the
+    server again on every press.
+- No horizontal scrolling at 1440px, 390px and 360px.
+
+Design pass
+
+- A manual pass over `/quote`, `/admin/pricing` and its form against `DESIGN.md`: one accent
+  button per page, divider rows, no glass inside glass, 44px targets, status as words. The
+  Impeccable scanner reported nothing on the new files.
+- Fixed: the stale repeated quote; the admin menu wrapping onto two lines at 360px; "Night-time
+  rate" renamed "Night-time pick-up", because only some vehicle types have a night rate.
+- `DESIGN.md` gained money, the price breakdown and the checkbox, and the navigation changes.
+- The independent finish review was not run for these screens.
+
+Learning notes
+
+- A POST can still be a query. Asking for a price changes nothing, so it is cached by its
+  question like a GET, and invalidated when prices change.
+- A cache answers the same question with the same answer. Where the answer can change behind
+  the user's back (a price), an explicit "ask again" must reach the server.
+- Times typed by a person need a time zone decided for them. Journeys are in the UK, so the
+  form reads UK time, not the visitor's computer's time.
+- The screen never calculates a price. It shows the server's lines and total, so what the
+  customer sees is exactly what the server will charge.
+
+### Module 5 summary
+
+Built: the `PricingRule` model with night and airport surcharges; admin endpoints to read and
+set prices; the quote calculation as a pure function with 18 unit tests; `POST /quotes`; the
+admin pricing screens; the public `/quote` page with the breakdown. The module was built on
+the branch `module-05-pricing` and merged into `main`.
+
+Checks at completion: typecheck and lint pass for both apps, the frontend builds, the unit
+tests pass, and every endpoint and screen was checked by hand against the running system.
+
+Open items
+
+- No real prices: the test prices were deleted. Until an admin sets them, `/quote` says prices
+  have not been published.
+- The distance is typed in by hand. Measuring it from addresses needs a maps service, which is
+  not free; to be decided.
+- Night hours (22:00 to 06:00) are fixed in code, not set by an admin.
+- A quote is not saved, and a price change is not recorded anywhere (no history of old prices).
+- Rate limits are per server process, as before.
+- The tests on GitHub are still out of date; locally, only the quote calculation's tests exist.

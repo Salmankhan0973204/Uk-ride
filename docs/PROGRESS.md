@@ -4,34 +4,34 @@ Update this file after every coding session.
 
 - **Current module:** Module 5 - Pricing Rules + Quote Engine (branch `module-05-pricing`)
 - **Last completed:** Module 4 - Fleet Vehicles
-- **Next step:** 5.5 - Night and airport surcharges
-- **Steps done:** 37 of 113
+- **Next step:** 5.6 - Admin pricing screen
+- **Steps done:** 38 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
 
 Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 
-| #   | Module                                             | Steps | Backend     | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
-| --- | -------------------------------------------------- | ----- | ----------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 4   | Fleet Vehicles                                     | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 5   | Pricing Rules + Quote Engine                       | 4/7   | In progress | -          | -           | -              | -                            | In progress |
-| 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -           | -          | -           | -              | -                            | -           |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -           | -          | -           | -              | -                            | -           |
-| 11  | Notifications + Email                              | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -           | -          | -           | -              | -                            | -           |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -           | -          | -           | -              | -                            | -           |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -           | -          | -           | -              | -                            | -           |
+| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status      |
+| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | ----------- |
+| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 4   | Fleet Vehicles                                     | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
+| 5   | Pricing Rules + Quote Engine                       | 5/7   | Done    | Done       | -           | -              | -                            | In progress |
+| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
+| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -           |
+| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -           |
+| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -           |
+| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -           |
+| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -           |
 
 ## Steps
 
@@ -106,7 +106,7 @@ runs.
 - [x] 5.3 Quote calculation as a pure function with unit tests.
       _Learn: business logic without HTTP._
 - [x] 5.4 `POST /quotes` with the distance typed in by hand.
-- [ ] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
+- [x] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
 - [ ] 5.6 Admin pricing screen.
 - [ ] 5.7 Customer quote form with the price breakdown, design pass.
 
@@ -1897,3 +1897,45 @@ Learning notes
   now lives in one function that both use.
 - POST is used although nothing is created, because the question has a body and the answer is
   worked out each time.
+
+#### Step 5.5 - Night and airport surcharges (done 2026-10-15)
+
+Built
+
+- Two columns on `PricingRule` (migration `add_surcharges`): `nightSurchargePercent` (whole
+  percent, 0 to 100) and `airportFeePence` (up to £100). Both default to 0, so existing
+  prices did not change. `PUT /admin/pricing/:id` now needs both.
+- The calculation, in this order: base fare and distance; the minimum fare top-up; the night
+  surcharge as a share of that; the airport fee last, not surcharged. Each is its own line.
+- Night is 22:00 up to 06:00 on the UK clock (`Europe/London`), which follows British Summer
+  Time. `isNight()` and `ukHour()` are exported and tested.
+- `POST /quotes` takes `pickupAt` (with a time zone; not in the past, at most a year ahead;
+  "now" when left out) and `airport` (default false), and answers with `pickupAt`, `night`
+  and `airport`. The clock is read in the service, never in the calculation.
+
+Verified
+
+- 18 unit tests pass, 8 of them new: the surcharge as a share of the fare, after the minimum,
+  the airport fee not surcharged, no lines for a surcharge of 0, the night boundaries at
+  21:59, 22:00, 05:59 and 06:00, and the same UTC time giving day in winter and night in
+  summer.
+- The new tests were checked against broken versions: night starting at 23:00 failed 2 tests;
+  the airport fee placed before the surcharge failed 1. Both were restored.
+- By hand against the running API, Executive at 25% and 500p, 10 miles: 2450p by day; 3063p
+  at night; 3563p at night to an airport. 21:30 UTC on 20 October (BST) was night, the same
+  time on 20 November (GMT) was day, and 22:30+01:00 was night. Types with no surcharges set
+  had no surcharge lines.
+- The old three-field PUT body answered 400 naming the two new fields; 12.5% and -5p answered 400. A past time, a time two years ahead, a time with no zone and `"airport":"yes"` each
+  answered 400.
+
+Learning notes
+
+- When rules combine, the order is part of the price. A percentage applied before or after
+  a flat fee gives different totals, so the order is written down and tested.
+- A time without a time zone is ambiguous: 23:30 where? The API refuses it. Stored and sent
+  times are UTC; the UK clock is used only to decide what counts as night.
+- Summer time is why "night" cannot be worked out with UTC hours. The tests pin both seasons.
+- Adding a column with a default is safe for existing rows: they get the default, here 0,
+  which means "no surcharge".
+- Keeping the clock out of the pure function means the tests choose the time, instead of
+  passing or failing depending on when they run.

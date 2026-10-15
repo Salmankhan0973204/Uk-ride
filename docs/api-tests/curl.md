@@ -559,7 +559,7 @@ type's id in `$exec` (see 4.2):
 ```powershell
 Invoke-RestMethod http://localhost:4000/api/v1/admin/pricing -Headers $headers | ConvertTo-Json -Depth 5
 
-$body = '{"baseFarePence":350,"perMilePence":210,"minimumFarePence":1200}'
+$body = '{"baseFarePence":350,"perMilePence":210,"minimumFarePence":1200,"nightSurchargePercent":25,"airportFeePence":500}'
 Invoke-RestMethod "http://localhost:4000/api/v1/admin/pricing/$exec" -Method Put -Headers $headers -ContentType 'application/json' -Body $body
 ```
 
@@ -596,3 +596,23 @@ type.
 | a `vehicleType` switched off or unpriced | `404`                                                  |
 | `{"distanceMiles":0}` or `1001`          | `400`, out of range                                    |
 | `{"distanceMiles":"10"}`                 | `400` "Distance must be a number of miles"             |
+
+### 5.5 Night and airport surcharges
+
+Night is 22:00 to 06:00 on the UK clock. Give the pick-up time with its time zone:
+
+```powershell
+$body = '{"distanceMiles":10,"vehicleType":"executive","pickupAt":"2026-11-02T23:30:00Z","airport":true}'
+(Invoke-RestMethod http://localhost:4000/api/v1/quotes -Method Post -ContentType 'application/json' -Body $body).data
+```
+
+With Executive at 350 / 210 / 1200, 25% and 500p: 2450p for the fare, 613p night surcharge,
+500p airport fee, 3563p in all. The answer says `night` and `airport`.
+
+| Body                                         | Answer                                         |
+| -------------------------------------------- | ---------------------------------------------- |
+| no `pickupAt`                                | priced for now                                 |
+| `"pickupAt":"2026-10-20T21:30:00Z"`          | night: 22:30 in London, on British Summer Time |
+| `"pickupAt":"2026-11-20T21:30:00Z"`          | day: 21:30 in London, on GMT                   |
+| a time in the past, or more than a year away | `400`                                          |
+| a time with no zone, `"2026-11-02T23:30:00"` | `400`: it could mean any time zone             |

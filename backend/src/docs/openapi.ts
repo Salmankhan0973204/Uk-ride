@@ -912,6 +912,13 @@ export const openApiDocument = {
                 additionalProperties: false,
                 properties: {
                   distanceMiles: { type: 'number', minimum: 0.1, maximum: 1000, example: 12.4 },
+                  pickupAt: {
+                    type: 'string',
+                    format: 'date-time',
+                    example: '2026-11-02T23:30:00Z',
+                    description: 'With a time zone. Left out: now. Not in the past.',
+                  },
+                  airport: { type: 'boolean', default: false },
                   vehicleType: { type: 'string', example: 'executive' },
                 },
               },
@@ -1255,12 +1262,26 @@ export const openApiDocument = {
       },
       PricingRuleRequest: {
         type: 'object',
-        required: ['baseFarePence', 'perMilePence', 'minimumFarePence'],
+        required: [
+          'baseFarePence',
+          'perMilePence',
+          'minimumFarePence',
+          'nightSurchargePercent',
+          'airportFeePence',
+        ],
         additionalProperties: false,
         properties: {
           baseFarePence: { type: 'integer', minimum: 0, maximum: 100000, example: 350 },
           perMilePence: { type: 'integer', minimum: 0, maximum: 10000, example: 210 },
           minimumFarePence: { type: 'integer', minimum: 0, maximum: 100000, example: 1200 },
+          nightSurchargePercent: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 100,
+            example: 25,
+            description: 'Added for a pick-up from 22:00 to 06:00 UK time',
+          },
+          airportFeePence: { type: 'integer', minimum: 0, maximum: 10000, example: 500 },
         },
       },
       VehicleTypePricing: {
@@ -1286,7 +1307,16 @@ export const openApiDocument = {
         type: 'object',
         required: ['code', 'label', 'amountPence'],
         properties: {
-          code: { type: 'string', example: 'DISTANCE' },
+          code: {
+            type: 'string',
+            enum: [
+              'BASE_FARE',
+              'DISTANCE',
+              'MINIMUM_FARE_TOP_UP',
+              'NIGHT_SURCHARGE',
+              'AIRPORT_FEE',
+            ],
+          },
           label: { type: 'string', example: '12.4 miles at £2.10 a mile' },
           amountPence: { type: 'integer', example: 2604 },
         },
@@ -1297,6 +1327,9 @@ export const openApiDocument = {
         properties: {
           distanceMiles: { type: 'number', example: 12.44 },
           chargedMiles: { type: 'number', example: 12.4 },
+          pickupAt: { type: 'string', format: 'date-time' },
+          night: { type: 'boolean', description: 'Pick-up between 22:00 and 06:00 UK time' },
+          airport: { type: 'boolean' },
           currency: { type: 'string', enum: ['GBP'] },
           quotes: {
             type: 'array',

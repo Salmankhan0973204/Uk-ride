@@ -6,6 +6,8 @@ export const pricingRuleSelect = {
   baseFarePence: true,
   perMilePence: true,
   minimumFarePence: true,
+  nightSurchargePercent: true,
+  airportFeePence: true,
   updatedAt: true,
 } as const;
 

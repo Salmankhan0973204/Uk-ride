@@ -27,8 +27,19 @@ export const pricingRuleSchema = z.strictObject(
     baseFarePence: pence('Base fare', 100_000),
     perMilePence: pence('Price per mile', 10_000),
     minimumFarePence: pence('Minimum fare', 100_000),
+    nightSurchargePercent: z
+      .number({
+        error: (issue) =>
+          issue.input === undefined
+            ? 'Night surcharge is required'
+            : 'Night surcharge must be a number',
+      })
+      .int('Night surcharge must be a whole percentage, like 25')
+      .min(0, 'Night surcharge cannot be negative')
+      .max(100, 'Night surcharge must be at most 100%'),
+    airportFeePence: pence('Airport fee', 10_000),
   },
-  'Send baseFarePence, perMilePence and minimumFarePence',
+  'Send baseFarePence, perMilePence, minimumFarePence, nightSurchargePercent and airportFeePence',
 );
 
 export type PricingRuleInput = z.infer<typeof pricingRuleSchema>;

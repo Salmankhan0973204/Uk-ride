@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 5 - Pricing Rules + Quote Engine (branch `module-05-pricing`)
 - **Last completed:** Module 4 - Fleet Vehicles
-- **Next step:** 5.4 - `POST /quotes` with the distance typed in by hand
-- **Steps done:** 36 of 113
+- **Next step:** 5.5 - Night and airport surcharges
+- **Steps done:** 37 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -19,7 +19,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 4   | Fleet Vehicles                                     | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 5   | Pricing Rules + Quote Engine                       | 3/7   | In progress | -          | -           | -              | -                            | In progress |
+| 5   | Pricing Rules + Quote Engine                       | 4/7   | In progress | -          | -           | -              | -                            | In progress |
 | 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
 | 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
 | 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
@@ -105,7 +105,7 @@ runs.
 - [x] 5.2 Admin pricing endpoints.
 - [x] 5.3 Quote calculation as a pure function with unit tests.
       _Learn: business logic without HTTP._
-- [ ] 5.4 `POST /quotes` with the distance typed in by hand.
+- [x] 5.4 `POST /quotes` with the distance typed in by hand.
 - [ ] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
 - [ ] 5.6 Admin pricing screen.
 - [ ] 5.7 Customer quote form with the price breakdown, design pass.
@@ -1861,3 +1861,39 @@ Learning notes
   the lines, never separately.
 - A passing test proves little until you have seen it fail. Breaking the code on purpose
   showed a gap that a green run had hidden.
+
+#### Step 5.4 - `POST /quotes` with the distance typed in by hand (done 2026-10-15)
+
+Built
+
+- `POST /quotes` with `{ "distanceMiles": 12.4, "vehicleType": "executive" }`; the vehicle type
+  is optional. Public, with a limit of 120 quotes per 15 minutes from one address.
+- Without `vehicleType`, every type that is on offer and has prices is quoted, in list order.
+  With it, only that type; a type that is switched off or has no prices answers 404.
+- The answer: `distanceMiles` as sent, `chargedMiles`, `currency: "GBP"`, and per vehicle type
+  its public details, the breakdown lines and `totalPence`.
+- `quotes.service.ts` only reads the rules and hands them to `calculateQuote`. The rounding of
+  the distance moved into `chargedMilesFor()` in the calculator, so it is written once.
+- Nothing is saved: a quote is an answer, not a promise. The booking will work the price out
+  again.
+
+Verified (by hand against the running API, plus the unit tests)
+
+- With no prices set: 200 "No prices are published yet" and no quotes.
+- With Saloon, Executive and Minibus priced, 10 miles gave 2100p, 2450p and 3800p, matching
+  the rules by hand; 12.44 miles in Executive was charged as 12.4 and cost 2954p; 2 miles was
+  topped up to the 1200p minimum with its own line.
+- With Minibus switched off it was left out of the list, and asking for it answered 404; Estate,
+  which has no prices, answered 404.
+- 0, "10", nothing, 1001 and an extra field each answered 400 with a message. The answer
+  carried `Cache-Control: no-store` and the rate-limit header.
+- The 10 unit tests still pass.
+
+Learning notes
+
+- A thin outer layer around a pure core: the service does the input and output (database,
+  HTTP), the calculator does the thinking. The tested part is the part that matters.
+- A rule written twice will one day disagree with itself. The "nearest tenth of a mile" rule
+  now lives in one function that both use.
+- POST is used although nothing is created, because the question has a body and the answer is
+  worked out each time.

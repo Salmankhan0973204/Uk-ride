@@ -41,6 +41,11 @@ export interface Quote {
 /** The longest journey the calculation accepts. */
 export const MAX_MILES = 1000;
 
+/** The distance that is charged: the nearest tenth of a mile. 12.44 → 12.4. */
+export function chargedMilesFor(distanceMiles: number) {
+  return Math.round(distanceMiles * 10) / 10;
+}
+
 /** 1250 → "£12.50". For labels only; amounts stay in pence. */
 export function formatPence(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
@@ -58,8 +63,8 @@ export function calculateQuote(rule: PriceRule, trip: Trip): Quote {
 
   // Count in tenths of a mile, as whole numbers, so no fractions of a penny
   // pile up: 12.4 miles is 124 tenths.
-  const tenths = Math.round(trip.distanceMiles * 10);
-  const chargedMiles = tenths / 10;
+  const chargedMiles = chargedMilesFor(trip.distanceMiles);
+  const tenths = Math.round(chargedMiles * 10);
   // 124 tenths at 210p a mile is 124 × 210 / 10 = 2604p. Rounded to the
   // nearest penny, once.
   const distancePence = Math.round((tenths * rule.perMilePence) / 10);

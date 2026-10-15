@@ -96,3 +96,10 @@ export const passwordLimiter = rateLimiter({
   failuresOnly: true,
   message: `Too many attempts. ${TRY_LATER}`,
 });
+
+/** Quotes are public and cheap to ask for, but each one reads the database. */
+export const quoteLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 120,
+  message: `Too many quotes asked for. ${TRY_LATER}`,
+});

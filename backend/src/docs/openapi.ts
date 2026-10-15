@@ -50,6 +50,7 @@ export const openApiDocument = {
     { name: 'Auth', description: 'Accounts and sign-in' },
     { name: 'Users', description: 'Your own profile' },
     { name: 'Vehicle types', description: 'The classes of car on offer' },
+    { name: 'Quotes', description: 'The price of a journey' },
     { name: 'Admin', description: "For the operator's staff. Needs the ADMIN role" },
   ],
   paths: {
@@ -893,6 +894,46 @@ export const openApiDocument = {
         },
       },
     },
+    '/quotes': {
+      post: {
+        tags: ['Quotes'],
+        summary: 'Price a journey',
+        description:
+          'Public. Prices the journey in every vehicle type that is on offer and has prices, ' +
+          'or only in `vehicleType`. The distance is charged to the nearest tenth of a mile. ' +
+          'Amounts are whole pence, and each total is the sum of its lines. Nothing is saved.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['distanceMiles'],
+                additionalProperties: false,
+                properties: {
+                  distanceMiles: { type: 'number', minimum: 0.1, maximum: 1000, example: 12.4 },
+                  vehicleType: { type: 'string', example: 'executive' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Quotes, or none when no prices are published yet',
+            successEnvelope({ $ref: '#/components/schemas/QuoteResult' }),
+          ),
+          400: jsonResponse('The distance is missing, not a number, or out of range', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('The vehicle type asked for is not on offer or has no prices', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -1238,6 +1279,36 @@ export const openApiDocument = {
                 properties: { updatedAt: { type: 'string', format: 'date-time' } },
               },
             ],
+          },
+        },
+      },
+      QuoteLine: {
+        type: 'object',
+        required: ['code', 'label', 'amountPence'],
+        properties: {
+          code: { type: 'string', example: 'DISTANCE' },
+          label: { type: 'string', example: '12.4 miles at £2.10 a mile' },
+          amountPence: { type: 'integer', example: 2604 },
+        },
+      },
+      QuoteResult: {
+        type: 'object',
+        required: ['distanceMiles', 'chargedMiles', 'currency', 'quotes'],
+        properties: {
+          distanceMiles: { type: 'number', example: 12.44 },
+          chargedMiles: { type: 'number', example: 12.4 },
+          currency: { type: 'string', enum: ['GBP'] },
+          quotes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['vehicleType', 'lines', 'totalPence'],
+              properties: {
+                vehicleType: { $ref: '#/components/schemas/VehicleType' },
+                lines: { type: 'array', items: { $ref: '#/components/schemas/QuoteLine' } },
+                totalPence: { type: 'integer', example: 2954 },
+              },
+            },
           },
         },
       },

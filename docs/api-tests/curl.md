@@ -573,3 +573,26 @@ it again with other amounts replaces them.
 | a field left out                       | `400` "... is required": PUT replaces the whole rule      |
 | `"currency": "USD"` or any other field | `400`                                                     |
 | a vehicle type id that does not exist  | `404`                                                     |
+
+### 5.4 Price a journey (public)
+
+No token needed. Set prices for at least one vehicle type first (5.2).
+
+```powershell
+$q = Invoke-RestMethod http://localhost:4000/api/v1/quotes -Method Post -ContentType 'application/json' -Body '{"distanceMiles":12.44}'
+$q.data.chargedMiles
+$q.data.quotes | ForEach-Object { "{0}: {1}p" -f $_.vehicleType.name, $_.totalPence }
+$q.data.quotes[0].lines
+```
+
+With Executive at 350 / 210 / 1200, 12.44 miles is charged as 12.4 and costs 2954p: a base
+fare of 350p and 2604p for the distance. Add `"vehicleType":"executive"` to price only that
+type.
+
+| Body                                     | Answer                                                 |
+| ---------------------------------------- | ------------------------------------------------------ |
+| `{"distanceMiles":2}`                    | a "Minimum fare" line tops the price up to the minimum |
+| no vehicle type has prices yet           | `200` "No prices are published yet", `quotes` empty    |
+| a `vehicleType` switched off or unpriced | `404`                                                  |
+| `{"distanceMiles":0}` or `1001`          | `400`, out of range                                    |
+| `{"distanceMiles":"10"}`                 | `400` "Distance must be a number of miles"             |

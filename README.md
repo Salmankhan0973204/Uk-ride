@@ -234,6 +234,7 @@ Base URL: `http://localhost:4000/api/v1`
 | POST   | `/users/me/password`            | Change your password; signs out other devices             |
 | GET    | `/vehicle-types`                | The catalogue of vehicle types (public)                   |
 | GET    | `/vehicle-types/:slug`          | One vehicle type, for example `executive` (public)        |
+| POST   | `/quotes`                       | The price of a journey, by distance (public)              |
 | GET    | `/admin/vehicle-types`          | Every vehicle type, including switched-off ones (admin)   |
 | POST   | `/admin/vehicle-types`          | Add a vehicle type (admin)                                |
 | PATCH  | `/admin/vehicle-types/:id`      | Change a vehicle type, or switch it back on (admin)       |

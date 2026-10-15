@@ -818,6 +818,81 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/pricing': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Prices of every vehicle type',
+        description:
+          'Every vehicle type in list order, switched off or not, with its pricing rule, or ' +
+          'null where no prices are set yet. Amounts are whole pence.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'Pricing',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleTypes'],
+              properties: {
+                vehicleTypes: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/VehicleTypePricing' },
+                },
+              },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/pricing/{vehicleTypeId}': {
+      put: {
+        tags: ['Admin'],
+        summary: 'Set the prices of one vehicle type',
+        description:
+          'Creates the rule the first time and replaces it after that. Every field is ' +
+          'required. Amounts are whole pence: 350 is £3.50.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'vehicleTypeId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/PricingRuleRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Prices saved',
+            successEnvelope({
+              type: 'object',
+              required: ['vehicleType'],
+              properties: { vehicleType: { $ref: '#/components/schemas/VehicleTypePricing' } },
+            }),
+          ),
+          400: jsonResponse('An amount is missing, not whole pence, negative or too large', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No vehicle type has this id', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -1135,6 +1210,35 @@ export const openApiDocument = {
           pageSize: { type: 'integer', example: 20 },
           total: { type: 'integer', example: 25, description: 'Rows matching the filters' },
           totalPages: { type: 'integer', example: 2 },
+        },
+      },
+      PricingRuleRequest: {
+        type: 'object',
+        required: ['baseFarePence', 'perMilePence', 'minimumFarePence'],
+        additionalProperties: false,
+        properties: {
+          baseFarePence: { type: 'integer', minimum: 0, maximum: 100000, example: 350 },
+          perMilePence: { type: 'integer', minimum: 0, maximum: 10000, example: 210 },
+          minimumFarePence: { type: 'integer', minimum: 0, maximum: 100000, example: 1200 },
+        },
+      },
+      VehicleTypePricing: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          slug: { type: 'string', example: 'executive' },
+          name: { type: 'string', example: 'Executive' },
+          isActive: { type: 'boolean' },
+          pricingRule: {
+            nullable: true,
+            allOf: [
+              { $ref: '#/components/schemas/PricingRuleRequest' },
+              {
+                type: 'object',
+                properties: { updatedAt: { type: 'string', format: 'date-time' } },
+              },
+            ],
+          },
         },
       },
       ApiFailure: {

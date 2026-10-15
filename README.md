@@ -215,34 +215,36 @@ Never commit `.env` or `.env.local`. Only the example files are tracked.
 
 Base URL: `http://localhost:4000/api/v1`
 
-| Method | Path                         | Purpose                                                   |
-| ------ | ---------------------------- | --------------------------------------------------------- |
-| GET    | `/health`                    | Service name, version, environment, uptime                |
-| GET    | `/health/live`               | The process is alive                                      |
-| GET    | `/health/ready`              | The database answers; `503` when it cannot be reached     |
-| POST   | `/auth/register`             | Create an account: name, email, mobile number, password   |
-| POST   | `/auth/login`                | Sign in and receive an access token                       |
-| POST   | `/auth/refresh`              | New access token from the refresh cookie                  |
-| POST   | `/auth/logout`               | Sign out: revoke the refresh token, clear the cookie      |
-| GET    | `/auth/me`                   | The signed-in user; needs `Authorization: Bearer <token>` |
-| POST   | `/auth/verify-email`         | Confirm an email address with the emailed token           |
-| POST   | `/auth/resend-verification`  | Send the confirmation link again (signed in)              |
-| POST   | `/auth/forgot-password`      | Ask for a password reset link                             |
-| POST   | `/auth/reset-password`       | Choose a new password with the emailed token              |
-| GET    | `/users/me`                  | Your profile (signed in)                                  |
-| PATCH  | `/users/me`                  | Change your name, mobile number or gender                 |
-| POST   | `/users/me/password`         | Change your password; signs out other devices             |
-| GET    | `/vehicle-types`             | The catalogue of vehicle types (public)                   |
-| GET    | `/vehicle-types/:slug`       | One vehicle type, for example `executive` (public)        |
-| GET    | `/admin/vehicle-types`       | Every vehicle type, including switched-off ones (admin)   |
-| POST   | `/admin/vehicle-types`       | Add a vehicle type (admin)                                |
-| PATCH  | `/admin/vehicle-types/:id`   | Change a vehicle type, or switch it back on (admin)       |
-| DELETE | `/admin/vehicle-types/:id`   | Switch a vehicle type off; the row is kept (admin)        |
-| GET    | `/admin/vehicles`            | The fleet: pages, status and type filters, search (admin) |
-| POST   | `/admin/vehicles`            | Add a vehicle to the fleet (admin)                        |
-| GET    | `/admin/vehicles/:id`        | One vehicle with its type (admin)                         |
-| PATCH  | `/admin/vehicles/:id`        | Change a vehicle's details (admin)                        |
-| PATCH  | `/admin/vehicles/:id/status` | Active, in maintenance or retired (admin)                 |
+| Method | Path                            | Purpose                                                   |
+| ------ | ------------------------------- | --------------------------------------------------------- |
+| GET    | `/health`                       | Service name, version, environment, uptime                |
+| GET    | `/health/live`                  | The process is alive                                      |
+| GET    | `/health/ready`                 | The database answers; `503` when it cannot be reached     |
+| POST   | `/auth/register`                | Create an account: name, email, mobile number, password   |
+| POST   | `/auth/login`                   | Sign in and receive an access token                       |
+| POST   | `/auth/refresh`                 | New access token from the refresh cookie                  |
+| POST   | `/auth/logout`                  | Sign out: revoke the refresh token, clear the cookie      |
+| GET    | `/auth/me`                      | The signed-in user; needs `Authorization: Bearer <token>` |
+| POST   | `/auth/verify-email`            | Confirm an email address with the emailed token           |
+| POST   | `/auth/resend-verification`     | Send the confirmation link again (signed in)              |
+| POST   | `/auth/forgot-password`         | Ask for a password reset link                             |
+| POST   | `/auth/reset-password`          | Choose a new password with the emailed token              |
+| GET    | `/users/me`                     | Your profile (signed in)                                  |
+| PATCH  | `/users/me`                     | Change your name, mobile number or gender                 |
+| POST   | `/users/me/password`            | Change your password; signs out other devices             |
+| GET    | `/vehicle-types`                | The catalogue of vehicle types (public)                   |
+| GET    | `/vehicle-types/:slug`          | One vehicle type, for example `executive` (public)        |
+| GET    | `/admin/vehicle-types`          | Every vehicle type, including switched-off ones (admin)   |
+| POST   | `/admin/vehicle-types`          | Add a vehicle type (admin)                                |
+| PATCH  | `/admin/vehicle-types/:id`      | Change a vehicle type, or switch it back on (admin)       |
+| DELETE | `/admin/vehicle-types/:id`      | Switch a vehicle type off; the row is kept (admin)        |
+| GET    | `/admin/vehicles`               | The fleet: pages, status and type filters, search (admin) |
+| POST   | `/admin/vehicles`               | Add a vehicle to the fleet (admin)                        |
+| GET    | `/admin/vehicles/:id`           | One vehicle with its type (admin)                         |
+| PATCH  | `/admin/vehicles/:id`           | Change a vehicle's details (admin)                        |
+| PATCH  | `/admin/vehicles/:id/status`    | Active, in maintenance or retired (admin)                 |
+| GET    | `/admin/pricing`                | Prices of every vehicle type, in pence (admin)            |
+| PUT    | `/admin/pricing/:vehicleTypeId` | Set the prices of one vehicle type (admin)                |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

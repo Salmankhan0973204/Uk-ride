@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 5 - Pricing Rules + Quote Engine (branch `module-05-pricing`)
 - **Last completed:** Module 4 - Fleet Vehicles
-- **Next step:** 5.2 - Admin pricing endpoints
-- **Steps done:** 34 of 113
+- **Next step:** 5.3 - Quote calculation as a pure function with unit tests
+- **Steps done:** 35 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -19,7 +19,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 4   | Fleet Vehicles                                     | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 5   | Pricing Rules + Quote Engine                       | 1/7   | In progress | -          | -           | -              | -                            | In progress |
+| 5   | Pricing Rules + Quote Engine                       | 2/7   | In progress | -          | -           | -              | -                            | In progress |
 | 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
 | 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
 | 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
@@ -102,7 +102,7 @@ runs.
 ### Module 5 - Pricing Rules + Quote Engine
 
 - [x] 5.1 `PricingRule` model per vehicle type. _Learn: money as integer pence._
-- [ ] 5.2 Admin pricing endpoints.
+- [x] 5.2 Admin pricing endpoints.
 - [ ] 5.3 Quote calculation as a pure function with unit tests.
       _Learn: business logic without HTTP._
 - [ ] 5.4 `POST /quotes` with the distance typed in by hand.
@@ -1793,3 +1793,37 @@ Learning notes
 - A unique foreign key turns one-to-many into one-to-one.
 - A database column of whole numbers rounds a decimal instead of refusing it. Checking that a
   value is a whole number is the API's job.
+
+#### Step 5.2 - Admin pricing endpoints (done 2026-10-15)
+
+Built
+
+- `backend/src/modules/pricing/`, mounted at `/api/v1/admin/pricing` for admins only.
+- `GET /admin/pricing`: every vehicle type in list order with its rule, or `pricingRule: null`
+  where no prices are set. `meta` says the currency and unit: GBP, pence.
+- `PUT /admin/pricing/:vehicleTypeId`: the whole rule, every field required. Creates it the
+  first time and replaces it after that, with one `upsert`.
+- Amounts: whole pence only; base and minimum fare up to £1,000, price per mile up to £100.
+  A missing amount and a wrong one get different messages.
+
+Verified (by hand against the running API; no automated tests)
+
+- With no prices set, the list showed all five types with `none`.
+- PUT for Executive answered 200 with 350/210/1200; a second PUT replaced it with
+  400/225/1500; the same body again gave the same result, and the table held one row.
+- 3.5, -1 and "1200" answered 400 with one message each; a missing field said "is required";
+  100001 pence and an extra `currency` field answered 400.
+- An unknown vehicle type answered 404; a customer's token answered 403.
+
+Learning notes
+
+- PUT replaces the whole thing at an address you name; PATCH changes part of it; POST makes
+  something new at an address the server chooses. A price per vehicle type has a natural
+  address, so PUT.
+- PUT is idempotent: sending the same body twice leaves the same result as sending it once.
+  That makes it safe to retry after a timeout.
+- `upsert` is "update if it exists, create if not" in one statement. Checking first and
+  then creating could make two rules if two admins saved at once; the unique index and the
+  single statement prevent that.
+- The API speaks pence; pounds are a matter for the screen. The API rejects `3.5` rather than
+  guessing whether it meant £3.50 or 3.5p.

@@ -1,0 +1,24 @@
+meta {
+  name: Admin List Pricing
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/admin/pricing
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.vehicleTypes: isArray
+}
+
+docs {
+  Needs an admin's token. pricingRule is null for a type with no prices yet.
+}

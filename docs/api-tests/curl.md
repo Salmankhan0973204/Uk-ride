@@ -548,3 +548,28 @@ Invoke-RestMethod "http://localhost:4000/api/v1/admin/vehicles/$id/status" -Meth
 
 Expect `200` with `status` = `MAINTENANCE`. `RETIRED` and back to `ACTIVE` work the same way.
 `{"status":"SCRAPPED"}` answers `400`, and so does sending any other field with it.
+
+## Module 5 - Pricing and quotes
+
+### 5.2 Set the prices of a vehicle type (admin)
+
+Every amount is whole pence: 350 is £3.50. With an admin's token in `$headers` and a vehicle
+type's id in `$exec` (see 4.2):
+
+```powershell
+Invoke-RestMethod http://localhost:4000/api/v1/admin/pricing -Headers $headers | ConvertTo-Json -Depth 5
+
+$body = '{"baseFarePence":350,"perMilePence":210,"minimumFarePence":1200}'
+Invoke-RestMethod "http://localhost:4000/api/v1/admin/pricing/$exec" -Method Put -Headers $headers -ContentType 'application/json' -Body $body
+```
+
+The list shows `pricingRule: null` for every type with no prices. The PUT answers `200`; sending
+it again with other amounts replaces them.
+
+| Body                                   | Answer                                                    |
+| -------------------------------------- | --------------------------------------------------------- |
+| `"baseFarePence": 3.5`                 | `400` "Base fare must be whole pence, like 350 for £3.50" |
+| `"perMilePence": -1`                   | `400` "Price per mile cannot be negative"                 |
+| a field left out                       | `400` "... is required": PUT replaces the whole rule      |
+| `"currency": "USD"` or any other field | `400`                                                     |
+| a vehicle type id that does not exist  | `404`                                                     |

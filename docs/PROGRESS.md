@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 5 - Pricing Rules + Quote Engine (branch `module-05-pricing`)
 - **Last completed:** Module 4 - Fleet Vehicles
-- **Next step:** 5.3 - Quote calculation as a pure function with unit tests
-- **Steps done:** 35 of 113
+- **Next step:** 5.4 - `POST /quotes` with the distance typed in by hand
+- **Steps done:** 36 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -19,7 +19,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 2   | Profile Management                                 | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 4   | Fleet Vehicles                                     | 6/6   | Done        | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 5   | Pricing Rules + Quote Engine                       | 2/7   | In progress | -          | -           | -              | -                            | In progress |
+| 5   | Pricing Rules + Quote Engine                       | 3/7   | In progress | -          | -           | -              | -                            | In progress |
 | 6   | Booking Creation                                   | 0/6   | -           | -          | -           | -              | -                            | -           |
 | 7   | My Bookings: List + Detail                         | 0/5   | -           | -          | -           | -              | -                            | -           |
 | 8   | Booking Edit + Cancellation                        | 0/6   | -           | -          | -           | -              | -                            | -           |
@@ -103,7 +103,7 @@ runs.
 
 - [x] 5.1 `PricingRule` model per vehicle type. _Learn: money as integer pence._
 - [x] 5.2 Admin pricing endpoints.
-- [ ] 5.3 Quote calculation as a pure function with unit tests.
+- [x] 5.3 Quote calculation as a pure function with unit tests.
       _Learn: business logic without HTTP._
 - [ ] 5.4 `POST /quotes` with the distance typed in by hand.
 - [ ] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
@@ -1827,3 +1827,37 @@ Learning notes
   single statement prevent that.
 - The API speaks pence; pounds are a matter for the screen. The API rejects `3.5` rather than
   guessing whether it meant £3.50 or 3.5p.
+
+#### Step 5.3 - Quote calculation as a pure function with unit tests (done 2026-10-15)
+
+Built
+
+- `backend/src/modules/quotes/quote.calculator.ts`: `calculateQuote(rule, trip)` returns the
+  charged distance, the breakdown lines and the total, all in whole pence. No database, no
+  HTTP, no clock.
+- The rules, in order: the distance is counted to the nearest tenth of a mile; the distance
+  charge is rounded to the nearest penny once; base fare plus distance; if that is below the
+  minimum fare, a "Minimum fare" line tops it up. The total is always the sum of the lines.
+- `formatPence(1250)` gives "£12.50", for labels only.
+- `quote.calculator.test.ts`: 10 unit tests with Vitest. The user chose on 2026-10-15 to have
+  tests for this calculation, although the other test files stay out of the local code.
+
+Verified
+
+- `npm test -w backend` runs the 10 tests and they pass. Typecheck and lint pass.
+- The tests were checked against a broken version: with the rounding changed to always round
+  down, all 10 still passed, because no case had to round up. A case at 368.5p was added;
+  the broken version then failed with "expected 368 to be 369", and the real one passes.
+
+Learning notes
+
+- Business logic without HTTP: the rule for a price lives in a plain function. The API calls
+  it, a booking will call it, a test calls it, and all get the same answer.
+- A pure function gives the same output for the same input and touches nothing outside
+  itself. That is what makes it easy to test: no server, no database, no waiting.
+- Count in the smallest whole unit (tenths of a mile, pence) and round once, at the end of
+  each line. Rounding at every step lets pennies drift.
+- A breakdown that does not add up loses the customer's trust. The total is computed from
+  the lines, never separately.
+- A passing test proves little until you have seen it fail. Breaking the code on purpose
+  showed a gap that a green run had hidden.

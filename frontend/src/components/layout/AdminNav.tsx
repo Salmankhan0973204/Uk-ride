@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const LINKS = [
   { href: '/admin/vehicles', label: 'Vehicles' },
   { href: '/admin/vehicle-types', label: 'Vehicle types' },
+  { href: '/admin/pricing', label: 'Pricing' },
 ];
 
 /** Moves between the admin screens. A section stays marked on its own forms. */
@@ -14,7 +15,8 @@ export function AdminNav() {
 
   return (
     <nav aria-label="Admin" className="flex flex-wrap items-center gap-2">
-      <span className="mr-2 text-sm font-medium text-ink-muted">Admin</span>
+      {/* On a phone the word gives way to the links; screen readers still hear it. */}
+      <span className="mr-2 text-sm font-medium text-ink-muted max-sm:sr-only">Admin</span>
       {LINKS.map(({ href, label }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (

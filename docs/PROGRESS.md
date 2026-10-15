@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 5 - Pricing Rules + Quote Engine (branch `module-05-pricing`)
 - **Last completed:** Module 4 - Fleet Vehicles
-- **Next step:** 5.6 - Admin pricing screen
-- **Steps done:** 38 of 113
+- **Next step:** 5.7 - Customer quote form with the price breakdown, design pass
+- **Steps done:** 39 of 113
 
 A module is **Complete** only when all five stages are Done and the flow works end to end.
 Do not start two modules at the same time.
@@ -19,7 +19,7 @@ Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
 | 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
 | 4   | Fleet Vehicles                                     | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete    |
-| 5   | Pricing Rules + Quote Engine                       | 5/7   | Done    | Done       | -           | -              | -                            | In progress |
+| 5   | Pricing Rules + Quote Engine                       | 6/7   | Done    | Done       | In progress | In progress    | -                            | In progress |
 | 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | -           |
 | 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -           |
 | 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -           |
@@ -107,7 +107,7 @@ runs.
       _Learn: business logic without HTTP._
 - [x] 5.4 `POST /quotes` with the distance typed in by hand.
 - [x] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
-- [ ] 5.6 Admin pricing screen.
+- [x] 5.6 Admin pricing screen.
 - [ ] 5.7 Customer quote form with the price breakdown, design pass.
 
 ### Module 6 - Booking Creation
@@ -1939,3 +1939,46 @@ Learning notes
   which means "no surcharge".
 - Keeping the clock out of the pure function means the tests choose the time, instead of
   passing or failing depending on when they run.
+
+#### Step 5.6 - Admin pricing screen (done 2026-10-15)
+
+Built
+
+- `/admin/pricing`: every vehicle type with its base fare, price per mile, minimum fare,
+  night surcharge and airport fee. A type with no prices shows a "No prices" pill and a
+  "Set prices" button; a warning above the table counts the types on offer that cannot be
+  quoted. On narrow screens the prices fold into one sentence under the name.
+- `/admin/pricing/[vehicleTypeId]`: the form. Amounts are typed in pounds with a £ in the box;
+  the night surcharge as a whole percentage with a % in the box. A notice after saving says
+  new quotes use the prices at once.
+- `frontend/src/lib/money/money.ts`: `formatPence`, `penceToPounds` and `parsePounds`. Pounds
+  are read as digits ("3.50" is 3 and 50), never multiplied as decimals.
+- `usePricing` and `useSetPricing`; saving invalidates the pricing list and any cached quotes.
+- "Pricing" joined the admin menu. On phones the word "Admin" is hidden (still read by screen
+  readers) so the three links fit on one line.
+
+Verified
+
+- Typecheck and lint pass.
+- `parsePounds` checked on 16 inputs: "3.5", "£3.50", "1,250.00" and "0.07" were read exactly;
+  "3.505", "3.", ".50", "-1" and "abc" were refused. For comparison, `1.15 * 100` in JavaScript
+  is 114.99999999999999, while `parsePounds("1.15")` is 115.
+- In a real browser: the menu led to the table, which said 2 types on offer had no prices;
+  "Set prices for Estate" opened an empty form with 0 surcharges; empty fields, "3.505", "two",
+  £1,500, 12.5% and -1 were each caught in the browser; "£3.2", "1.15", "1,000", 20 and 4 were
+  stored as 320, 115, 100000, 20 and 400 pence; the edit form showed them back as pounds; an
+  unknown id said so.
+- After a change, a quote used the new price per mile at once (320p + 10 miles at 120p =
+  1520p).
+- No horizontal scrolling at 1440px, 820px, 390px and 360px.
+
+Learning notes
+
+- The screen speaks pounds, the API speaks pence, and the conversion happens in one place.
+  Turning "1.15" into pence by multiplying by 100 gives 114.99999999999999; reading the digits
+  gives exactly 115.
+- A form for a whole record pairs naturally with PUT: the form always sends every field.
+- A mutation can make more than one cache stale. New prices change every quote, so both the
+  pricing list and the quotes are invalidated.
+- An easy-to-make typo with money (£1,000 instead of £10.00) is a reason to show amounts back
+  in a familiar form: the table shows "£1,000.00", which stands out.

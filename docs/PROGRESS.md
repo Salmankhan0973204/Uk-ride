@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** none in progress
+- **Current module:** Module 1 rework - auth like ukride.uk (branch `module-01-auth-otp`)
 - **Last completed:** Module 0 rework - three apps (tag `module-00-v2`)
-- **Next step:** 1.9 - OTP codes (Module 1 rework)
-- **Steps done:** 44 of 113
+- **Next step:** 1.10 - sign-up with a code to the mobile
+- **Steps done:** 45 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -17,26 +17,26 @@ Do not start two modules at the same time.
 Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (not started),
 `n/a`.
 
-| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
-| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
-| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
-| 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Next     |
-| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework   |
-| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
-| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
-| 6   | Booking                      | 0/6   | -       | -             | -           | -        |
-| 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
-| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
-| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -        |
-| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -        |
-| 11  | Admin operations             | 0/6   | -       | -             | -           | -        |
-| 12  | Reviews                      | 0/4   | -       | -             | -           | -        |
-| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -        |
-| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -        |
-| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -        |
-| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -        |
-| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -        |
+| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
+| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
+| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete    |
+| 1   | Auth like ukride.uk          | 9/13  | Rework  | Rework        | n/a         | In progress |
+| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
+| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
+| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
+| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework      |
+| 6   | Booking                      | 0/6   | -       | -             | -           | -           |
+| 7   | Wallet                       | 0/5   | -       | -             | -           | -           |
+| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -           |
+| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -           |
+| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -           |
+| 11  | Admin operations             | 0/6   | -       | -             | -           | -           |
+| 12  | Reviews                      | 0/4   | -       | -             | -           | -           |
+| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -           |
+| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -           |
+| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -           |
+| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -           |
+| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -           |
 
 ## Steps
 
@@ -80,7 +80,7 @@ runs.
 - [x] 1.6 Register page. _Learn: forms, field errors, mutations._
 - [x] 1.7 Login page and `useMe()`. _Learn: auth state with TanStack Query._
 - [x] 1.8 Protected page, logout button, design pass. _Learn: route guards._
-- [ ] 1.9 OTP codes: stored hashed, 6 digits, 10 minutes, resend after 60 s, 5 tries,
+- [x] 1.9 OTP codes: stored hashed, 6 digits, 10 minutes, resend after 60 s, 5 tries,
       per-number limits in Redis, a short-lived signed ticket after verifying. "SMS" goes to
       Mailpit for now. _Learn: one-time codes, Redis counters._
 - [ ] 1.10 Sign-up like ukride.uk: check the email, code to the mobile, verify, register,
@@ -2417,3 +2417,58 @@ Open items
   program has them open.
 - The /vehicles page still says prices are not published; it folds into the home page in 3.9.
 - The tests on GitHub still describe the old single web app.
+
+### Module 1 rework - auth like ukride.uk (branch `module-01-auth-otp`)
+
+#### Step 1.9 - OTP codes (done 2026-10-16)
+
+Built
+
+- `OtpCode` table (migration `add_otp_codes`):
+  - purpose: SIGNUP, GUEST_BOOKING, CHANGE_MOBILE or RESET_PASSWORD
+  - channel: SMS or EMAIL
+  - the target, a keyed hash of the code, wrong tries, expiry, used-at and ticket-used-at
+- `User.phoneVerifiedAt`.
+- `backend/src/modules/otp/`:
+  - `sendOtp` makes a 6-digit code that lasts 10 minutes and replaces any earlier one
+  - `verifyOtp` allows 5 wrong tries; the right code is used up and answered with a signed
+    ticket (15 minutes)
+  - `spendTicket` accepts that ticket once, for its own purpose and target only
+- **Limits:**
+  - 60 s between codes, checked in the database
+  - at most 5 codes an hour to one target, counted in Redis (`backend/src/config/redis.ts`,
+    `REDIS_URL`); if Redis is down, the 60 s rule still applies and the problem is logged
+  - per-address limits on sending and checking
+- **Delivery** (`otp.sender.ts`):
+  - email through the mail server
+  - SMS through a development driver that emails Mailpit at `<number>@sms.ukride.local`
+    and logs it, and refuses to run in production until a real SMS provider is added
+- **Endpoints:** `POST /auth/otp/send` and `/verify`, for the SIGNUP and GUEST_BOOKING
+  purposes. A sign-up code is refused (409) for a mobile that already has an account.
+- **Readiness** now reports Redis. The clean-up job deletes codes a day after they end.
+
+Verified (against the running API and Mailpit)
+
+- **Sending:**
+  - the code arrived in Mailpit as "SMS to +447400999971"
+  - the stored hash was not the code
+  - a second send at once got 429 "Wait N seconds"; a 6th in the hour got 429
+  - a landline was refused
+- **Checking:**
+  - a wrong code got "4 tries left"; "12ab" and a wrong purpose were refused
+  - the right code gave a 900-second ticket; using it again was refused
+- **Ending a code:**
+  - five wrong tries ended the code, so the right one was refused after them
+  - an expired code was refused
+- The test codes and the Redis counter were deleted afterwards.
+
+Learning notes
+
+- Six digits are only a million possibilities. A keyed hash (HMAC with the server secret)
+  means a stolen table of hashes is useless; a plain hash could be reversed in seconds.
+- Three separate limits guard different things: tries per code (guessing), time between
+  sends (annoyance and cost), and sends per hour per number in Redis (shared across servers).
+- A short-lived, single-use ticket separates proving you hold the phone from what you do
+  next, so the code endpoint stays the same for sign-up, guest booking and the rest.
+- Updates with a condition (`attempts < 5`, `consumedAt is null`) stop two requests at once
+  from both getting the last try or both using one code.

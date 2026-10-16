@@ -213,6 +213,7 @@ Database commands belong to the backend workspace.
 | `LOG_LEVEL`              | `debug`                                       | Pino log level                                             |
 | `CORS_ORIGINS`           | `http://localhost:3000,http://localhost:3001` | Comma-separated origins allowed to call the API            |
 | `DATABASE_URL`           | none, required                                | PostgreSQL connection string                               |
+| `REDIS_URL`              | `redis://localhost:6379`                      | Shared counters, such as codes sent per phone              |
 | `JWT_ACCESS_SECRET`      | none, required                                | Signs login tokens; 32 characters or more                  |
 | `JWT_ACCESS_TTL_SECONDS` | `900`                                         | Lifetime of an access token                                |
 | `REFRESH_TOKEN_TTL_DAYS` | `7`                                           | How long someone stays signed in                           |
@@ -246,6 +247,8 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/health/live`                  | The process is alive                                      |
 | GET    | `/health/ready`                 | The database answers; `503` when it cannot be reached     |
 | POST   | `/auth/register`                | Create an account: name, email, mobile number, password   |
+| POST   | `/auth/otp/send`                | Send a 6-digit code to a mobile (sign-up, guest booking)  |
+| POST   | `/auth/otp/verify`              | Check a code; answers with a one-use ticket               |
 | POST   | `/auth/login`                   | Sign in and receive an access token                       |
 | POST   | `/auth/refresh`                 | New access token from the refresh cookie                  |
 | POST   | `/auth/logout`                  | Sign out: revoke the refresh token, clear the cookie      |

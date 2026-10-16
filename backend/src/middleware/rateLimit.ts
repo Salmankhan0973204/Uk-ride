@@ -103,3 +103,17 @@ export const quoteLimiter = rateLimiter({
   limit: 120,
   message: `Too many quotes asked for. ${TRY_LATER}`,
 });
+
+/** Asking for codes: one address may not flood many phones. Each phone has its own limit too. */
+export const otpSendLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 10,
+  message: `Too many codes asked for from this address. ${TRY_LATER}`,
+});
+
+/** Trying codes. Each code also allows only 5 wrong tries. */
+export const otpVerifyLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 30,
+  message: `Too many code checks from this address. ${TRY_LATER}`,
+});

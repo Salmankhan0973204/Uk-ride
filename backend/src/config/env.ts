@@ -21,6 +21,8 @@ const envSchema = z.object({
         .filter(Boolean),
     ),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+  // Short-lived shared counters, such as codes sent per phone. Redis from docker-compose.yml.
+  REDIS_URL: z.url({ protocol: /^rediss?$/ }).default('redis://localhost:6379'),
   // Signs access tokens. Anyone who knows it can forge a login, so it must be
   // long, random and different in every environment.
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),

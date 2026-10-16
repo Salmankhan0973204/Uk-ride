@@ -138,6 +138,85 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/otp/send': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Send a 6-digit code to a mobile',
+        description:
+          'For SIGNUP (refused with 409 if the mobile already has an account) or GUEST_BOOKING. ' +
+          'The code lasts 10 minutes; another can be sent after 60 seconds, at most 5 an hour ' +
+          'to one number. In development the SMS is delivered to Mailpit.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['purpose', 'mobile'],
+                properties: {
+                  purpose: { type: 'string', enum: ['SIGNUP', 'GUEST_BOOKING'] },
+                  mobile: { type: 'string', example: '+44 7400 123456' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse('Code sent', successEnvelope({ type: 'object' })),
+          400: jsonResponse('The mobile or purpose is not valid', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          409: jsonResponse('Sign-up: the mobile already has an account', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: jsonResponse('Too soon after the last code, or too many codes this hour', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          503: jsonResponse('The code could not be sent', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+        },
+      },
+    },
+    '/auth/otp/verify': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Check a code and get a ticket',
+        description:
+          'Five wrong tries end the code. The right code is used up and answered with a ticket ' +
+          'valid for 15 minutes and usable once, which the next step (sign-up, guest booking) ' +
+          'asks for.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['purpose', 'mobile', 'code'],
+                properties: {
+                  purpose: { type: 'string', enum: ['SIGNUP', 'GUEST_BOOKING'] },
+                  mobile: { type: 'string' },
+                  code: { type: 'string', example: '519012' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Code accepted',
+            successEnvelope({
+              type: 'object',
+              properties: { ticket: { type: 'string' }, expiresInSeconds: { type: 'integer' } },
+            }),
+          ),
+          400: jsonResponse('Wrong, expired or used code; the message says which', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+        },
+      },
+    },
     '/auth/login': {
       post: {
         tags: ['Auth'],

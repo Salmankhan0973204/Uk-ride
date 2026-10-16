@@ -11,6 +11,7 @@ import { notFound } from './middleware/notFound.js';
 import { requestId } from './middleware/requestId.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { staffAuthRouter } from './modules/auth/auth.staff.routes.js';
+import { otpRouter } from './modules/otp/otp.routes.js';
 import { adminPricingRouter } from './modules/pricing/pricing.routes.js';
 import { quotesRouter } from './modules/quotes/quotes.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
@@ -57,6 +58,7 @@ app.use(cookieParser());
 
 const api = express.Router();
 api.use('/health', healthRouter);
+api.use('/auth/otp', otpRouter);
 api.use('/auth', authRouter);
 api.use('/users', usersRouter);
 api.use('/vehicle-types', vehicleTypesRouter);

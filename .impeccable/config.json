@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "arial",
+        "createdAt": "2026-10-16T12:32:48.877Z",
+        "reason": "Claude decided, not user confirmed: Arial appears only in HTML email bodies (auth.emails.ts, otp.sender.ts). Mail clients do not load web fonts, so a system font is required; DESIGN.md records emails as outside the web design system."
+      }
+    ]
+  }
+}

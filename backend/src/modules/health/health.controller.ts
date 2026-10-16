@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
 import { prisma } from '../../config/db.js';
+import { redisIsUp } from '../../config/redis.js';
 import { APP_VERSION, SERVICE_NAME, env } from '../../config/env.js';
 import { AppError } from '../../shared/AppError.js';
 import { sendSuccess } from '../../shared/response.js';
@@ -27,10 +28,11 @@ export const getLive: RequestHandler = (_req, res) => {
 /**
  * Readiness: dependencies are reachable.
  * Answers 503 when the database cannot be queried, so a load balancer can
- * stop sending traffic. The Redis check is added in Module 11.
+ * stop sending traffic. Redis is reported too; without it the API still
+ * works (code limits fall back to the database), so it does not cause a 503.
  */
 export const getReady: RequestHandler = async (req, res) => {
-  const redis = { status: 'skipped', note: 'Added in Module 11 (Redis + BullMQ)' };
+  const redis = { status: (await redisIsUp()) ? 'up' : 'down' };
 
   try {
     await prisma.$queryRaw`SELECT 1`;

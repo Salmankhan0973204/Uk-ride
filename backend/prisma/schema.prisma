@@ -41,6 +41,8 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  // Set when the person proves they hold the mobile with a code. Null until then.
+  phoneVerifiedAt DateTime? @map("phone_verified_at")
   // Set when the person opens the link we emailed. Null until then.
   emailVerifiedAt DateTime? @map("email_verified_at")
 
@@ -189,4 +191,39 @@ model PricingRule {
   updatedAt             DateTime    @updatedAt @map("updated_at")
 
   @@map("pricing_rules")
+}
+
+// What a one-time code is for. A code (and the ticket it turns into) only
+// works for the purpose it was sent for.
+enum OtpPurpose {
+  SIGNUP
+  GUEST_BOOKING
+  CHANGE_MOBILE
+  RESET_PASSWORD
+}
+
+enum OtpChannel {
+  SMS
+  EMAIL
+}
+
+// A six-digit code sent to a phone or an email. Only a keyed hash is stored.
+model OtpCode {
+  id           String     @id @default(uuid())
+  purpose      OtpPurpose
+  channel      OtpChannel
+  // The phone (+447400123456) or email the code was sent to.
+  target       String
+  codeHash     String     @map("code_hash")
+  // Wrong guesses so far. Five end the code.
+  attempts     Int        @default(0)
+  expiresAt    DateTime   @map("expires_at")
+  // Set when the code is used, or replaced by a newer one.
+  consumedAt   DateTime?  @map("consumed_at")
+  // Set when the ticket it was exchanged for is spent. A ticket works once.
+  ticketUsedAt DateTime?  @map("ticket_used_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@index([target, purpose, createdAt])
+  @@map("otp_codes")
 }

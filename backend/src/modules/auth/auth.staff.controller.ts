@@ -20,7 +20,9 @@ const notStaff = () => AppError.forbidden('This sign-in is for UkRide staff');
  * audience, and a lifetime of one working day.
  */
 export const staffLogin: RequestHandler = async (req, res) => {
-  const user = await checkCredentials(req.body as LoginInput);
+  // "Remember me" does not apply: staff sessions always last STAFF_SESSION_HOURS.
+  const { email, password } = req.body as LoginInput;
+  const user = await checkCredentials({ email, password });
   if (!(STAFF_ROLES as readonly string[]).includes(user.role)) throw notStaff();
 
   const session = await createSession(user.id, { audience: 'STAFF' });

@@ -11,8 +11,9 @@ and runs on a local machine.
 
 ## Status
 
-**44 of 113 steps are done.** You can create an account, sign in, edit your profile, browse the
-vehicle types and get an exact price between two postcodes. An admin can manage vehicle types,
+**49 of 113 steps are done.** You can sign up with a code texted to your mobile, sign in (with
+"Remember me"), reset a forgotten password with a code sent by email, edit your profile, browse
+the vehicle types and get an exact price between two postcodes. An admin can manage vehicle types,
 the fleet and the prices.
 
 On 2026-10-16 the roadmap changed: UkRide now follows the customer flow of
@@ -23,8 +24,8 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 | #   | Module                       | Status   |
 | --- | ---------------------------- | -------- |
 | 0   | Foundation: three apps       | Complete |
-| 1   | Auth like ukride.uk          | Next     |
-| 2   | Profile                      | Rework   |
+| 1   | Auth like ukride.uk          | Complete |
+| 2   | Profile                      | Next     |
 | 3   | Fleet classes                | Rework   |
 | 4   | Fleet vehicles               | Complete |
 | 5   | Pricing and quotes           | Rework   |
@@ -159,8 +160,11 @@ npm run dev
 `npm run dev` starts all three. Each can also run alone: `npm run dev:api`,
 `npm run dev:customer`, `npm run dev:admin`.
 
-On the customer site, create an account at http://localhost:3000/register, sign in at
-http://localhost:3000/login and see your profile at http://localhost:3000/account. The vehicle
+On the customer site, create an account at http://localhost:3000/signup, sign in at
+http://localhost:3000/login and see your profile at http://localhost:3000/account. Phone and
+email codes arrive in Mailpit at http://localhost:8025 (a "text message" is an email to
+`<number>@sms.ukride.local`); a forgotten password is reset at
+http://localhost:3000/forgot-password. The vehicle
 types are at http://localhost:3000/vehicles and prices between two postcodes at
 http://localhost:3000/quote.
 
@@ -213,9 +217,11 @@ Database commands belong to the backend workspace.
 | `LOG_LEVEL`              | `debug`                                       | Pino log level                                             |
 | `CORS_ORIGINS`           | `http://localhost:3000,http://localhost:3001` | Comma-separated origins allowed to call the API            |
 | `DATABASE_URL`           | none, required                                | PostgreSQL connection string                               |
+| `REDIS_URL`              | `redis://localhost:6379`                      | Shared counters, such as codes sent per phone              |
 | `JWT_ACCESS_SECRET`      | none, required                                | Signs login tokens; 32 characters or more                  |
 | `JWT_ACCESS_TTL_SECONDS` | `900`                                         | Lifetime of an access token                                |
-| `REFRESH_TOKEN_TTL_DAYS` | `7`                                           | How long someone stays signed in                           |
+| `REMEMBER_ME_DAYS`       | `30`                                          | How long a customer stays signed in with "Remember me"     |
+| `CUSTOMER_SESSION_HOURS` | `24`                                          | How long a customer stays signed in without it             |
 | `STAFF_SESSION_HOURS`    | `12`                                          | How long a staff member stays signed in to the admin panel |
 | `SMTP_HOST`              | `localhost`                                   | Mail server; the default is Mailpit                        |
 | `SMTP_PORT`              | `1025`                                        | Mail server port                                           |
@@ -245,15 +251,17 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/health`                       | Service name, version, environment, uptime                |
 | GET    | `/health/live`                  | The process is alive                                      |
 | GET    | `/health/ready`                 | The database answers; `503` when it cannot be reached     |
-| POST   | `/auth/register`                | Create an account: name, email, mobile number, password   |
+| POST   | `/auth/check-email`             | Is this email free? (first step of sign-up)               |
+| POST   | `/auth/register`                | Create an account with a code-checked mobile; signs in    |
+| POST   | `/auth/otp/send`                | Send a 6-digit code to a mobile (sign-up, guest booking)  |
+| POST   | `/auth/otp/verify`              | Check a code; answers with a one-use ticket               |
 | POST   | `/auth/login`                   | Sign in and receive an access token                       |
 | POST   | `/auth/refresh`                 | New access token from the refresh cookie                  |
 | POST   | `/auth/logout`                  | Sign out: revoke the refresh token, clear the cookie      |
 | GET    | `/auth/me`                      | The signed-in user; needs `Authorization: Bearer <token>` |
-| POST   | `/auth/verify-email`            | Confirm an email address with the emailed token           |
-| POST   | `/auth/resend-verification`     | Send the confirmation link again (signed in)              |
-| POST   | `/auth/forgot-password`         | Ask for a password reset link                             |
-| POST   | `/auth/reset-password`          | Choose a new password with the emailed token              |
+| POST   | `/auth/forgot-password`         | Forgot password: a 6-digit code to the email              |
+| POST   | `/auth/forgot-password/verify`  | Check the code; answers with a ticket                     |
+| POST   | `/auth/reset-password`          | New password with the ticket; ends all sessions, signs in |
 | GET    | `/users/me`                     | Your profile (signed in)                                  |
 | PATCH  | `/users/me`                     | Change your name, mobile number or gender                 |
 | POST   | `/users/me/password`            | Change your password; signs out other devices             |

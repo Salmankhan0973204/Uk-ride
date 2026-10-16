@@ -659,3 +659,25 @@ Invoke-RestMethod http://localhost:4000/api/v1/admin/vehicles -Headers $headers
 | a staff token on `/auth/me` or `/users/me` | `401`                                           |
 | two refreshes at once with one cookie      | one `200`, the other `409` with `details.retry` |
 | an old refresh cookie more than 30 s later | `401`, and every session of that user ends      |
+
+## Module 1 rework - codes by SMS (step 1.9)
+
+The "SMS" goes to Mailpit for now: open http://localhost:8025 and look for a message to
+`447400123456@sms.ukride.local`.
+
+```powershell
+$body = '{"purpose":"SIGNUP","mobile":"+44 7400 123456"}'
+Invoke-RestMethod http://localhost:4000/api/v1/auth/otp/send -Method Post -ContentType 'application/json' -Body $body
+
+$body = '{"purpose":"SIGNUP","mobile":"+44 7400 123456","code":"519012"}'
+(Invoke-RestMethod http://localhost:4000/api/v1/auth/otp/verify -Method Post -ContentType 'application/json' -Body $body).data.ticket
+```
+
+| Request                                 | Answer                                               |
+| --------------------------------------- | ---------------------------------------------------- |
+| a second send within 60 s               | `429` "Wait N seconds before asking for a new code." |
+| a 6th send to one number in an hour     | `429`                                                |
+| a wrong code                            | `400` "That code is not right. 4 tries left"         |
+| the right code after 5 wrong ones       | `400` "Too many wrong tries. Ask for a new code"     |
+| a code older than 10 minutes, or reused | `400` "This code has expired or was replaced"        |
+| SIGNUP for a mobile that has an account | `409` on `mobile`                                    |

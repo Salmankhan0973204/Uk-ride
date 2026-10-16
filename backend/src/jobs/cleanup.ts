@@ -1,5 +1,6 @@
 import { logger } from '../config/logger.js';
 import { deleteExpiredSessions } from '../modules/auth/auth.sessions.js';
+import { deleteOldOtpCodes } from '../modules/otp/otp.service.js';
 
 const HOUR_MS = 60 * 60 * 1000;
 /** A refresh token lives for days, so sweeping a few times a day is plenty. */
@@ -11,7 +12,8 @@ const FIRST_RUN_MS = 30_000;
 export async function runCleanup() {
   try {
     const removed = await deleteExpiredSessions();
-    logger.info({ removed }, 'Clean-up: expired refresh tokens removed');
+    const codes = await deleteOldOtpCodes();
+    logger.info({ removed, codes }, 'Clean-up: expired refresh tokens and old codes removed');
     return removed;
   } catch (err) {
     logger.error({ err }, 'Clean-up failed; it will run again at the next interval');

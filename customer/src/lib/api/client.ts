@@ -10,10 +10,13 @@ export { API_PREFIX, ApiError } from '@ukride/shared/api/client';
  * `client-only` stops this file from ever running on the server, where the
  * access token kept inside the client would be shared between visitors.
  */
+/** The localStorage key that says "this browser has a customer session". */
+export const SESSION_HINT_KEY = 'ukride_signed_in';
+
 const client = createApiClient({
   baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000',
   refreshPath: '/auth/refresh',
-  hintKey: 'ukride_signed_in',
+  hintKey: SESSION_HINT_KEY,
 });
 
 export const API_BASE_URL = client.apiBaseUrl;

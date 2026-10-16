@@ -100,15 +100,34 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/check-email': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Is this email free?',
+        description: 'The first step of sign-up, as on ukride.uk.',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/EmailOnly' } } },
+        },
+        responses: {
+          200: jsonResponse(
+            'Answer',
+            successEnvelope({ type: 'object', properties: { available: { type: 'boolean' } } }),
+          ),
+          400: jsonResponse('Not an email address', { $ref: '#/components/schemas/ApiFailure' }),
+          429: { $ref: '#/components/responses/RateLimited' },
+        },
+      },
+    },
     '/auth/register': {
       post: {
         tags: ['Auth'],
         summary: 'Create an account',
         description:
-          'The email is trimmed and lower-cased. The mobile number may come from any country ' +
-          'and is stored in international form (+447400123456). The password is stored as a ' +
-          'bcrypt hash and is never returned. No token is issued here; sign in with ' +
-          '`/auth/login`.',
+          'As on ukride.uk, the mobile is proved first: send a SIGNUP code with ' +
+          '`/auth/otp/send`, check it with `/auth/otp/verify`, and send the ticket as ' +
+          '`otpTicket`. The email is trimmed and lower-cased; the mobile is stored in ' +
+          'international form. The answer signs the person in, like `/auth/login`.',
         requestBody: {
           required: true,
           content: {
@@ -138,6 +157,85 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/otp/send': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Send a 6-digit code to a mobile',
+        description:
+          'For SIGNUP (refused with 409 if the mobile already has an account) or GUEST_BOOKING. ' +
+          'The code lasts 10 minutes; another can be sent after 60 seconds, at most 5 an hour ' +
+          'to one number. In development the SMS is delivered to Mailpit.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['purpose', 'mobile'],
+                properties: {
+                  purpose: { type: 'string', enum: ['SIGNUP', 'GUEST_BOOKING'] },
+                  mobile: { type: 'string', example: '+44 7400 123456' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse('Code sent', successEnvelope({ type: 'object' })),
+          400: jsonResponse('The mobile or purpose is not valid', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          409: jsonResponse('Sign-up: the mobile already has an account', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: jsonResponse('Too soon after the last code, or too many codes this hour', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          503: jsonResponse('The code could not be sent', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+        },
+      },
+    },
+    '/auth/otp/verify': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Check a code and get a ticket',
+        description:
+          'Five wrong tries end the code. The right code is used up and answered with a ticket ' +
+          'valid for 15 minutes and usable once, which the next step (sign-up, guest booking) ' +
+          'asks for.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['purpose', 'mobile', 'code'],
+                properties: {
+                  purpose: { type: 'string', enum: ['SIGNUP', 'GUEST_BOOKING'] },
+                  mobile: { type: 'string' },
+                  code: { type: 'string', example: '519012' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Code accepted',
+            successEnvelope({
+              type: 'object',
+              properties: { ticket: { type: 'string' }, expiresInSeconds: { type: 'integer' } },
+            }),
+          ),
+          400: jsonResponse('Wrong, expired or used code; the message says which', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+        },
+      },
+    },
     '/auth/login': {
       post: {
         tags: ['Auth'],
@@ -147,7 +245,9 @@ export const openApiDocument = {
           'token. Send the token on later requests as `Authorization: Bearer <token>`. ' +
           'A wrong password and an unknown email get the same 401, on purpose. ' +
           'Also sets the httpOnly cookie `ukride_refresh`, used by `/auth/refresh` and ' +
-          '`/auth/logout`.',
+          '`/auth/logout`. With `rememberMe: true` the session lasts 30 days ' +
+          '(`REMEMBER_ME_DAYS`), otherwise 1 day (`CUSTOMER_SESSION_HOURS`); every refresh ' +
+          'keeps that lifetime. At most 5 sign-in attempts a minute from one address.',
         requestBody: {
           required: true,
           content: {
@@ -234,60 +334,15 @@ export const openApiDocument = {
         },
       },
     },
-    '/auth/verify-email': {
-      post: {
-        tags: ['Auth'],
-        summary: 'Confirm an email address',
-        description:
-          'Takes the token from the link emailed at registration. A link works once and ' +
-          'lasts 24 hours. No sign-in is needed: the token is the proof.',
-        requestBody: {
-          required: true,
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/LinkToken' } } },
-        },
-        responses: {
-          200: jsonResponse(
-            'Email address confirmed',
-            successEnvelope({ type: 'object', nullable: true }),
-          ),
-          400: jsonResponse('The link is not valid, was used already, or has expired', {
-            $ref: '#/components/schemas/ApiFailure',
-          }),
-          429: { $ref: '#/components/responses/RateLimited' },
-          500: { $ref: '#/components/responses/Error' },
-        },
-      },
-    },
-    '/auth/resend-verification': {
-      post: {
-        tags: ['Auth'],
-        summary: 'Send the confirmation link again',
-        description:
-          'For the signed-in user. Any earlier link stops working. `data.sent` is false when ' +
-          'the address is already confirmed.',
-        security: [{ bearerAuth: [] }],
-        responses: {
-          200: jsonResponse(
-            'Confirmation email sent, or already confirmed',
-            successEnvelope({
-              type: 'object',
-              required: ['sent'],
-              properties: { sent: { type: 'boolean' } },
-            }),
-          ),
-          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
-          429: { $ref: '#/components/responses/RateLimited' },
-          500: { $ref: '#/components/responses/Error' },
-        },
-      },
-    },
     '/auth/forgot-password': {
       post: {
         tags: ['Auth'],
-        summary: 'Ask for a password reset link',
+        summary: 'Forgot password: send a code to the email',
         description:
-          'Always answers 200 with the same message, whether or not the email has an ' +
-          'account, so it cannot be used to find out who is registered. Limited to 5 an hour.',
+          'Step 1 of 3, as on ukride.uk. If the email has an account, a 6-digit ' +
+          'RESET_PASSWORD code is sent to it: valid 10 minutes, a new one after 60 s, at most 5 ' +
+          'an hour. The answer is always the same 200, sent before the email goes out, so it ' +
+          'cannot be used to find out who is registered. Limited to 5 an hour per address.',
         requestBody: {
           required: true,
           content: { 'application/json': { schema: { $ref: '#/components/schemas/EmailOnly' } } },
@@ -295,7 +350,15 @@ export const openApiDocument = {
         responses: {
           200: jsonResponse(
             'The same answer for every address',
-            successEnvelope({ type: 'object', nullable: true }),
+            successEnvelope({
+              type: 'object',
+              properties: {
+                sentTo: { type: 'string', example: 's•••@example.com' },
+                channel: { type: 'string', enum: ['EMAIL'] },
+                expiresInSeconds: { type: 'integer', example: 600 },
+                resendAfterSeconds: { type: 'integer', example: 60 },
+              },
+            }),
           ),
           400: jsonResponse('The email address is missing or badly formed', {
             $ref: '#/components/schemas/ApiFailure',
@@ -305,13 +368,51 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/forgot-password/verify': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Forgot password: check the code',
+        description:
+          'Step 2 of 3. Five wrong tries end the code. The right code is answered with a ' +
+          'ticket for this email, valid 15 minutes and usable once.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'code'],
+                properties: {
+                  email: { type: 'string', format: 'email' },
+                  code: { type: 'string', example: '519012' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Code accepted',
+            successEnvelope({
+              type: 'object',
+              properties: { ticket: { type: 'string' }, expiresInSeconds: { type: 'integer' } },
+            }),
+          ),
+          400: jsonResponse('Wrong, expired or used code; the message says which', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+        },
+      },
+    },
     '/auth/reset-password': {
       post: {
         tags: ['Auth'],
-        summary: 'Choose a new password',
+        summary: 'Forgot password: choose a new password',
         description:
-          'Takes the token from the reset link and the new password. A link works once and ' +
-          'lasts 1 hour. Every session of the user is ended.',
+          'Step 3 of 3. Takes the email, the ticket from step 2 and the new password. Every ' +
+          'session of the account ends, on every device, and this browser is signed in ' +
+          'afresh: the answer is the same as from `/auth/login`, with the `ukride_refresh` cookie.',
         requestBody: {
           required: true,
           content: {
@@ -320,10 +421,10 @@ export const openApiDocument = {
         },
         responses: {
           200: jsonResponse(
-            'Password changed',
-            successEnvelope({ type: 'object', nullable: true }),
+            'Password changed and signed in',
+            successEnvelope({ $ref: '#/components/schemas/LoginResult' }),
           ),
-          400: jsonResponse('The link is not usable, or the password breaks the rules', {
+          400: jsonResponse('The ticket is not usable, or the password breaks the rules', {
             $ref: '#/components/schemas/ApiFailure',
           }),
           429: { $ref: '#/components/responses/RateLimited' },
@@ -1049,11 +1150,6 @@ export const openApiDocument = {
       staffRefreshCookie: { type: 'apiKey', in: 'cookie', name: 'ukride_staff_refresh' },
     },
     schemas: {
-      LinkToken: {
-        type: 'object',
-        required: ['token'],
-        properties: { token: { type: 'string', description: 'From the emailed link.' } },
-      },
       EmailOnly: {
         type: 'object',
         required: ['email'],
@@ -1061,9 +1157,10 @@ export const openApiDocument = {
       },
       ResetPasswordRequest: {
         type: 'object',
-        required: ['token', 'password'],
+        required: ['email', 'otpTicket', 'password'],
         properties: {
-          token: { type: 'string', description: 'From the emailed link.' },
+          email: { type: 'string', format: 'email' },
+          otpTicket: { type: 'string', description: 'From /auth/forgot-password/verify' },
           password: { type: 'string', minLength: 8, maxLength: 72, example: 'a-brand-new-pass' },
         },
       },
@@ -1073,6 +1170,12 @@ export const openApiDocument = {
         properties: {
           email: { type: 'string', format: 'email', example: 'sara@example.com' },
           password: { type: 'string', example: 'secret-pass-1' },
+          rememberMe: {
+            type: 'boolean',
+            default: false,
+            description:
+              'Customer sign-in only: a 30-day session instead of a 1-day one. Staff ignore it.',
+          },
         },
       },
       AccessToken: {
@@ -1101,8 +1204,9 @@ export const openApiDocument = {
       Gender: { type: 'string', enum: GENDERS },
       RegisterRequest: {
         type: 'object',
-        required: ['firstName', 'lastName', 'email', 'mobile', 'password'],
+        required: ['firstName', 'lastName', 'email', 'mobile', 'password', 'otpTicket'],
         properties: {
+          otpTicket: { type: 'string', description: 'From /auth/otp/verify with purpose SIGNUP' },
           firstName: { type: 'string', minLength: 1, maxLength: 50, example: 'Sara' },
           lastName: { type: 'string', minLength: 1, maxLength: 50, example: 'Khan' },
           email: { type: 'string', format: 'email', example: 'sara@example.com' },

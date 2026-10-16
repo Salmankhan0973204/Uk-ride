@@ -17,6 +17,7 @@ export const publicUser = {
   mobile: true,
   gender: true,
   role: true,
+  phoneVerifiedAt: true,
   emailVerifiedAt: true,
   createdAt: true,
 } satisfies Prisma.UserSelect;

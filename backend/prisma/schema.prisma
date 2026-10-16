@@ -41,11 +41,13 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  // Set when the person opens the link we emailed. Null until then.
+  // Set when the person proves they hold the mobile with a code. Null until then.
+  phoneVerifiedAt DateTime? @map("phone_verified_at")
+  // Set when the person proves they read the mailbox, with a code sent to it.
+  // Null until then.
   emailVerifiedAt DateTime? @map("email_verified_at")
 
   refreshTokens RefreshToken[]
-  emailTokens   EmailToken[]
 
   @@map("users")
 }
@@ -70,6 +72,9 @@ model RefreshToken {
   // and the access token carries it, so ending the session cuts off both.
   sessionId String          @map("session_id")
   audience  SessionAudience @default(CUSTOMER)
+  // How long this session lasts from its last refresh, chosen at sign-in:
+  // 30 days with "Remember me", 1 day without, 12 hours for staff.
+  lifetimeHours   Int             @default(168) @map("lifetime_hours")
   tokenHash String          @unique @map("token_hash")
   expiresAt DateTime        @map("expires_at")
   // Set when the token is used (rotation) or the user signs out. A revoked
@@ -80,28 +85,6 @@ model RefreshToken {
   @@index([userId])
   @@index([sessionId])
   @@map("refresh_tokens")
-}
-
-enum EmailTokenPurpose {
-  VERIFY_EMAIL
-  RESET_PASSWORD
-}
-
-// A single-use link we email to someone: to confirm their address, or to let
-// them choose a new password. As with refresh tokens, only a hash is stored.
-model EmailToken {
-  id        String            @id @default(uuid())
-  userId    String            @map("user_id")
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  purpose   EmailTokenPurpose
-  tokenHash String            @unique @map("token_hash")
-  expiresAt DateTime          @map("expires_at")
-  // Set when the link is used. A link works once.
-  usedAt    DateTime?         @map("used_at")
-  createdAt DateTime          @default(now()) @map("created_at")
-
-  @@index([userId])
-  @@map("email_tokens")
 }
 
 // A class of car a customer can book, for example Saloon or Executive.
@@ -189,4 +172,39 @@ model PricingRule {
   updatedAt             DateTime    @updatedAt @map("updated_at")
 
   @@map("pricing_rules")
+}
+
+// What a one-time code is for. A code (and the ticket it turns into) only
+// works for the purpose it was sent for.
+enum OtpPurpose {
+  SIGNUP
+  GUEST_BOOKING
+  CHANGE_MOBILE
+  RESET_PASSWORD
+}
+
+enum OtpChannel {
+  SMS
+  EMAIL
+}
+
+// A six-digit code sent to a phone or an email. Only a keyed hash is stored.
+model OtpCode {
+  id           String     @id @default(uuid())
+  purpose      OtpPurpose
+  channel      OtpChannel
+  // The phone (+447400123456) or email the code was sent to.
+  target       String
+  codeHash     String     @map("code_hash")
+  // Wrong guesses so far. Five end the code.
+  attempts     Int        @default(0)
+  expiresAt    DateTime   @map("expires_at")
+  // Set when the code is used, or replaced by a newer one.
+  consumedAt   DateTime?  @map("consumed_at")
+  // Set when the ticket it was exchanged for is spent. A ticket works once.
+  ticketUsedAt DateTime?  @map("ticket_used_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@index([target, purpose, createdAt])
+  @@map("otp_codes")
 }

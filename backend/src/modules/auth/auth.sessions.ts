@@ -30,14 +30,17 @@ import { AppError } from '../../shared/AppError.js';
  */
 
 const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
 
 /**
- * How long a refresh token lives. Customers stay signed in for days; staff
- * for one working day, because the admin panel can move money and bookings.
+ * How long a session lasts, chosen when it starts and kept by every refresh:
+ *   - a customer who ticked "Remember me": REMEMBER_ME_DAYS (30)
+ *   - a customer who did not: CUSTOMER_SESSION_HOURS (24)
+ *   - staff: STAFF_SESSION_HOURS (12), because the admin panel moves money
  */
-const lifetimeMs = (audience: SessionAudience) =>
-  audience === 'STAFF' ? env.STAFF_SESSION_HOURS * HOUR_MS : env.REFRESH_TOKEN_TTL_DAYS * DAY_MS;
+export function sessionHours(audience: SessionAudience, rememberMe = false) {
+  if (audience === 'STAFF') return env.STAFF_SESSION_HOURS;
+  return rememberMe ? env.REMEMBER_ME_DAYS * 24 : env.CUSTOMER_SESSION_HOURS;
+}
 
 /**
  * Two refreshes a moment apart with the same cookie are normal: two tabs
@@ -66,13 +69,21 @@ export async function createSession(
   {
     audience = 'CUSTOMER',
     sessionId = randomUUID(),
-  }: { audience?: SessionAudience; sessionId?: string } = {},
+    lifetimeHours = sessionHours(audience),
+  }: { audience?: SessionAudience; sessionId?: string; lifetimeHours?: number } = {},
 ) {
   const refreshToken = randomBytes(32).toString('base64url');
-  const expiresAt = new Date(Date.now() + lifetimeMs(audience));
+  const expiresAt = new Date(Date.now() + lifetimeHours * HOUR_MS);
 
   await prisma.refreshToken.create({
-    data: { userId, sessionId, audience, tokenHash: hashToken(refreshToken), expiresAt },
+    data: {
+      userId,
+      sessionId,
+      audience,
+      lifetimeHours,
+      tokenHash: hashToken(refreshToken),
+      expiresAt,
+    },
   });
 
   return { sessionId, refreshToken, expiresAt };
@@ -129,7 +140,12 @@ export async function rotateSession(
 
   return {
     userId: stored.userId,
-    ...(await createSession(stored.userId, { audience, sessionId: stored.sessionId })),
+    // The new token keeps the lifetime chosen at sign-in.
+    ...(await createSession(stored.userId, {
+      audience,
+      sessionId: stored.sessionId,
+      lifetimeHours: stored.lifetimeHours,
+    })),
   };
 }
 

@@ -2,11 +2,9 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Badge } from '@ukride/shared/ui/Badge';
 import { Card } from '@ukride/shared/ui/Card';
 import { Spinner } from '@ukride/shared/ui/Spinner';
 import { formatMobile } from '@ukride/shared/phone';
-import { useResendVerification } from '../hooks/useEmailActions';
 import { useLogout } from '../hooks/useLogout';
 import { GENDER_OPTIONS } from '../types';
 import type { User } from '../types';
@@ -21,6 +19,9 @@ const memberSince = (value: string) =>
 const DONE: Record<string, string> = {
   profile: 'Your profile has been updated.',
   password: 'Your password has been changed. Other devices have been signed out.',
+  welcome: 'Welcome to UkRide. Your account is ready and your mobile is confirmed.',
+  reset:
+    'Your password has been changed. Other devices have been signed out; this one is signed in.',
 };
 
 /**
@@ -37,7 +38,6 @@ function Profile({ user, onSigningOut }: { user: User; onSigningOut: () => void 
   const router = useRouter();
   const done = DONE[useSearchParams().get('done') ?? ''];
   const logout = useLogout();
-  const resend = useResendVerification();
 
   function signOut() {
     // Signing out empties the user, and the gate would send the person to the
@@ -88,52 +88,10 @@ function Profile({ user, onSigningOut }: { user: User; onSigningOut: () => void 
               <dt className="text-sm text-ink-muted">{label}</dt>
               <dd className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1.5 text-right font-medium break-all">
                 {value}
-                {label === 'Email' ? (
-                  <Badge variant={user.emailVerifiedAt ? 'success' : 'warning'}>
-                    {user.emailVerifiedAt ? 'Confirmed' : 'Not confirmed'}
-                  </Badge>
-                ) : null}
               </dd>
             </div>
           ))}
         </dl>
-
-        {user.emailVerifiedAt ? null : (
-          <div className="space-y-3 rounded-2xl border border-warning/50 bg-[rgb(252_211_77/0.12)] px-4 py-3">
-            <p className="text-sm leading-relaxed">
-              Please confirm your email address. We sent a link to{' '}
-              <span className="font-medium break-all">{user.email}</span> when you registered.
-            </p>
-            {resend.isSuccess && resend.data.sent ? (
-              <p role="status" className="text-sm font-medium text-success">
-                A new link is on its way. It lasts 24 hours.
-              </p>
-            ) : (
-              <button
-                type="button"
-                onClick={() => resend.mutate()}
-                disabled={resend.isPending}
-                className="btn btn-ghost min-h-11! text-sm"
-              >
-                {resend.isPending ? (
-                  <>
-                    <Spinner />
-                    Sending
-                  </>
-                ) : (
-                  'Send the link again'
-                )}
-              </button>
-            )}
-            {resend.isError ? (
-              <p role="alert" className="text-sm font-medium text-danger">
-                {resend.error.status === 429
-                  ? resend.error.message
-                  : 'We could not send the link. Try again in a moment.'}
-              </p>
-            ) : null}
-          </div>
-        )}
 
         {user.role === 'ADMIN' ? (
           <p className="text-base leading-relaxed">

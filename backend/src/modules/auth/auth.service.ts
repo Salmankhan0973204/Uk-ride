@@ -3,7 +3,7 @@ import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
 import { hashPassword, verifyPassword } from '../../shared/passwords.js';
 import { publicUser } from '../users/users.select.js';
-import { sendInBackground, sendVerificationEmail } from './auth.emails.js';
+import { spendTicket } from '../otp/otp.service.js';
 import type { LoginInput, RegisterInput } from './auth.schemas.js';
 
 /**
@@ -25,19 +25,24 @@ async function assertNotTaken(email: string, mobile: string) {
   });
 }
 
-export async function registerUser({ password, gender, ...profile }: RegisterInput) {
+/**
+ * Creates an account, as on ukride.uk: the mobile was proved with a code
+ * first, and the ticket from that check must come with the details.
+ *
+ * Order matters. Taken details are reported before the ticket is spent, so a
+ * person who mistyped their email does not need a new code.
+ */
+export async function registerUser({ password, gender, otpTicket, ...profile }: RegisterInput) {
   await assertNotTaken(profile.email, profile.mobile);
+  await spendTicket(otpTicket, 'SIGNUP', profile.mobile);
 
   const passwordHash = await hashPassword(password);
 
   try {
-    const user = await prisma.user.create({
-      data: { ...profile, gender: gender ?? null, passwordHash },
+    return await prisma.user.create({
+      data: { ...profile, gender: gender ?? null, passwordHash, phoneVerifiedAt: new Date() },
       select: publicUser,
     });
-    // Not awaited: the account exists whether or not the email goes out.
-    sendInBackground(sendVerificationEmail(user), 'confirmation');
-    return user;
   } catch (err) {
     // Two requests with the same email or mobile can both pass the check
     // above. The unique index stops the second one; P2002 is Prisma's code for
@@ -63,7 +68,10 @@ const getDecoyHash = () => (decoyHash ??= hashPassword('no-such-account'));
  * Both ways of failing give the same answer: saying "no such email" would let
  * anyone test which addresses have accounts.
  */
-export async function checkCredentials({ email, password }: LoginInput) {
+export async function checkCredentials({
+  email,
+  password,
+}: Pick<LoginInput, 'email' | 'password'>) {
   const found = await prisma.user.findUnique({
     where: { email },
     select: { ...publicUser, passwordHash: true },
@@ -96,4 +104,10 @@ export async function getCurrentUser(userId: string) {
     throw AppError.unauthenticated('Your session is not valid. Sign in again.');
   }
   return user;
+}
+
+/** True when no account uses this email. */
+export async function isEmailAvailable(email: string) {
+  const taken = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+  return !taken;
 }

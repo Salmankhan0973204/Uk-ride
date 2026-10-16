@@ -12,6 +12,7 @@
     "./phone": "./src/phone/mobile.ts",
     "./ui/Badge": "./src/ui/Badge.tsx",
     "./ui/Card": "./src/ui/Card.tsx",
+    "./ui/Checkbox": "./src/ui/Checkbox.tsx",
     "./ui/Field": "./src/ui/Field.tsx",
     "./ui/PasswordInput": "./src/ui/PasswordInput.tsx",
     "./ui/Select": "./src/ui/Select.tsx",

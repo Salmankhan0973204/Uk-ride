@@ -79,8 +79,11 @@ export const emailLimiter = rateLimiter({
   message: 'Too many emails requested. Try again in an hour.',
 });
 
-/** Opening an emailed link: enough for honest use, too few to guess a token. */
-export const linkLimiter = rateLimiter({
+/**
+ * Choosing a new password with a reset ticket. The ticket is single-use, so
+ * this only stops a script hammering the endpoint.
+ */
+export const resetLimiter = rateLimiter({
   windowMinutes: 15,
   limit: 20,
   message: `Too many attempts. ${TRY_LATER}`,
@@ -102,4 +105,28 @@ export const quoteLimiter = rateLimiter({
   windowMinutes: 15,
   limit: 120,
   message: `Too many quotes asked for. ${TRY_LATER}`,
+});
+
+/** Asking for codes: one address may not flood many phones. Each phone has its own limit too. */
+export const otpSendLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 10,
+  message: `Too many codes asked for from this address. ${TRY_LATER}`,
+});
+
+/** Trying codes. Each code also allows only 5 wrong tries. */
+export const otpVerifyLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 30,
+  message: `Too many code checks from this address. ${TRY_LATER}`,
+});
+
+/**
+ * Sign-in, any outcome: 5 tries a minute from one address, as on ukride.uk.
+ * It sits in front of loginLimiter, which counts wrong passwords over 15 minutes.
+ */
+export const loginBurstLimiter = rateLimiter({
+  windowMinutes: 1,
+  limit: 5,
+  message: 'Too many sign-in attempts. Wait a minute and try again.',
 });

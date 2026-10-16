@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { loginLimiter, sessionLimiter } from '../../middleware/rateLimit.js';
+import { loginBurstLimiter, loginLimiter, sessionLimiter } from '../../middleware/rateLimit.js';
 import { requireStaffAuth } from '../../middleware/requireAuth.js';
 import { requireRole } from '../../middleware/requireRole.js';
 import { validate } from '../../middleware/validate.js';
@@ -18,7 +18,7 @@ import {
  */
 export const staffAuthRouter = Router();
 
-staffAuthRouter.post('/login', loginLimiter, validate(loginSchema), staffLogin);
+staffAuthRouter.post('/login', loginBurstLimiter, loginLimiter, validate(loginSchema), staffLogin);
 staffAuthRouter.post('/refresh', sessionLimiter, staffRefresh);
 staffAuthRouter.post('/logout', sessionLimiter, staffLogout);
 // A staff member who is demoted is refused here at once, token or not.

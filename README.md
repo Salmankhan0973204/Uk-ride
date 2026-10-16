@@ -189,20 +189,22 @@ Database commands belong to the backend workspace.
 
 ### Backend (`backend/.env`)
 
-| Variable                 | Default                          | Purpose                                         |
-| ------------------------ | -------------------------------- | ----------------------------------------------- |
-| `NODE_ENV`               | `development`                    | `development`, `test` or `production`           |
-| `PORT`                   | `4000`                           | API port                                        |
-| `LOG_LEVEL`              | `debug`                          | Pino log level                                  |
-| `CORS_ORIGINS`           | `http://localhost:3000`          | Comma-separated origins allowed to call the API |
-| `DATABASE_URL`           | none, required                   | PostgreSQL connection string                    |
-| `JWT_ACCESS_SECRET`      | none, required                   | Signs login tokens; 32 characters or more       |
-| `JWT_ACCESS_TTL_SECONDS` | `900`                            | Lifetime of an access token                     |
-| `REFRESH_TOKEN_TTL_DAYS` | `7`                              | How long someone stays signed in                |
-| `SMTP_HOST`              | `localhost`                      | Mail server; the default is Mailpit             |
-| `SMTP_PORT`              | `1025`                           | Mail server port                                |
-| `MAIL_FROM`              | `UkRide <no-reply@ukride.local>` | Sender shown on emails                          |
-| `WEB_APP_URL`            | `http://localhost:3000`          | Used for the links inside emails                |
+| Variable                 | Default                           | Purpose                                          |
+| ------------------------ | --------------------------------- | ------------------------------------------------ |
+| `NODE_ENV`               | `development`                     | `development`, `test` or `production`            |
+| `PORT`                   | `4000`                            | API port                                         |
+| `LOG_LEVEL`              | `debug`                           | Pino log level                                   |
+| `CORS_ORIGINS`           | `http://localhost:3000`           | Comma-separated origins allowed to call the API  |
+| `DATABASE_URL`           | none, required                    | PostgreSQL connection string                     |
+| `JWT_ACCESS_SECRET`      | none, required                    | Signs login tokens; 32 characters or more        |
+| `JWT_ACCESS_TTL_SECONDS` | `900`                             | Lifetime of an access token                      |
+| `REFRESH_TOKEN_TTL_DAYS` | `7`                               | How long someone stays signed in                 |
+| `SMTP_HOST`              | `localhost`                       | Mail server; the default is Mailpit              |
+| `SMTP_PORT`              | `1025`                            | Mail server port                                 |
+| `MAIL_FROM`              | `UkRide <no-reply@ukride.local>`  | Sender shown on emails                           |
+| `WEB_APP_URL`            | `http://localhost:3000`           | Used for the links inside emails                 |
+| `POSTCODES_API_URL`      | `https://api.postcodes.io`        | Finds UK postcodes on the map; free, no key      |
+| `ROUTING_API_URL`        | `https://router.project-osrm.org` | Road distance (OSRM); the default is a free demo |
 
 The API refuses to start if a value is invalid.
 
@@ -237,7 +239,7 @@ Base URL: `http://localhost:4000/api/v1`
 | POST   | `/users/me/password`            | Change your password; signs out other devices             |
 | GET    | `/vehicle-types`                | The catalogue of vehicle types (public)                   |
 | GET    | `/vehicle-types/:slug`          | One vehicle type, for example `executive` (public)        |
-| POST   | `/quotes`                       | The price of a journey, by distance (public)              |
+| POST   | `/quotes`                       | The price of a journey between two postcodes (public)     |
 | GET    | `/admin/vehicle-types`          | Every vehicle type, including switched-off ones (admin)   |
 | POST   | `/admin/vehicle-types`          | Add a vehicle type (admin)                                |
 | PATCH  | `/admin/vehicle-types/:id`      | Change a vehicle type, or switch it back on (admin)       |

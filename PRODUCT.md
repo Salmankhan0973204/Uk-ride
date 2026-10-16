@@ -127,7 +127,7 @@ below are the short version and must agree with it. Where they differ, DESIGN.md
 - Motion is short: panels rise in once, the dropdown opens from its trigger. It is removed
   under `prefers-reduced-motion`. 44px minimum touch target.
 - Tokens and shared classes (`.glass`, `.btn`, `.control`, `.pill`) live in
-  `frontend/src/app/globals.css`.
+  `shared/styles/glass.css`.
 
 ### Avoid
 

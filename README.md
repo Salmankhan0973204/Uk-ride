@@ -73,13 +73,16 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 │       ├── middleware/      Request ID, validation, auth, 404, error handler
 │       ├── modules/         One folder per feature (routes, controller, tests)
 │       └── shared/          AppError, response helpers
-├── frontend/                Next.js web app
+├── customer/                Next.js customer website (port 3000)
 │   └── src/
 │       ├── app/             Routes and layouts
-│       ├── components/      Shared UI and layout components
+│       ├── components/      Layout components (navigation)
 │       ├── features/        One folder per feature (api, hooks, components, types)
-│       ├── lib/             API client, query keys
+│       ├── lib/             This app's API client and query keys
 │       └── providers/       TanStack Query provider
+├── admin/                   Next.js admin panel (port 3001), same layout as customer/
+├── shared/                  @ukride/shared: API client factory, UI primitives,
+│                            money, UK time and phone helpers, the glass styles
 ├── docs/
 │   ├── PROGRESS.md          Module tracker and learning notes
 │   ├── api-tests/           Bruno collection and curl examples
@@ -88,7 +91,9 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 └── PRODUCT.md               Product and design context for every UI pass
 ```
 
-The root is an npm workspace, so one install covers both apps.
+The root is an npm workspace with four packages (backend, customer, admin, shared). Run
+`npm install` at the root only: one install covers all of them and links `shared/` into both
+web apps. See [ADR-0002](docs/decisions/ADR-0002-three-apps.md).
 
 ## Getting started
 
@@ -112,14 +117,16 @@ Copy the example environment files. The defaults work as they are.
 
 ```bash
 cp backend/.env.example backend/.env
-cp frontend/.env.local.example frontend/.env.local
+cp customer/.env.local.example customer/.env.local
+cp admin/.env.local.example admin/.env.local
 ```
 
 On Windows PowerShell:
 
 ```powershell
 Copy-Item backend/.env.example backend/.env
-Copy-Item frontend/.env.local.example frontend/.env.local
+Copy-Item customer/.env.local.example customer/.env.local
+Copy-Item admin/.env.local.example admin/.env.local
 ```
 
 ### Database
@@ -142,20 +149,26 @@ Run `db:generate` again after every `npm install` on a fresh clone, and after ev
 npm run dev
 ```
 
-| App      | URL                               |
-| -------- | --------------------------------- |
-| Web      | http://localhost:3000             |
-| API      | http://localhost:4000/api/v1      |
-| API docs | http://localhost:4000/api/v1/docs |
+| App           | URL                               |
+| ------------- | --------------------------------- |
+| Customer site | http://localhost:3000             |
+| Admin panel   | http://localhost:3001             |
+| API           | http://localhost:4000/api/v1      |
+| API docs      | http://localhost:4000/api/v1/docs |
 
-Open http://localhost:3000/system-status. Stop the API to see the offline state. Start it again
-and the page recovers by itself. Create an account at http://localhost:3000/register, sign in at http://localhost:3000/login,
-and see your profile at http://localhost:3000/account, where you can edit it and change your
-password. The vehicle types are at http://localhost:3000/vehicles. To manage them, make your
-account an admin with `npm run db:set-role -w backend -- you@example.com ADMIN`, sign in again
-and open http://localhost:3000/admin, which leads to the fleet, the vehicle types and the
-prices. No prices are set out of the box: set them under Pricing, then try
+`npm run dev` starts all three. Each can also run alone: `npm run dev:api`,
+`npm run dev:customer`, `npm run dev:admin`.
+
+On the customer site, create an account at http://localhost:3000/register, sign in at
+http://localhost:3000/login and see your profile at http://localhost:3000/account. The vehicle
+types are at http://localhost:3000/vehicles and prices between two postcodes at
 http://localhost:3000/quote.
+
+The admin panel has its own staff sign-in. Make your account an admin once with
+`npm run db:set-role -w backend -- you@example.com ADMIN`, then sign in at
+http://localhost:3001/login. It has the fleet, the vehicle types, the prices and the system
+status. No prices are set out of the box: set them under Pricing, then try the customer quote
+page. The two apps keep separate sign-ins, so signing out of one leaves the other signed in.
 
 ## Scripts
 
@@ -163,14 +176,15 @@ Run these from the repository root.
 
 | Command                    | What it does                                          |
 | -------------------------- | ----------------------------------------------------- |
-| `npm run dev`              | Start the API and the web app together                |
+| `npm run dev`              | Start the API, the customer site and the admin panel  |
 | `npm run dev:api`          | Start the API only                                    |
-| `npm run dev:web`          | Start the web app only                                |
-| `npm run typecheck`        | Type-check both apps                                  |
-| `npm run lint`             | Lint both apps                                        |
+| `npm run dev:customer`     | Start the customer site only (port 3000)              |
+| `npm run dev:admin`        | Start the admin panel only (port 3001)                |
+| `npm run typecheck`        | Type-check every workspace                            |
+| `npm run lint`             | Lint every app                                        |
 | `npm test`                 | Run the automated tests                               |
 | `npm run test:integration` | Run the tests that use a real database (needs Docker) |
-| `npm run build`            | Production build of both apps                         |
+| `npm run build`            | Production build of every app                         |
 | `npm run format`           | Format the code with Prettier                         |
 | `npm run docker:up`        | Start PostgreSQL, Redis and Mailpit                   |
 | `npm run docker:down`      | Stop them                                             |
@@ -215,9 +229,10 @@ The API refuses to start if a value is invalid.
 
 ### Customer site and admin panel (`customer/.env.local`, `admin/.env.local`)
 
-| Variable                   | Default                 | Purpose            |
-| -------------------------- | ----------------------- | ------------------ |
-| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:4000` | Address of the API |
+| Variable                   | Default                 | Purpose                                                              |
+| -------------------------- | ----------------------- | -------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:4000` | Address of the API (both apps)                                       |
+| `NEXT_PUBLIC_ADMIN_URL`    | `http://localhost:3001` | The admin panel, linked from an admin's account page (customer site) |
 
 Never commit `.env` or `.env.local`. Only the example files are tracked.
 

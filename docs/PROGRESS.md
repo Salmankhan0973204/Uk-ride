@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 0 rework - three apps (branch `module-00-three-apps`)
 - **Last completed:** Module 5 - Pricing Rules + Quote Engine (v1), plus real road distance
-- **Next step:** 0.9 - docs for three apps
-- **Steps done:** 42 of 113
+- **Next step:** 0.10 - customer site frame: header, footer, mobile tab bar
+- **Steps done:** 43 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -19,7 +19,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 
 | #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
 | --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
-| 0   | Foundation: three apps       | 8/10  | Rework  | Rework        | -           | In progress |
+| 0   | Foundation: three apps       | 9/10  | Rework  | Rework        | -           | In progress |
 | 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Rework      |
 | 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
 | 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
@@ -66,7 +66,7 @@ runs.
 - [x] 0.8 Staff sign-in with its own sessions, the admin app shell, the admin screens moved,
       and a fix for two sign-ins refreshing at the same moment.
       _Learn: token audiences, race conditions._
-- [ ] 0.9 Docs for three apps: `DESIGN.md`, `README.md`, ADR-0002.
+- [x] 0.9 Docs for three apps: `DESIGN.md`, `README.md`, ADR-0002.
 - [ ] 0.10 Customer site frame: header, footer, mobile tab bar. _Learn: responsive navigation._
 
 ### Module 1 - Auth like ukride.uk
@@ -2344,3 +2344,22 @@ Learning notes
 - Windows would not rename folders that the dev server was watching; moving files one by one
   worked. Empty leftover folders (`frontend/`, `customer/src/app/admin/`) can be deleted by
   hand.
+
+#### Step 0.9 - Docs for three apps (done 2026-10-16)
+
+- `DESIGN.md`:
+  - the token source is now `shared/styles/glass.css`
+  - the layout section describes both apps
+  - the admin sidebar replaces the old admin menu
+  - the mobile tab bar rule is written down before it is built (0.10)
+  - the navigation entry matches the new links
+- `README.md`:
+  - project structure with `customer/`, `admin/` and `shared/`
+  - setup copies both apps' `.env.local`
+  - how to run the three apps, and that their sign-ins are separate
+  - the scripts and frontend settings tables
+- `PRODUCT.md` points at the shared styles. ADR-0002 was written in 0.7.
+
+Learning note: write the rule for a new screen pattern before building it. The tab bar's
+rules (which items, when it shows, how it avoids covering content) were settled in
+`DESIGN.md` first, so 0.10 builds to a known target.

@@ -81,9 +81,17 @@ export const registerSchema = z.object({
   // Optional: leaving it out is a valid answer.
   gender: z.enum(GENDERS, 'Choose one of the listed options').optional(),
   password: newPassword,
+  // From POST /auth/otp/verify with purpose SIGNUP: proof the person holds this mobile.
+  otpTicket: z
+    .string('Verify your mobile with the code first')
+    .min(20, 'Verify your mobile with the code first'),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+/** Is this email free for a new account? Asked before the code is sent, as on ukride.uk. */
+export const checkEmailSchema = z.object({ email });
+export type CheckEmailInput = z.infer<typeof checkEmailSchema>;
 
 export const loginSchema = z.object({
   // Cleaned the same way as at registration, so "Sara@Example.com " signs in.
@@ -94,9 +102,6 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
-
-export const verifyEmailSchema = z.object({ token: linkToken });
-export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 
 export const forgotPasswordSchema = z.object({ email });
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;

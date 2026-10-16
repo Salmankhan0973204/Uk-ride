@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 1 rework - auth like ukride.uk (branch `module-01-auth-otp`)
 - **Last completed:** Module 0 rework - three apps (tag `module-00-v2`)
-- **Next step:** 1.10 - sign-up with a code to the mobile
-- **Steps done:** 45 of 113
+- **Next step:** 1.11 - login with "Remember me"
+- **Steps done:** 46 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -20,7 +20,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
 | --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
 | 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete    |
-| 1   | Auth like ukride.uk          | 9/13  | Rework  | Rework        | n/a         | In progress |
+| 1   | Auth like ukride.uk          | 10/13 | Rework  | Rework        | n/a         | In progress |
 | 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
 | 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
@@ -83,7 +83,7 @@ runs.
 - [x] 1.9 OTP codes: stored hashed, 6 digits, 10 minutes, resend after 60 s, 5 tries,
       per-number limits in Redis, a short-lived signed ticket after verifying. "SMS" goes to
       Mailpit for now. _Learn: one-time codes, Redis counters._
-- [ ] 1.10 Sign-up like ukride.uk: check the email, code to the mobile, verify, register,
+- [x] 1.10 Sign-up like ukride.uk: check the email, code to the mobile, verify, register,
       signed in. Email-link confirmation is retired. _Learn: multi-step flows on the server._
 - [ ] 1.11 Login with "Remember me": each session keeps its own lifetime (30 days or 1 day);
       signing out in one tab signs out all tabs. _Learn: per-session lifetimes._
@@ -2472,3 +2472,42 @@ Learning notes
   next, so the code endpoint stays the same for sign-up, guest booking and the rest.
 - Updates with a condition (`attempts < 5`, `consumedAt is null`) stop two requests at once
   from both getting the last try or both using one code.
+
+#### Step 1.10 - Sign-up with a code to the mobile (done 2026-10-16)
+
+Built
+
+- **The flow, as on ukride.uk:** `POST /auth/check-email` (is it free?), then a SIGNUP code to
+  the mobile (1.9), then `POST /auth/register` with the details and the `otpTicket`.
+- `registerUser` reports a taken email or mobile before spending the ticket, then spends it
+  (once, for that mobile only), and stores `phoneVerifiedAt`.
+- **Sign-up now signs the person in:** the answer carries an access token and sets the
+  refresh cookie, like a login.
+- **Email-link confirmation is retired:**
+  - no confirmation email at sign-up
+  - `/auth/verify-email` and `/auth/resend-verification` are gone, with their code
+  - the `email_tokens` table stays until the reset links go in 1.12
+- `phoneVerifiedAt` is part of the user the API returns.
+
+Verified (against the running API and Mailpit)
+
+- `check-email` answered `available: true` for a new email and `false` once registered.
+- **Refusals:**
+  - no ticket, a made-up ticket, and a real ticket for a different mobile were each refused
+    on `otpTicket`
+  - the same ticket again, with other details, was refused
+  - a SIGNUP code for the now-registered mobile got 409
+- **A real ticket:** 201 "Account created" with `phoneVerifiedAt`, an access token and the
+  refresh cookie; the cookie then refreshed into a token that `/auth/me` accepted.
+- **Retired paths:** Mailpit held no confirmation email for the new address, and the old
+  endpoints answered 404.
+
+Note: the customer site's register page still sends the old body, so it is broken on this
+branch until the new sign-up page in 1.13.
+
+Learning notes
+
+- Check the cheap, user-fixable things (a taken email) before spending something
+  single-use (the ticket); otherwise a typo costs the person a new code.
+- Proving a phone and creating an account are separate requests, joined by a ticket that names
+  the phone. Swapping the number between the two steps is refused.

@@ -3,31 +3,56 @@ import { currentUserId } from '../../middleware/requireAuth.js';
 import { AppError } from '../../shared/AppError.js';
 import { sendSuccess } from '../../shared/response.js';
 import { clearRefreshCookie, readRefreshCookie, setRefreshCookie } from './auth.cookies.js';
-import {
-  requestPasswordReset,
-  resendVerification,
-  resetPassword,
-  verifyEmail,
-} from './auth.emails.js';
+import { requestPasswordReset, resetPassword } from './auth.emails.js';
 import type {
+  CheckEmailInput,
   ForgotPasswordInput,
   LoginInput,
   RegisterInput,
   ResetPasswordInput,
-  VerifyEmailInput,
 } from './auth.schemas.js';
-import { checkCredentials, getCurrentUser, registerUser } from './auth.service.js';
+import {
+  checkCredentials,
+  getCurrentUser,
+  isEmailAvailable,
+  registerUser,
+} from './auth.service.js';
 import { createSession, endSession, rotateSession } from './auth.sessions.js';
 import { signAccessToken } from './auth.tokens.js';
 
 /** True for the 401 that means the session is over, false for a retryable conflict. */
 export const isSessionEnd = (err: unknown) => err instanceof AppError && err.statusCode === 401;
 
-/** Creates an account. The body was already checked by the validate middleware. */
+/**
+ * Creates an account and signs the person in at once, as on ukride.uk: the
+ * answer is the same as a login's.
+ */
 export const register: RequestHandler = async (req, res) => {
   const user = await registerUser(req.body as RegisterInput);
+  const session = await createSession(user.id);
 
-  sendSuccess(res, { status: 201, message: 'Account created', data: { user } });
+  setRefreshCookie(res, session.refreshToken, session.expiresAt);
+  res.set('Cache-Control', 'no-store');
+  sendSuccess(res, {
+    status: 201,
+    message: 'Account created',
+    data: {
+      user,
+      ...signAccessToken({ userId: user.id, sessionId: session.sessionId, audience: 'customer' }),
+      tokenType: 'Bearer',
+    },
+  });
+};
+
+/** Answers whether an email is free for a new account. */
+export const checkEmail: RequestHandler = async (req, res) => {
+  const available = await isEmailAvailable((req.body as CheckEmailInput).email);
+
+  res.set('Cache-Control', 'no-store');
+  sendSuccess(res, {
+    message: available ? 'This email is free' : 'An account with this email already exists',
+    data: { available },
+  });
 };
 
 /**
@@ -98,23 +123,6 @@ export const me: RequestHandler = async (_req, res) => {
   // Personal data for one user: no shared cache may keep it.
   res.set('Cache-Control', 'no-store');
   sendSuccess(res, { message: 'Signed-in user', data: { user } });
-};
-
-/** Confirms an email address from the token in the link we sent. */
-export const confirmEmail: RequestHandler = async (req, res) => {
-  await verifyEmail((req.body as VerifyEmailInput).token);
-
-  sendSuccess(res, { message: 'Email address confirmed', data: null });
-};
-
-/** Sends the confirmation link again to the signed-in user. */
-export const resendConfirmation: RequestHandler = async (_req, res) => {
-  const sent = await resendVerification(currentUserId(res));
-
-  sendSuccess(res, {
-    message: sent ? 'Confirmation email sent' : 'Your email address is already confirmed',
-    data: { sent },
-  });
 };
 
 /**

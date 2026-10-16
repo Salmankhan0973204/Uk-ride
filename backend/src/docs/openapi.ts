@@ -100,15 +100,34 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/check-email': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Is this email free?',
+        description: 'The first step of sign-up, as on ukride.uk.',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/EmailOnly' } } },
+        },
+        responses: {
+          200: jsonResponse(
+            'Answer',
+            successEnvelope({ type: 'object', properties: { available: { type: 'boolean' } } }),
+          ),
+          400: jsonResponse('Not an email address', { $ref: '#/components/schemas/ApiFailure' }),
+          429: { $ref: '#/components/responses/RateLimited' },
+        },
+      },
+    },
     '/auth/register': {
       post: {
         tags: ['Auth'],
         summary: 'Create an account',
         description:
-          'The email is trimmed and lower-cased. The mobile number may come from any country ' +
-          'and is stored in international form (+447400123456). The password is stored as a ' +
-          'bcrypt hash and is never returned. No token is issued here; sign in with ' +
-          '`/auth/login`.',
+          'As on ukride.uk, the mobile is proved first: send a SIGNUP code with ' +
+          '`/auth/otp/send`, check it with `/auth/otp/verify`, and send the ticket as ' +
+          '`otpTicket`. The email is trimmed and lower-cased; the mobile is stored in ' +
+          'international form. The answer signs the person in, like `/auth/login`.',
         requestBody: {
           required: true,
           content: {
@@ -309,53 +328,6 @@ export const openApiDocument = {
           401: jsonResponse('No token, or a token that is invalid or expired', {
             $ref: '#/components/schemas/ApiFailure',
           }),
-          500: { $ref: '#/components/responses/Error' },
-        },
-      },
-    },
-    '/auth/verify-email': {
-      post: {
-        tags: ['Auth'],
-        summary: 'Confirm an email address',
-        description:
-          'Takes the token from the link emailed at registration. A link works once and ' +
-          'lasts 24 hours. No sign-in is needed: the token is the proof.',
-        requestBody: {
-          required: true,
-          content: { 'application/json': { schema: { $ref: '#/components/schemas/LinkToken' } } },
-        },
-        responses: {
-          200: jsonResponse(
-            'Email address confirmed',
-            successEnvelope({ type: 'object', nullable: true }),
-          ),
-          400: jsonResponse('The link is not valid, was used already, or has expired', {
-            $ref: '#/components/schemas/ApiFailure',
-          }),
-          429: { $ref: '#/components/responses/RateLimited' },
-          500: { $ref: '#/components/responses/Error' },
-        },
-      },
-    },
-    '/auth/resend-verification': {
-      post: {
-        tags: ['Auth'],
-        summary: 'Send the confirmation link again',
-        description:
-          'For the signed-in user. Any earlier link stops working. `data.sent` is false when ' +
-          'the address is already confirmed.',
-        security: [{ bearerAuth: [] }],
-        responses: {
-          200: jsonResponse(
-            'Confirmation email sent, or already confirmed',
-            successEnvelope({
-              type: 'object',
-              required: ['sent'],
-              properties: { sent: { type: 'boolean' } },
-            }),
-          ),
-          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
-          429: { $ref: '#/components/responses/RateLimited' },
           500: { $ref: '#/components/responses/Error' },
         },
       },
@@ -1180,8 +1152,9 @@ export const openApiDocument = {
       Gender: { type: 'string', enum: GENDERS },
       RegisterRequest: {
         type: 'object',
-        required: ['firstName', 'lastName', 'email', 'mobile', 'password'],
+        required: ['firstName', 'lastName', 'email', 'mobile', 'password', 'otpTicket'],
         properties: {
+          otpTicket: { type: 'string', description: 'From /auth/otp/verify with purpose SIGNUP' },
           firstName: { type: 'string', minLength: 1, maxLength: 50, example: 'Sara' },
           lastName: { type: 'string', minLength: 1, maxLength: 50, example: 'Khan' },
           email: { type: 'string', format: 'email', example: 'sara@example.com' },

@@ -18,7 +18,6 @@ import { endAllSessions } from './auth.sessions.js';
  */
 
 const MINUTE_MS = 60_000;
-const VERIFY_TTL_MINUTES = 24 * 60;
 const RESET_TTL_MINUTES = 60;
 
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
@@ -90,23 +89,6 @@ function escapeHtml(value: string) {
     .replaceAll('"', '&quot;');
 }
 
-export async function sendVerificationEmail(user: Recipient) {
-  const token = await createEmailToken(user.id, 'VERIFY_EMAIL', VERIFY_TTL_MINUTES);
-  const url = `${env.CUSTOMER_APP_URL}/verify-email?token=${token}`;
-
-  await sendEmail({
-    to: user.email,
-    subject: 'Confirm your email address for UkRide',
-    ...compose(
-      user.firstName,
-      ['Thanks for creating a UkRide account. Please confirm that this email address is yours.'],
-      'Confirm my email address',
-      url,
-      'The link works once and expires in 24 hours. If you did not create this account, you can ignore this email.',
-    ),
-  });
-}
-
 async function sendPasswordResetEmail(user: Recipient) {
   const token = await createEmailToken(user.id, 'RESET_PASSWORD', RESET_TTL_MINUTES);
   const url = `${env.CUSTOMER_APP_URL}/reset-password?token=${token}`;
@@ -134,35 +116,6 @@ export function sendInBackground(send: Promise<void>, what: string) {
 }
 
 /** Confirms an email address from the link token. */
-export async function verifyEmail(token: string) {
-  const stored = await findUsableToken(token, 'VERIFY_EMAIL');
-  const now = new Date();
-
-  // Both changes happen, or neither does.
-  await prisma.$transaction([
-    prisma.emailToken.update({ where: { id: stored.id }, data: { usedAt: now } }),
-    prisma.user.update({ where: { id: stored.userId }, data: { emailVerifiedAt: now } }),
-  ]);
-}
-
-/** Sends the confirmation link again to a signed-in user. Returns false if already confirmed. */
-export async function resendVerification(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true, email: true, firstName: true, emailVerifiedAt: true },
-  });
-  if (!user) throw AppError.unauthenticated('Your session is not valid. Sign in again.');
-  if (user.emailVerifiedAt) return false;
-
-  await sendVerificationEmail(user);
-  return true;
-}
-
-/**
- * Starts a password reset. It answers the same way whether or not the email
- * has an account, and does not wait for the email, so neither the answer nor
- * its timing tells anyone which addresses are registered.
- */
 export async function requestPasswordReset(email: string) {
   const user = await prisma.user.findUnique({
     where: { email },

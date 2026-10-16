@@ -246,15 +246,14 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/health`                       | Service name, version, environment, uptime                |
 | GET    | `/health/live`                  | The process is alive                                      |
 | GET    | `/health/ready`                 | The database answers; `503` when it cannot be reached     |
-| POST   | `/auth/register`                | Create an account: name, email, mobile number, password   |
+| POST   | `/auth/check-email`             | Is this email free? (first step of sign-up)               |
+| POST   | `/auth/register`                | Create an account with a code-checked mobile; signs in    |
 | POST   | `/auth/otp/send`                | Send a 6-digit code to a mobile (sign-up, guest booking)  |
 | POST   | `/auth/otp/verify`              | Check a code; answers with a one-use ticket               |
 | POST   | `/auth/login`                   | Sign in and receive an access token                       |
 | POST   | `/auth/refresh`                 | New access token from the refresh cookie                  |
 | POST   | `/auth/logout`                  | Sign out: revoke the refresh token, clear the cookie      |
 | GET    | `/auth/me`                      | The signed-in user; needs `Authorization: Bearer <token>` |
-| POST   | `/auth/verify-email`            | Confirm an email address with the emailed token           |
-| POST   | `/auth/resend-verification`     | Send the confirmation link again (signed in)              |
 | POST   | `/auth/forgot-password`         | Ask for a password reset link                             |
 | POST   | `/auth/reset-password`          | Choose a new password with the emailed token              |
 | GET    | `/users/me`                     | Your profile (signed in)                                  |

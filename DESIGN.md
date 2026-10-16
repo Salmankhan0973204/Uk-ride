@@ -333,6 +333,8 @@ Icons are drawn inline as SVG on a 24 unit grid: one stroke in the current text 
 - **Password:** a "Show" / "Hide" text control sits inside the right end of the input. New forms use the shared `PasswordInput` component (`frontend/src/components/ui/PasswordInput.tsx`).
 - **Text area:** the same look, three lines tall to start, 12px of padding above and below, resizable downwards only.
 - **Numbers:** a text input with a numeric keyboard, not the browser's number spinner.
+- **Examples:** an example value ("Like SW1A 1AA.") goes in the hint under the box, never as a placeholder inside it: an example in an empty box looks like an answer already given.
+- **Postcodes:** shown in capitals as typed, and tidied to their printed form ("SW1A 1AA") when the box is left.
 - **Autofill:** the browser's yellow or blue autofill colour is suppressed so the field stays glass.
 
 ### Dropdown (Select)

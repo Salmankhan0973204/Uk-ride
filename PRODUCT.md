@@ -58,7 +58,9 @@ Screens never ask a customer to compare or choose between operators.
 - Customer-facing copy uses British English.
 - Undecided: the operator's trading name and licensing details, service area, and the actual
   fares. The fare rules are built (base fare, per mile, minimum, night and airport surcharges)
-  but no real amounts are set.
+  but no real amounts are set. Distances are measured by road between two UK postcodes
+  (postcodes.io and the public OSRM demo server, both free); a dependable routing service
+  is needed before going live.
 
 ## Evidence on Hand
 

@@ -99,6 +99,8 @@ export const loginSchema = z.object({
   // Only "not empty" is checked here. The length rules belong to choosing a
   // password; repeating them at login would tell a guesser what the rules are.
   password: z.string('Password is required').min(1, 'Password is required'),
+  // "Remember me": a 30-day session instead of a 1-day one.
+  rememberMe: z.boolean('Remember me must be true or false').default(false),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

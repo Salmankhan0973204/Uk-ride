@@ -41,6 +41,8 @@ export interface User {
 export interface LoginInput {
   email: string;
   password: string;
+  /** Stay signed in for 30 days on this device instead of 1. */
+  rememberMe: boolean;
 }
 
 /** Answer of POST /api/v1/auth/login. The refresh token is not here: it is in a cookie. */

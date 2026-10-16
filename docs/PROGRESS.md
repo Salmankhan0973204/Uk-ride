@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 1 rework - auth like ukride.uk (branch `module-01-auth-otp`)
 - **Last completed:** Module 0 rework - three apps (tag `module-00-v2`)
-- **Next step:** 1.11 - login with "Remember me"
-- **Steps done:** 46 of 113
+- **Next step:** 1.12 - forgot password with a 6-digit code
+- **Steps done:** 47 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -20,7 +20,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
 | --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
 | 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete    |
-| 1   | Auth like ukride.uk          | 10/13 | Rework  | Rework        | n/a         | In progress |
+| 1   | Auth like ukride.uk          | 11/13 | Rework  | Rework        | n/a         | In progress |
 | 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
 | 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
@@ -85,7 +85,7 @@ runs.
       Mailpit for now. _Learn: one-time codes, Redis counters._
 - [x] 1.10 Sign-up like ukride.uk: check the email, code to the mobile, verify, register,
       signed in. Email-link confirmation is retired. _Learn: multi-step flows on the server._
-- [ ] 1.11 Login with "Remember me": each session keeps its own lifetime (30 days or 1 day);
+- [x] 1.11 Login with "Remember me": each session keeps its own lifetime (30 days or 1 day);
       signing out in one tab signs out all tabs. _Learn: per-session lifetimes._
 - [ ] 1.12 Forgot password with a 6-digit code, then a new password, then signed in.
 - [ ] 1.13 `/login`, `/signup` and `/forgot-password` pages; old addresses redirect.
@@ -2511,3 +2511,39 @@ Learning notes
   single-use (the ticket); otherwise a typo costs the person a new code.
 - Proving a phone and creating an account are separate requests, joined by a ticket that names
   the phone. Swapping the number between the two steps is refused.
+
+#### Step 1.11 - Login with "Remember me" (done 2026-10-16)
+
+Built
+
+- **Each session keeps its own lifetime.** A new `lifetime_hours` column on refresh tokens
+  is chosen at sign-in and copied by every refresh:
+  - customer with "Remember me": `REMEMBER_ME_DAYS` (30 days)
+  - customer without it: `CUSTOMER_SESSION_HOURS` (24 hours)
+  - staff: `STAFF_SESSION_HOURS` (12 hours); staff sign-in ignores `rememberMe`
+  - `REFRESH_TOKEN_TTL_DAYS` is gone; rows from before the migration keep 7 days (168 h)
+- `POST /auth/login` takes `rememberMe` (true or false, default false).
+- **Burst limit, as on ukride.uk:** 5 sign-in attempts a minute from one address, right or
+  wrong, on both the customer and the staff sign-in. The 15-minute wrong-password limit stays
+  behind it.
+- **Cross-tab sign-out** on the customer site (`AuthSync`): the "signed in" hint lives in
+  localStorage, so when one tab removes it (sign-out, or a session that ended), every other
+  tab forgets its access token and shows "signed out"; when one tab signs in, the others ask
+  who it is.
+- A "Remember me for 30 days" checkbox on the sign-in form, using a new shared `Checkbox`.
+
+Verified (against the running API)
+
+- Without "Remember me": `lifetime_hours` 24 and a cookie of about 23 hours 59 minutes.
+- With it: 720 hours and a cookie of about 30 days; after a refresh the new token still had
+  720 hours.
+- `"rememberMe": "yes"` was refused with "Remember me must be true or false".
+- The 6th sign-in attempt within a minute got 429 "Too many sign-in attempts. Wait a minute
+  and try again."
+
+Learning notes
+
+- A lifetime chosen at sign-in has to be stored with the session; otherwise the first refresh
+  quietly turns a 1-day session into the server default.
+- The browser's `storage` event fires only in the other tabs, and only when the value really
+  changes, so re-setting the hint on every refresh costs nothing.

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { MobileTabBar } from '@/components/layout/MobileTabBar';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteNav } from '@/components/layout/SiteNav';
+import { AuthSync } from '@/lib/auth/AuthSync';
 import { QueryProvider } from '@/providers/query-provider';
 import './globals.css';
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
     <html lang="en-GB" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
         <QueryProvider>
+          <AuthSync />
           <SiteNav />
           <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-10 pb-16 sm:px-6 sm:pt-14 sm:pb-24">
             {children}

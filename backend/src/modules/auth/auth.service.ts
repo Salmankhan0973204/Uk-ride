@@ -68,7 +68,10 @@ const getDecoyHash = () => (decoyHash ??= hashPassword('no-such-account'));
  * Both ways of failing give the same answer: saying "no such email" would let
  * anyone test which addresses have accounts.
  */
-export async function checkCredentials({ email, password }: LoginInput) {
+export async function checkCredentials({
+  email,
+  password,
+}: Pick<LoginInput, 'email' | 'password'>) {
   const found = await prisma.user.findUnique({
     where: { email },
     select: { ...publicUser, passwordHash: true },

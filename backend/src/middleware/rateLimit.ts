@@ -117,3 +117,13 @@ export const otpVerifyLimiter = rateLimiter({
   limit: 30,
   message: `Too many code checks from this address. ${TRY_LATER}`,
 });
+
+/**
+ * Sign-in, any outcome: 5 tries a minute from one address, as on ukride.uk.
+ * It sits in front of loginLimiter, which counts wrong passwords over 15 minutes.
+ */
+export const loginBurstLimiter = rateLimiter({
+  windowMinutes: 1,
+  limit: 5,
+  message: 'Too many sign-in attempts. Wait a minute and try again.',
+});

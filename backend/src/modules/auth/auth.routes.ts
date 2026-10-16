@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   emailLimiter,
+  loginBurstLimiter,
   linkLimiter,
   loginLimiter,
   registerLimiter,
@@ -31,7 +32,7 @@ export const authRouter = Router();
 // The limiter comes first: a refused request should cost the server nothing.
 authRouter.post('/check-email', registerLimiter, validate(checkEmailSchema), checkEmail);
 authRouter.post('/register', registerLimiter, validate(registerSchema), register);
-authRouter.post('/login', loginLimiter, validate(loginSchema), login);
+authRouter.post('/login', loginBurstLimiter, loginLimiter, validate(loginSchema), login);
 // These two are authenticated by the refresh cookie, not by an access token:
 // they are called exactly when the access token is missing or expired.
 authRouter.post('/refresh', sessionLimiter, refresh);

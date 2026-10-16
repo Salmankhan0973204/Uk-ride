@@ -245,7 +245,9 @@ export const openApiDocument = {
           'token. Send the token on later requests as `Authorization: Bearer <token>`. ' +
           'A wrong password and an unknown email get the same 401, on purpose. ' +
           'Also sets the httpOnly cookie `ukride_refresh`, used by `/auth/refresh` and ' +
-          '`/auth/logout`.',
+          '`/auth/logout`. With `rememberMe: true` the session lasts 30 days ' +
+          '(`REMEMBER_ME_DAYS`), otherwise 1 day (`CUSTOMER_SESSION_HOURS`); every refresh ' +
+          'keeps that lifetime. At most 5 sign-in attempts a minute from one address.',
         requestBody: {
           required: true,
           content: {
@@ -1124,6 +1126,12 @@ export const openApiDocument = {
         properties: {
           email: { type: 'string', format: 'email', example: 'sara@example.com' },
           password: { type: 'string', example: 'secret-pass-1' },
+          rememberMe: {
+            type: 'boolean',
+            default: false,
+            description:
+              'Customer sign-in only: a 30-day session instead of a 1-day one. Staff ignore it.',
+          },
         },
       },
       AccessToken: {

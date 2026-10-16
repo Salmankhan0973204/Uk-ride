@@ -17,7 +17,7 @@ import {
   isEmailAvailable,
   registerUser,
 } from './auth.service.js';
-import { createSession, endSession, rotateSession } from './auth.sessions.js';
+import { createSession, endSession, rotateSession, sessionHours } from './auth.sessions.js';
 import { signAccessToken } from './auth.tokens.js';
 
 /** True for the 401 that means the session is over, false for a retryable conflict. */
@@ -63,8 +63,11 @@ export const checkEmail: RequestHandler = async (req, res) => {
  *     POST /auth/refresh and POST /auth/logout ever read.
  */
 export const login: RequestHandler = async (req, res) => {
-  const user = await checkCredentials(req.body as LoginInput);
-  const session = await createSession(user.id);
+  const { rememberMe, ...credentials } = req.body as LoginInput;
+  const user = await checkCredentials(credentials);
+  const session = await createSession(user.id, {
+    lifetimeHours: sessionHours('CUSTOMER', rememberMe),
+  });
 
   setRefreshCookie(res, session.refreshToken, session.expiresAt);
   // A login response holds a credential, so nothing along the way may store it.

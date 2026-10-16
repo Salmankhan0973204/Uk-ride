@@ -29,7 +29,9 @@ const envSchema = z.object({
   // How long an access token is valid. Short on purpose: 15 minutes.
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(86_400).default(900),
   // How long someone stays signed in without typing their password again.
-  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
+  // How long a customer stays signed in: with "Remember me" ticked, and without.
+  REMEMBER_ME_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+  CUSTOMER_SESSION_HOURS: z.coerce.number().int().min(1).max(168).default(24),
   // How long a staff member stays signed in to the admin panel: one working day.
   STAFF_SESSION_HOURS: z.coerce.number().int().min(1).max(72).default(12),
   // Where email is handed over. The defaults are Mailpit from docker-compose.yml,

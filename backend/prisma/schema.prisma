@@ -72,6 +72,9 @@ model RefreshToken {
   // and the access token carries it, so ending the session cuts off both.
   sessionId String          @map("session_id")
   audience  SessionAudience @default(CUSTOMER)
+  // How long this session lasts from its last refresh, chosen at sign-in:
+  // 30 days with "Remember me", 1 day without, 12 hours for staff.
+  lifetimeHours   Int             @default(168) @map("lifetime_hours")
   tokenHash String          @unique @map("token_hash")
   expiresAt DateTime        @map("expires_at")
   // Set when the token is used (rotation) or the user signs out. A revoked

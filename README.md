@@ -216,7 +216,8 @@ Database commands belong to the backend workspace.
 | `REDIS_URL`              | `redis://localhost:6379`                      | Shared counters, such as codes sent per phone              |
 | `JWT_ACCESS_SECRET`      | none, required                                | Signs login tokens; 32 characters or more                  |
 | `JWT_ACCESS_TTL_SECONDS` | `900`                                         | Lifetime of an access token                                |
-| `REFRESH_TOKEN_TTL_DAYS` | `7`                                           | How long someone stays signed in                           |
+| `REMEMBER_ME_DAYS`       | `30`                                          | How long a customer stays signed in with "Remember me"     |
+| `CUSTOMER_SESSION_HOURS` | `24`                                          | How long a customer stays signed in without it             |
 | `STAFF_SESSION_HOURS`    | `12`                                          | How long a staff member stays signed in to the admin panel |
 | `SMTP_HOST`              | `localhost`                                   | Mail server; the default is Mailpit                        |
 | `SMTP_PORT`              | `1025`                                        | Mail server port                                           |

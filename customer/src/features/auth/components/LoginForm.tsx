@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Card } from '@ukride/shared/ui/Card';
+import { Checkbox } from '@ukride/shared/ui/Checkbox';
 import { Field, describedBy } from '@ukride/shared/ui/Field';
 import { Spinner } from '@ukride/shared/ui/Spinner';
 import type { ApiError } from '@/lib/api/client';
@@ -36,6 +37,7 @@ export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string>();
 
@@ -63,7 +65,7 @@ export function LoginForm() {
     if (found.password) return passwordRef.current?.focus();
 
     mutate(
-      { email: email.trim(), password },
+      { email: email.trim(), password, rememberMe },
       {
         onError: (error) => {
           setFormError(readApiError(error));
@@ -149,6 +151,14 @@ export function LoginForm() {
               </button>
             </div>
           </Field>
+
+          <Checkbox
+            name="rememberMe"
+            checked={rememberMe}
+            onChange={(event) => setRememberMe(event.target.checked)}
+          >
+            <span className="text-sm text-ink">Remember me for 30 days</span>
+          </Checkbox>
 
           <button type="submit" disabled={isPending} className="btn btn-primary mt-2 w-full">
             {isPending ? (

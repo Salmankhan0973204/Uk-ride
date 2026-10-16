@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMe } from '@/features/auth/hooks/useMe';
+import { NAV_ITEMS, isActive } from './navItems';
 
 /** A floating glass bar that stays at the top while the page scrolls. */
 export function SiteNav() {
@@ -11,7 +12,7 @@ export function SiteNav() {
 
   const link = (href: string, label: string, className = '') => {
     // A section stays highlighted on its own sub-pages: /account covers /account/edit.
-    const active = pathname === href || pathname.startsWith(`${href}/`);
+    const active = isActive(pathname, href);
     return (
       <Link
         href={href}
@@ -28,7 +29,7 @@ export function SiteNav() {
   return (
     <header className="sticky top-3 z-30 px-3 sm:top-4 sm:px-6">
       <nav
-        aria-label="Main"
+        aria-label="Site"
         className="glass mx-auto flex w-full max-w-5xl items-center justify-between gap-2 rounded-full! py-1.5 pr-1.5 pl-5"
       >
         <Link href="/" className="flex min-h-11 items-center gap-2.5 text-base font-semibold">
@@ -50,9 +51,12 @@ export function SiteNav() {
         </Link>
 
         <div className="flex items-center gap-1">
-          {/* On a phone there is no room for these; the home page links to both. */}
-          {link('/quote', 'Prices', 'max-sm:hidden')}
-          {link('/vehicles', 'Vehicles', 'max-sm:hidden')}
+          {/* On a phone these live in the tab bar at the bottom of the screen. */}
+          {NAV_ITEMS.filter((item) => item.inHeader).map(({ href, label }) => (
+            <span key={href} className="max-sm:hidden">
+              {link(href, label)}
+            </span>
+          ))}
 
           {user ? (
             // Signed in: one way into the account, named after the person.

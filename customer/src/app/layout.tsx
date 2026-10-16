@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { MobileTabBar } from '@/components/layout/MobileTabBar';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteNav } from '@/components/layout/SiteNav';
 import { QueryProvider } from '@/providers/query-provider';
 import './globals.css';
@@ -31,6 +33,8 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-10 pb-16 sm:px-6 sm:pt-14 sm:pb-24">
             {children}
           </main>
+          <SiteFooter />
+          <MobileTabBar />
         </QueryProvider>
       </body>
     </html>

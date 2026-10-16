@@ -11,7 +11,7 @@ and runs on a local machine.
 
 ## Status
 
-**40 of 113 steps are done.** You can create an account, sign in, edit your profile, browse the
+**44 of 113 steps are done.** You can create an account, sign in, edit your profile, browse the
 vehicle types and get an exact price between two postcodes. An admin can manage vehicle types,
 the fleet and the prices.
 
@@ -22,8 +22,8 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                       | Status   |
 | --- | ---------------------------- | -------- |
-| 0   | Foundation: three apps       | Next     |
-| 1   | Auth like ukride.uk          | Rework   |
+| 0   | Foundation: three apps       | Complete |
+| 1   | Auth like ukride.uk          | Next     |
 | 2   | Profile                      | Rework   |
 | 3   | Fleet classes                | Rework   |
 | 4   | Fleet vehicles               | Complete |

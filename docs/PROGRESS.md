@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 0 rework - three apps (branch `module-00-three-apps`)
-- **Last completed:** Module 5 - Pricing Rules + Quote Engine (v1), plus real road distance
-- **Next step:** 0.10 - customer site frame: header, footer, mobile tab bar
-- **Steps done:** 43 of 113
+- **Current module:** none in progress
+- **Last completed:** Module 0 rework - three apps (tag `module-00-v2`)
+- **Next step:** 1.9 - OTP codes (Module 1 rework)
+- **Steps done:** 44 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -17,26 +17,26 @@ Do not start two modules at the same time.
 Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (not started),
 `n/a`.
 
-| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
-| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
-| 0   | Foundation: three apps       | 9/10  | Rework  | Rework        | -           | In progress |
-| 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Rework      |
-| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
-| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
-| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
-| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework      |
-| 6   | Booking                      | 0/6   | -       | -             | -           | -           |
-| 7   | Wallet                       | 0/5   | -       | -             | -           | -           |
-| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -           |
-| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -           |
-| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -           |
-| 11  | Admin operations             | 0/6   | -       | -             | -           | -           |
-| 12  | Reviews                      | 0/4   | -       | -             | -           | -           |
-| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -           |
-| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -           |
-| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -           |
-| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -           |
-| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -           |
+| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
+| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
+| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
+| 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Next     |
+| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework   |
+| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
+| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
+| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
+| 6   | Booking                      | 0/6   | -       | -             | -           | -        |
+| 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
+| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
+| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -        |
+| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -        |
+| 11  | Admin operations             | 0/6   | -       | -             | -           | -        |
+| 12  | Reviews                      | 0/4   | -       | -             | -           | -        |
+| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -        |
+| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -        |
+| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -        |
+| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -        |
+| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -        |
 
 ## Steps
 
@@ -67,7 +67,7 @@ runs.
       and a fix for two sign-ins refreshing at the same moment.
       _Learn: token audiences, race conditions._
 - [x] 0.9 Docs for three apps: `DESIGN.md`, `README.md`, ADR-0002.
-- [ ] 0.10 Customer site frame: header, footer, mobile tab bar. _Learn: responsive navigation._
+- [x] 0.10 Customer site frame: header, footer, mobile tab bar. _Learn: responsive navigation._
 
 ### Module 1 - Auth like ukride.uk
 
@@ -2363,3 +2363,57 @@ Learning notes
 Learning note: write the rule for a new screen pattern before building it. The tab bar's
 rules (which items, when it shows, how it avoids covering content) were settled in
 `DESIGN.md` first, so 0.10 builds to a known target.
+
+#### Step 0.10 - Customer site frame (done 2026-10-16)
+
+Built
+
+- `customer/src/components/layout/navItems.ts`: the site's pages in one list (Home, Prices,
+  Vehicles, Profile today). The header, the mobile tab bar and the footer all read it, so a
+  new page appears everywhere at once. Its comment says how the list becomes Home, Book Now,
+  Journeys, Wallet, Profile as those pages are built.
+- `MobileTabBar`: below 640px, a bar fixed to the bottom of the screen with an icon and a
+  word per page, on the near-opaque menu surface; the current page is marked. The floating
+  header keeps only the brand and the account links on a phone.
+- `SiteFooter`: the same pages and the copyright line, with room left under it for the tab
+  bar.
+- The header shows Home, Prices and Vehicles from 640px up.
+- The home page is one hero: "Pre-booked travel in and around London", an exact price before
+  booking, "Get a price" and "See the vehicles". The journey-stage card is gone; the fleet
+  joins in 3.9 and the booking widget in 5.13.
+
+Verified
+
+- Typecheck and lint pass for every workspace; 18 unit tests pass; production builds pass for
+  the customer site (12 routes) and the admin panel (12 routes).
+- **Desktop:** the header marks the current page on /, /quote and /vehicles, and the tab bar
+  is hidden.
+- **Phone:**
+  - the tab bar shows Home, Prices, Vehicles and Profile with the current one marked, and
+    tapping Prices opened /quote
+  - the header shows only the brand and the sign-in links
+  - the footer's last line sits 39px above the tab bar
+- No horizontal scrolling at 1440, 390 and 360px.
+
+### Module 0 rework summary
+
+The project is now three apps and a shared package:
+
+- the backend
+- `customer/`, the customer website on port 3000
+- `admin/`, the admin panel on port 3001, with its own staff sign-in
+- `@ukride/shared`, the shared package
+
+Staff and customer sessions are separate, and refreshes at the same moment no longer sign
+people out. The admin screens moved to the admin panel, and the customer site has a header,
+footer and mobile tab bar.
+
+Built on the branch `module-00-three-apps`, merged into `main` and tagged `module-00-v2`.
+
+Open items
+
+- Empty leftover folders that Windows would not let me delete: `frontend/` (only ignored
+  `.next`, `node_modules`) and `customer/src/app/admin/`. Delete them by hand once no
+  program has them open.
+- The /vehicles page still says prices are not published; it folds into the home page in 3.9.
+- The tests on GitHub still describe the old single web app.

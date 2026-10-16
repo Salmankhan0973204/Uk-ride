@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 1 rework - auth like ukride.uk (branch `module-01-auth-otp`)
 - **Last completed:** Module 0 rework - three apps (tag `module-00-v2`)
-- **Next step:** 1.12 - forgot password with a 6-digit code
-- **Steps done:** 47 of 113
+- **Next step:** 1.13 - `/login`, `/signup` and `/forgot-password` pages
+- **Steps done:** 48 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -20,7 +20,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
 | --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
 | 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete    |
-| 1   | Auth like ukride.uk          | 11/13 | Rework  | Rework        | n/a         | In progress |
+| 1   | Auth like ukride.uk          | 12/13 | Rework  | Rework        | n/a         | In progress |
 | 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
 | 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
@@ -87,7 +87,7 @@ runs.
       signed in. Email-link confirmation is retired. _Learn: multi-step flows on the server._
 - [x] 1.11 Login with "Remember me": each session keeps its own lifetime (30 days or 1 day);
       signing out in one tab signs out all tabs. _Learn: per-session lifetimes._
-- [ ] 1.12 Forgot password with a 6-digit code, then a new password, then signed in.
+- [x] 1.12 Forgot password with a 6-digit code, then a new password, then signed in.
 - [ ] 1.13 `/login`, `/signup` and `/forgot-password` pages; old addresses redirect.
 
 ### Module 2 - Profile
@@ -2547,3 +2547,54 @@ Learning notes
   quietly turns a 1-day session into the server default.
 - The browser's `storage` event fires only in the other tabs, and only when the value really
   changes, so re-setting the hint on every refresh costs nothing.
+
+#### Step 1.12 - Forgot password with a 6-digit code (done 2026-10-16)
+
+Built
+
+- **Three requests, as on ukride.uk:**
+  1. `POST /auth/forgot-password` `{ email }`: a RESET_PASSWORD code to the email (the code
+     system from 1.9, channel EMAIL)
+  2. `POST /auth/forgot-password/verify` `{ email, code }`: the right code gives a ticket for
+     that email (15 minutes, single use)
+  3. `POST /auth/reset-password` `{ email, otpTicket, password }`: the password changes, every
+     session of the account ends, and this browser is signed in afresh (same answer as a login)
+- **Nothing reveals who is registered** at step 1: the answer is the same for every address,
+  and the code is sent in the background, so the time taken is the same too. A send that the
+  code rules refuse (asked again within 60 s, more than 5 an hour) is only logged.
+- A reset also fills `emailVerifiedAt` when empty: the code reached the mailbox.
+- **Email links are gone:** `auth.emails.ts` is deleted, and migration `drop_email_tokens`
+  drops the `email_tokens` table and its enum. The old `{ token, password }` body is refused.
+- Limits: 5 forgot-password requests an hour per address (as before), 30 code checks per
+  15 minutes, 20 resets per 15 minutes (`resetLimiter`, which replaces `linkLimiter`).
+
+Verified (against the running API and Mailpit)
+
+- An unknown email and a known one (typed as " U-Signup@ukride.test ") got the same 200 and
+  message; only the known one received a code. Times were mixed (unknown 37 and 16 ms, known
+  6 and 11 ms), with no pattern.
+- Asking again at once: still the same 200, no second email, a warning in the log.
+- A wrong code: "That code is not right. 4 tries left". The right code for another email:
+  refused.
+- **Refusals at step 3:**
+  - the ticket with another email was refused, and stayed usable
+  - a 7-character password was refused before the ticket was spent
+  - the old link body was refused
+- **Reset worked:** 200 "Password changed. You are signed in" with an access token and the
+  refresh cookie.
+  - the same ticket again was refused
+  - the old access token got 401, and the old refresh cookie "Your session has ended"
+  - the new token and the new cookie worked
+  - the old password got 401 and the new one 200
+  - `emailVerifiedAt` was set
+- The 6th forgot-password request within the hour got 429.
+
+Note: the customer site's forgot and reset pages still use the old link flow, so they are
+broken on this branch until the new pages in 1.13.
+
+Learning notes
+
+- "Same answer for everyone" covers the time taken as well as the words: the slow part (sending)
+  runs after the answer, so a stopwatch learns nothing.
+- Validate everything cheap before spending something single-use: a too-short password is
+  refused while the ticket is still good.

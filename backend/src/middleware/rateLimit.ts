@@ -79,8 +79,11 @@ export const emailLimiter = rateLimiter({
   message: 'Too many emails requested. Try again in an hour.',
 });
 
-/** Opening an emailed link: enough for honest use, too few to guess a token. */
-export const linkLimiter = rateLimiter({
+/**
+ * Choosing a new password with a reset ticket. The ticket is single-use, so
+ * this only stops a script hammering the endpoint.
+ */
+export const resetLimiter = rateLimiter({
   windowMinutes: 15,
   limit: 20,
   message: `Too many attempts. ${TRY_LATER}`,

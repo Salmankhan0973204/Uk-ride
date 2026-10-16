@@ -2,8 +2,9 @@ import { Router } from 'express';
 import {
   emailLimiter,
   loginBurstLimiter,
-  linkLimiter,
   loginLimiter,
+  otpVerifyLimiter,
+  resetLimiter,
   registerLimiter,
   sessionLimiter,
 } from '../../middleware/rateLimit.js';
@@ -18,9 +19,11 @@ import {
   me,
   refresh,
   register,
+  verifyResetCode,
 } from './auth.controller.js';
 import {
   checkEmailSchema,
+  checkResetCodeSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -39,6 +42,12 @@ authRouter.post('/refresh', sessionLimiter, refresh);
 authRouter.post('/logout', sessionLimiter, logout);
 authRouter.get('/me', requireAuth, me);
 
-// Links sent by email. Opening one needs no sign-in: the token is the proof.
+// Forgot password: a code to the email, then a ticket, then the new password.
 authRouter.post('/forgot-password', emailLimiter, validate(forgotPasswordSchema), forgotPassword);
-authRouter.post('/reset-password', linkLimiter, validate(resetPasswordSchema), choosePassword);
+authRouter.post(
+  '/forgot-password/verify',
+  otpVerifyLimiter,
+  validate(checkResetCodeSchema),
+  verifyResetCode,
+);
+authRouter.post('/reset-password', resetLimiter, validate(resetPasswordSchema), choosePassword);

@@ -337,10 +337,12 @@ export const openApiDocument = {
     '/auth/forgot-password': {
       post: {
         tags: ['Auth'],
-        summary: 'Ask for a password reset link',
+        summary: 'Forgot password: send a code to the email',
         description:
-          'Always answers 200 with the same message, whether or not the email has an ' +
-          'account, so it cannot be used to find out who is registered. Limited to 5 an hour.',
+          'Step 1 of 3, as on ukride.uk. If the email has an account, a 6-digit ' +
+          'RESET_PASSWORD code is sent to it: valid 10 minutes, a new one after 60 s, at most 5 ' +
+          'an hour. The answer is always the same 200, sent before the email goes out, so it ' +
+          'cannot be used to find out who is registered. Limited to 5 an hour per address.',
         requestBody: {
           required: true,
           content: { 'application/json': { schema: { $ref: '#/components/schemas/EmailOnly' } } },
@@ -348,7 +350,15 @@ export const openApiDocument = {
         responses: {
           200: jsonResponse(
             'The same answer for every address',
-            successEnvelope({ type: 'object', nullable: true }),
+            successEnvelope({
+              type: 'object',
+              properties: {
+                sentTo: { type: 'string', example: 's•••@example.com' },
+                channel: { type: 'string', enum: ['EMAIL'] },
+                expiresInSeconds: { type: 'integer', example: 600 },
+                resendAfterSeconds: { type: 'integer', example: 60 },
+              },
+            }),
           ),
           400: jsonResponse('The email address is missing or badly formed', {
             $ref: '#/components/schemas/ApiFailure',
@@ -358,13 +368,51 @@ export const openApiDocument = {
         },
       },
     },
+    '/auth/forgot-password/verify': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Forgot password: check the code',
+        description:
+          'Step 2 of 3. Five wrong tries end the code. The right code is answered with a ' +
+          'ticket for this email, valid 15 minutes and usable once.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'code'],
+                properties: {
+                  email: { type: 'string', format: 'email' },
+                  code: { type: 'string', example: '519012' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Code accepted',
+            successEnvelope({
+              type: 'object',
+              properties: { ticket: { type: 'string' }, expiresInSeconds: { type: 'integer' } },
+            }),
+          ),
+          400: jsonResponse('Wrong, expired or used code; the message says which', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+        },
+      },
+    },
     '/auth/reset-password': {
       post: {
         tags: ['Auth'],
-        summary: 'Choose a new password',
+        summary: 'Forgot password: choose a new password',
         description:
-          'Takes the token from the reset link and the new password. A link works once and ' +
-          'lasts 1 hour. Every session of the user is ended.',
+          'Step 3 of 3. Takes the email, the ticket from step 2 and the new password. Every ' +
+          'session of the account ends, on every device, and this browser is signed in ' +
+          'afresh: the answer is the same as from `/auth/login`, with the `ukride_refresh` cookie.',
         requestBody: {
           required: true,
           content: {
@@ -373,10 +421,10 @@ export const openApiDocument = {
         },
         responses: {
           200: jsonResponse(
-            'Password changed',
-            successEnvelope({ type: 'object', nullable: true }),
+            'Password changed and signed in',
+            successEnvelope({ $ref: '#/components/schemas/LoginResult' }),
           ),
-          400: jsonResponse('The link is not usable, or the password breaks the rules', {
+          400: jsonResponse('The ticket is not usable, or the password breaks the rules', {
             $ref: '#/components/schemas/ApiFailure',
           }),
           429: { $ref: '#/components/responses/RateLimited' },
@@ -1102,11 +1150,6 @@ export const openApiDocument = {
       staffRefreshCookie: { type: 'apiKey', in: 'cookie', name: 'ukride_staff_refresh' },
     },
     schemas: {
-      LinkToken: {
-        type: 'object',
-        required: ['token'],
-        properties: { token: { type: 'string', description: 'From the emailed link.' } },
-      },
       EmailOnly: {
         type: 'object',
         required: ['email'],
@@ -1114,9 +1157,10 @@ export const openApiDocument = {
       },
       ResetPasswordRequest: {
         type: 'object',
-        required: ['token', 'password'],
+        required: ['email', 'otpTicket', 'password'],
         properties: {
-          token: { type: 'string', description: 'From the emailed link.' },
+          email: { type: 'string', format: 'email' },
+          otpTicket: { type: 'string', description: 'From /auth/forgot-password/verify' },
           password: { type: 'string', minLength: 8, maxLength: 72, example: 'a-brand-new-pass' },
         },
       },

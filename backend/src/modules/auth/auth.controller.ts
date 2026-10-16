@@ -3,14 +3,15 @@ import { currentUserId } from '../../middleware/requireAuth.js';
 import { AppError } from '../../shared/AppError.js';
 import { sendSuccess } from '../../shared/response.js';
 import { clearRefreshCookie, readRefreshCookie, setRefreshCookie } from './auth.cookies.js';
-import { requestPasswordReset, resetPassword } from './auth.emails.js';
 import type {
   CheckEmailInput,
+  CheckResetCodeInput,
   ForgotPasswordInput,
   LoginInput,
   RegisterInput,
   ResetPasswordInput,
 } from './auth.schemas.js';
+import { checkResetCode, resetPassword, sendResetCode } from './auth.reset.js';
 import {
   checkCredentials,
   getCurrentUser,
@@ -129,24 +130,46 @@ export const me: RequestHandler = async (_req, res) => {
 };
 
 /**
- * Starts a password reset. The answer is the same for every email address, so
- * it never reveals which ones have an account.
+ * Forgot password, step 1: a 6-digit code to the email. The answer is the same
+ * for every address, so it never reveals which ones have an account.
  */
 export const forgotPassword: RequestHandler = async (req, res) => {
-  await requestPasswordReset((req.body as ForgotPasswordInput).email);
+  const sent = await sendResetCode((req.body as ForgotPasswordInput).email);
 
+  res.set('Cache-Control', 'no-store');
   sendSuccess(res, {
-    message: 'If that email has an account, we have sent a link to reset the password',
-    data: null,
+    message: `If ${sent.sentTo} has an account, we have sent a 6-digit code to it`,
+    data: sent,
   });
 };
 
-/** Sets a new password from the token in the reset link. Signs the user out everywhere. */
-export const choosePassword: RequestHandler = async (req, res) => {
-  const { token, password } = req.body as ResetPasswordInput;
-  await resetPassword(token, password);
+/** Forgot password, step 2: the code is exchanged for a ticket. */
+export const verifyResetCode: RequestHandler = async (req, res) => {
+  const { email, code } = req.body as CheckResetCodeInput;
+  const result = await checkResetCode(email, code);
 
-  // The browser that did the reset may hold an old session cookie.
-  clearRefreshCookie(res);
-  sendSuccess(res, { message: 'Password changed. Sign in with your new password', data: null });
+  res.set('Cache-Control', 'no-store');
+  sendSuccess(res, { message: 'Code accepted. Choose a new password', data: result });
+};
+
+/**
+ * Forgot password, step 3: the ticket and a new password. Every session of the
+ * account ends, on every device, and this browser is signed in afresh, as on
+ * ukride.uk. The answer is the same as a login's.
+ */
+export const choosePassword: RequestHandler = async (req, res) => {
+  const { email, otpTicket, password } = req.body as ResetPasswordInput;
+  const user = await resetPassword(email, otpTicket, password);
+  const session = await createSession(user.id);
+
+  setRefreshCookie(res, session.refreshToken, session.expiresAt);
+  res.set('Cache-Control', 'no-store');
+  sendSuccess(res, {
+    message: 'Password changed. You are signed in',
+    data: {
+      user,
+      ...signAccessToken({ userId: user.id, sessionId: session.sessionId, audience: 'customer' }),
+      tokenType: 'Bearer',
+    },
+  });
 };

@@ -255,8 +255,9 @@ Base URL: `http://localhost:4000/api/v1`
 | POST   | `/auth/refresh`                 | New access token from the refresh cookie                  |
 | POST   | `/auth/logout`                  | Sign out: revoke the refresh token, clear the cookie      |
 | GET    | `/auth/me`                      | The signed-in user; needs `Authorization: Bearer <token>` |
-| POST   | `/auth/forgot-password`         | Ask for a password reset link                             |
-| POST   | `/auth/reset-password`          | Choose a new password with the emailed token              |
+| POST   | `/auth/forgot-password`         | Forgot password: a 6-digit code to the email              |
+| POST   | `/auth/forgot-password/verify`  | Check the code; answers with a ticket                     |
+| POST   | `/auth/reset-password`          | New password with the ticket; ends all sessions, signs in |
 | GET    | `/users/me`                     | Your profile (signed in)                                  |
 | PATCH  | `/users/me`                     | Change your name, mobile number or gender                 |
 | POST   | `/users/me/password`            | Change your password; signs out other devices             |

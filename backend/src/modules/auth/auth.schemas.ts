@@ -70,8 +70,11 @@ const email = z
   .toLowerCase()
   .pipe(z.email('Enter a valid email address'));
 
-// The token from a link we emailed. Its content is checked against the database.
-const linkToken = z.string('The link is incomplete').min(20, 'The link is incomplete').max(200);
+/** A 6-digit one-time code, as typed: spaces around it are ignored. */
+export const otpCode = z
+  .string('Enter the 6-digit code')
+  .trim()
+  .regex(/^\d{6}$/, 'Enter the 6-digit code from the message');
 
 export const registerSchema = z.object({
   firstName: name('First name'),
@@ -108,5 +111,15 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export const forgotPasswordSchema = z.object({ email });
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 
-export const resetPasswordSchema = z.object({ token: linkToken, password: newPassword });
+export const checkResetCodeSchema = z.object({ email, code: otpCode });
+export type CheckResetCodeInput = z.infer<typeof checkResetCodeSchema>;
+
+export const resetPasswordSchema = z.object({
+  email,
+  // From POST /auth/forgot-password/verify: proof the person reads this mailbox.
+  otpTicket: z
+    .string('Check the code from the email first')
+    .min(20, 'Check the code from the email first'),
+  password: newPassword,
+});
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

@@ -13,7 +13,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   CORS_ORIGINS: z
     .string()
-    .default('http://localhost:3000')
+    .default('http://localhost:3000,http://localhost:3001')
     .transform((value) =>
       value
         .split(',')
@@ -28,6 +28,8 @@ const envSchema = z.object({
   JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(86_400).default(900),
   // How long someone stays signed in without typing their password again.
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(7),
+  // How long a staff member stays signed in to the admin panel: one working day.
+  STAFF_SESSION_HOURS: z.coerce.number().int().min(1).max(72).default(12),
   // Where email is handed over. The defaults are Mailpit from docker-compose.yml,
   // which catches every message: read them at http://localhost:8025.
   SMTP_HOST: z.string().min(1).default('localhost'),
@@ -45,10 +47,15 @@ const envSchema = z.object({
     .url()
     .default('https://router.project-osrm.org')
     .transform((value) => value.replace(/\/+$/, '')),
-  // Address of the web app, used to build the links inside emails.
-  WEB_APP_URL: z
+  // Addresses of the two web apps. Links inside customer emails go to the
+  // customer site; links for staff go to the admin panel.
+  CUSTOMER_APP_URL: z
     .url()
     .default('http://localhost:3000')
+    .transform((value) => value.replace(/\/+$/, '')),
+  ADMIN_APP_URL: z
+    .url()
+    .default('http://localhost:3001')
     .transform((value) => value.replace(/\/+$/, '')),
 });
 

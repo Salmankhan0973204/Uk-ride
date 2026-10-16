@@ -11,7 +11,7 @@ and runs on a local machine.
 
 ## Status
 
-**40 of 113 steps are done.** You can create an account, sign in, edit your profile, browse the
+**44 of 113 steps are done.** You can create an account, sign in, edit your profile, browse the
 vehicle types and get an exact price between two postcodes. An admin can manage vehicle types,
 the fleet and the prices.
 
@@ -22,8 +22,8 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
 | #   | Module                       | Status   |
 | --- | ---------------------------- | -------- |
-| 0   | Foundation: three apps       | Next     |
-| 1   | Auth like ukride.uk          | Rework   |
+| 0   | Foundation: three apps       | Complete |
+| 1   | Auth like ukride.uk          | Next     |
 | 2   | Profile                      | Rework   |
 | 3   | Fleet classes                | Rework   |
 | 4   | Fleet vehicles               | Complete |
@@ -73,13 +73,16 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 │       ├── middleware/      Request ID, validation, auth, 404, error handler
 │       ├── modules/         One folder per feature (routes, controller, tests)
 │       └── shared/          AppError, response helpers
-├── frontend/                Next.js web app
+├── customer/                Next.js customer website (port 3000)
 │   └── src/
 │       ├── app/             Routes and layouts
-│       ├── components/      Shared UI and layout components
+│       ├── components/      Layout components (navigation)
 │       ├── features/        One folder per feature (api, hooks, components, types)
-│       ├── lib/             API client, query keys
+│       ├── lib/             This app's API client and query keys
 │       └── providers/       TanStack Query provider
+├── admin/                   Next.js admin panel (port 3001), same layout as customer/
+├── shared/                  @ukride/shared: API client factory, UI primitives,
+│                            money, UK time and phone helpers, the glass styles
 ├── docs/
 │   ├── PROGRESS.md          Module tracker and learning notes
 │   ├── api-tests/           Bruno collection and curl examples
@@ -88,7 +91,9 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 └── PRODUCT.md               Product and design context for every UI pass
 ```
 
-The root is an npm workspace, so one install covers both apps.
+The root is an npm workspace with four packages (backend, customer, admin, shared). Run
+`npm install` at the root only: one install covers all of them and links `shared/` into both
+web apps. See [ADR-0002](docs/decisions/ADR-0002-three-apps.md).
 
 ## Getting started
 
@@ -112,14 +117,16 @@ Copy the example environment files. The defaults work as they are.
 
 ```bash
 cp backend/.env.example backend/.env
-cp frontend/.env.local.example frontend/.env.local
+cp customer/.env.local.example customer/.env.local
+cp admin/.env.local.example admin/.env.local
 ```
 
 On Windows PowerShell:
 
 ```powershell
 Copy-Item backend/.env.example backend/.env
-Copy-Item frontend/.env.local.example frontend/.env.local
+Copy-Item customer/.env.local.example customer/.env.local
+Copy-Item admin/.env.local.example admin/.env.local
 ```
 
 ### Database
@@ -142,20 +149,26 @@ Run `db:generate` again after every `npm install` on a fresh clone, and after ev
 npm run dev
 ```
 
-| App      | URL                               |
-| -------- | --------------------------------- |
-| Web      | http://localhost:3000             |
-| API      | http://localhost:4000/api/v1      |
-| API docs | http://localhost:4000/api/v1/docs |
+| App           | URL                               |
+| ------------- | --------------------------------- |
+| Customer site | http://localhost:3000             |
+| Admin panel   | http://localhost:3001             |
+| API           | http://localhost:4000/api/v1      |
+| API docs      | http://localhost:4000/api/v1/docs |
 
-Open http://localhost:3000/system-status. Stop the API to see the offline state. Start it again
-and the page recovers by itself. Create an account at http://localhost:3000/register, sign in at http://localhost:3000/login,
-and see your profile at http://localhost:3000/account, where you can edit it and change your
-password. The vehicle types are at http://localhost:3000/vehicles. To manage them, make your
-account an admin with `npm run db:set-role -w backend -- you@example.com ADMIN`, sign in again
-and open http://localhost:3000/admin, which leads to the fleet, the vehicle types and the
-prices. No prices are set out of the box: set them under Pricing, then try
+`npm run dev` starts all three. Each can also run alone: `npm run dev:api`,
+`npm run dev:customer`, `npm run dev:admin`.
+
+On the customer site, create an account at http://localhost:3000/register, sign in at
+http://localhost:3000/login and see your profile at http://localhost:3000/account. The vehicle
+types are at http://localhost:3000/vehicles and prices between two postcodes at
 http://localhost:3000/quote.
+
+The admin panel has its own staff sign-in. Make your account an admin once with
+`npm run db:set-role -w backend -- you@example.com ADMIN`, then sign in at
+http://localhost:3001/login. It has the fleet, the vehicle types, the prices and the system
+status. No prices are set out of the box: set them under Pricing, then try the customer quote
+page. The two apps keep separate sign-ins, so signing out of one leaves the other signed in.
 
 ## Scripts
 
@@ -163,14 +176,15 @@ Run these from the repository root.
 
 | Command                    | What it does                                          |
 | -------------------------- | ----------------------------------------------------- |
-| `npm run dev`              | Start the API and the web app together                |
+| `npm run dev`              | Start the API, the customer site and the admin panel  |
 | `npm run dev:api`          | Start the API only                                    |
-| `npm run dev:web`          | Start the web app only                                |
-| `npm run typecheck`        | Type-check both apps                                  |
-| `npm run lint`             | Lint both apps                                        |
+| `npm run dev:customer`     | Start the customer site only (port 3000)              |
+| `npm run dev:admin`        | Start the admin panel only (port 3001)                |
+| `npm run typecheck`        | Type-check every workspace                            |
+| `npm run lint`             | Lint every app                                        |
 | `npm test`                 | Run the automated tests                               |
 | `npm run test:integration` | Run the tests that use a real database (needs Docker) |
-| `npm run build`            | Production build of both apps                         |
+| `npm run build`            | Production build of every app                         |
 | `npm run format`           | Format the code with Prettier                         |
 | `npm run docker:up`        | Start PostgreSQL, Redis and Mailpit                   |
 | `npm run docker:down`      | Stop them                                             |
@@ -192,30 +206,33 @@ Database commands belong to the backend workspace.
 
 ### Backend (`backend/.env`)
 
-| Variable                 | Default                           | Purpose                                          |
-| ------------------------ | --------------------------------- | ------------------------------------------------ |
-| `NODE_ENV`               | `development`                     | `development`, `test` or `production`            |
-| `PORT`                   | `4000`                            | API port                                         |
-| `LOG_LEVEL`              | `debug`                           | Pino log level                                   |
-| `CORS_ORIGINS`           | `http://localhost:3000`           | Comma-separated origins allowed to call the API  |
-| `DATABASE_URL`           | none, required                    | PostgreSQL connection string                     |
-| `JWT_ACCESS_SECRET`      | none, required                    | Signs login tokens; 32 characters or more        |
-| `JWT_ACCESS_TTL_SECONDS` | `900`                             | Lifetime of an access token                      |
-| `REFRESH_TOKEN_TTL_DAYS` | `7`                               | How long someone stays signed in                 |
-| `SMTP_HOST`              | `localhost`                       | Mail server; the default is Mailpit              |
-| `SMTP_PORT`              | `1025`                            | Mail server port                                 |
-| `MAIL_FROM`              | `UkRide <no-reply@ukride.local>`  | Sender shown on emails                           |
-| `WEB_APP_URL`            | `http://localhost:3000`           | Used for the links inside emails                 |
-| `POSTCODES_API_URL`      | `https://api.postcodes.io`        | Finds UK postcodes on the map; free, no key      |
-| `ROUTING_API_URL`        | `https://router.project-osrm.org` | Road distance (OSRM); the default is a free demo |
+| Variable                 | Default                                       | Purpose                                                    |
+| ------------------------ | --------------------------------------------- | ---------------------------------------------------------- |
+| `NODE_ENV`               | `development`                                 | `development`, `test` or `production`                      |
+| `PORT`                   | `4000`                                        | API port                                                   |
+| `LOG_LEVEL`              | `debug`                                       | Pino log level                                             |
+| `CORS_ORIGINS`           | `http://localhost:3000,http://localhost:3001` | Comma-separated origins allowed to call the API            |
+| `DATABASE_URL`           | none, required                                | PostgreSQL connection string                               |
+| `JWT_ACCESS_SECRET`      | none, required                                | Signs login tokens; 32 characters or more                  |
+| `JWT_ACCESS_TTL_SECONDS` | `900`                                         | Lifetime of an access token                                |
+| `REFRESH_TOKEN_TTL_DAYS` | `7`                                           | How long someone stays signed in                           |
+| `STAFF_SESSION_HOURS`    | `12`                                          | How long a staff member stays signed in to the admin panel |
+| `SMTP_HOST`              | `localhost`                                   | Mail server; the default is Mailpit                        |
+| `SMTP_PORT`              | `1025`                                        | Mail server port                                           |
+| `MAIL_FROM`              | `UkRide <no-reply@ukride.local>`              | Sender shown on emails                                     |
+| `CUSTOMER_APP_URL`       | `http://localhost:3000`                       | The customer site; links in customer emails                |
+| `ADMIN_APP_URL`          | `http://localhost:3001`                       | The admin panel; links in staff emails                     |
+| `POSTCODES_API_URL`      | `https://api.postcodes.io`                    | Finds UK postcodes on the map; free, no key                |
+| `ROUTING_API_URL`        | `https://router.project-osrm.org`             | Road distance (OSRM); the default is a free demo           |
 
 The API refuses to start if a value is invalid.
 
-### Frontend (`frontend/.env.local`)
+### Customer site and admin panel (`customer/.env.local`, `admin/.env.local`)
 
-| Variable                   | Default                 | Purpose            |
-| -------------------------- | ----------------------- | ------------------ |
-| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:4000` | Address of the API |
+| Variable                   | Default                 | Purpose                                                              |
+| -------------------------- | ----------------------- | -------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://localhost:4000` | Address of the API (both apps)                                       |
+| `NEXT_PUBLIC_ADMIN_URL`    | `http://localhost:3001` | The admin panel, linked from an admin's account page (customer site) |
 
 Never commit `.env` or `.env.local`. Only the example files are tracked.
 
@@ -243,6 +260,10 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/vehicle-types`                | The catalogue of vehicle types (public)                   |
 | GET    | `/vehicle-types/:slug`          | One vehicle type, for example `executive` (public)        |
 | POST   | `/quotes`                       | The price of a journey between two postcodes (public)     |
+| POST   | `/admin/auth/login`             | Staff sign-in for the admin panel (ADMIN or DISPATCHER)   |
+| POST   | `/admin/auth/refresh`           | New staff access token from the staff cookie              |
+| POST   | `/admin/auth/logout`            | Staff sign-out; the customer sign-in is not touched       |
+| GET    | `/admin/auth/me`                | The signed-in staff member                                |
 | GET    | `/admin/vehicle-types`          | Every vehicle type, including switched-off ones (admin)   |
 | POST   | `/admin/vehicle-types`          | Add a vehicle type (admin)                                |
 | PATCH  | `/admin/vehicle-types/:id`      | Change a vehicle type, or switch it back on (admin)       |

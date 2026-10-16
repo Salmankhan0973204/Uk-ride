@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 0 rework - three apps (branch `module-00-three-apps`)
-- **Last completed:** Module 5 - Pricing Rules + Quote Engine (v1), plus real road distance
-- **Next step:** 0.7 - split into `customer/`, `admin/` and `shared/`
-- **Steps done:** 40 of 113
+- **Current module:** none in progress
+- **Last completed:** Module 0 rework - three apps (tag `module-00-v2`)
+- **Next step:** 1.9 - OTP codes (Module 1 rework)
+- **Steps done:** 44 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -19,8 +19,8 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 
 | #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
 | --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
-| 0   | Foundation: three apps       | 6/10  | Rework  | Rework        | -           | Next     |
-| 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Rework   |
+| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
+| 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Next     |
 | 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework   |
 | 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
@@ -61,13 +61,13 @@ runs.
 - [x] 0.4 Next.js shell, design tokens, Badge, Card, Spinner. _Learn: App Router, Tailwind v4._
 - [x] 0.5 System status screen. _Learn: TanStack Query basics._
 - [x] 0.6 Swagger UI at `/api/v1/docs`. _Learn: OpenAPI documents._
-- [ ] 0.7 Split into three apps: `customer/` (today's `frontend/`), a new `admin/` and the
+- [x] 0.7 Split into three apps: `customer/` (today's `frontend/`), a new `admin/` and the
       `shared/` package. _Learn: workspace packages shared by two Next.js apps._
-- [ ] 0.8 Staff sign-in with its own sessions, the admin app shell, the admin screens moved,
+- [x] 0.8 Staff sign-in with its own sessions, the admin app shell, the admin screens moved,
       and a fix for two sign-ins refreshing at the same moment.
       _Learn: token audiences, race conditions._
-- [ ] 0.9 Docs for three apps: `DESIGN.md`, `README.md`, ADR-0002.
-- [ ] 0.10 Customer site frame: header, footer, mobile tab bar. _Learn: responsive navigation._
+- [x] 0.9 Docs for three apps: `DESIGN.md`, `README.md`, ADR-0002.
+- [x] 0.10 Customer site frame: header, footer, mobile tab bar. _Learn: responsive navigation._
 
 ### Module 1 - Auth like ukride.uk
 
@@ -2222,3 +2222,198 @@ Removed or not planned:
 
 The old Module 6-17 step lists are replaced by the roadmap above. Their numbers are reused,
 so a reference such as "Module 10" in notes written before this date means the old plan.
+
+### Module 0 rework - three apps (branch `module-00-three-apps`)
+
+#### Step 0.7 - Split into three apps (done 2026-10-16)
+
+Built
+
+- **Workspaces:** `backend/`, `customer/` (was `frontend/`, port 3000), a new `admin/` (Next.js,
+  port 3001) and `shared/` (`@ukride/shared`), with one root lockfile. Root scripts are
+  `dev` (all three), `dev:api`, `dev:customer` and `dev:admin`; `dev:web` is gone.
+- **`@ukride/shared`** is TypeScript source with an `exports` map. It holds:
+  - the API client factory `createApiClient({ baseUrl, refreshPath, hintKey })`
+  - money, UK time and phone helpers
+  - Card, Badge, Field, Select, Spinner and PasswordInput
+  - the glass styles (`shared/styles/glass.css`)
+- **The customer app's `lib/api/client.ts`** creates its own client (marked `client-only`)
+  and re-exports the same names as before, so feature code did not change. 23 files had their
+  imports rewritten to `@ukride/shared/...`.
+- **Each app's `globals.css`** is three lines: Tailwind, the shared styles, and an `@source`
+  line for `shared/src`.
+- **The admin app** has its layout and a placeholder page; the shell comes in 0.8.
+- **Backend settings:**
+  - `CORS_ORIGINS` allows ports 3000 and 3001
+  - `WEB_APP_URL` became `CUSTOMER_APP_URL` and `ADMIN_APP_URL`
+  - email links use the customer address
+- **Docs:** `.prettierrc` sorts Tailwind classes per app; `docs/decisions/ADR-0002-three-apps.md`
+  records the split.
+
+Verified
+
+- Typecheck passes for backend, shared, customer and admin; lint for backend, customer and
+  admin.
+- Production builds pass for both web apps. Next.js 16 compiled the shared package without
+  `transpilePackages`.
+- In a real browser, the customer site's home, sign-in, register, vehicles and quote pages
+  showed the glass styles from the shared package, with no horizontal scrolling. The admin app
+  rendered on port 3001 in the same style.
+- A request from the admin app's origin to the API passed CORS.
+
+Found on the way
+
+- Stopping a dev server task left its `node` child processes running; they were found by
+  their UkRide paths and stopped by PID.
+- Windows refused to rename the `frontend` folder even with nothing of ours running,
+  probably because the editor holds it open. The tracked files were moved one by one instead.
+  An empty `frontend/` folder with only ignored leftovers (`.next`, `node_modules`)
+  remains; delete it once the editor has let go.
+
+Learning notes
+
+- A workspace package can be plain TypeScript: the apps that import it compile it.
+- Code that holds a secret in a module variable must never run on the server, where one module
+  instance serves every visitor. `client-only` turns that rule into a build error.
+- A factory (`createApiClient`) lets two apps share code while keeping separate state.
+
+#### Step 0.8 - Staff sign-in, admin shell, admin screens moved (done 2026-10-16)
+
+Built
+
+- **Separate staff sessions:**
+  - `POST /admin/auth/login`, `/refresh`, `/logout` and `GET /admin/auth/me`, for ADMIN
+    or DISPATCHER accounts only
+  - their own cookie `ukride_staff_refresh` on the path `/api/v1/admin/auth`
+  - a session `audience` column (CUSTOMER or STAFF; migration `add_session_audience`)
+  - an `aud` claim in every access token
+  - `requireAuth` takes customer tokens only and the new `requireStaffAuth` takes staff
+    tokens only; every `/admin/*` route now uses `requireStaffAuth`
+  - staff sessions last `STAFF_SESSION_HOURS` (12)
+- **Refreshes at the same moment:**
+  - a refresh token exchanged less than 30 s ago answers 409 with `details.retry` and keeps
+    the cookie, instead of being treated as stolen; after 30 s a returning old token still
+    ends every session
+  - a failed refresh clears the cookie only on a real 401
+  - the shared client makes tabs take turns with `navigator.locks` and retries once on the 409
+- **Admin app:**
+  - `/login` (staff sign-in) and a `(panel)` route group whose layout runs the staff check
+    once and draws the sidebar: Vehicles, Vehicle types, Pricing, System status, plus the
+    staff member's name and role and Sign out
+  - an account that is no longer staff is told so, with a sign-out button
+- **Moved from the customer app:**
+  - the vehicles, pricing, admin vehicle-type and system status screens
+  - their features and query keys
+  - their addresses lost the `/admin` prefix
+- **Customer app:**
+  - keeps only the public vehicle-type list
+  - lost `/admin/**`, `/system-status`, the Status link and the home page's status panel
+  - an admin's account page links to the admin panel (`NEXT_PUBLIC_ADMIN_URL`)
+- `plural()` moved to `@ukride/shared/text`.
+
+Verified
+
+- Typecheck passes for all four workspaces; lint passes for all three apps.
+- **Against the running API:**
+  - a customer token got 401 on `/admin/vehicles` and a staff token 200
+  - a staff token got 401 on `/auth/me`
+  - a customer account got 403 at staff sign-in
+  - the two cookies have their own names and paths
+  - a staff cookie sent to the customer refresh got 401
+  - after staff sign-out the staff refresh got 401 while the customer session still worked
+  - two refreshes at once with one cookie gave 200 and 409; the same old cookie 2 s later
+    gave 409 and the session survived; 31 s later it gave 401 and every session of that
+    user ended
+- **In a real browser:**
+  - signed out, `/vehicles` on the admin app went to its sign-in
+  - a customer account was refused there
+  - an admin signed in to both apps; vehicles, vehicle types (adding one worked), pricing and
+    system status all ran in the admin app
+  - signing out of either app left the other signed in
+  - no horizontal scrolling at 1440 and 390px; on a phone the section links wrap
+- Test accounts and the test vehicle type were deleted.
+
+Learning notes
+
+- Who a token is for (its audience) is as important as who it belongs to. The same admin
+  person now holds two independent sessions, one per app.
+- A security rule that fires on normal behaviour (two tabs refreshing together) teaches
+  people to ignore it. The 30-second window keeps the replay check for real replays.
+- A layout in a route group runs for every page inside it, so a new admin page cannot forget
+  the staff check.
+- Windows would not rename folders that the dev server was watching; moving files one by one
+  worked. Empty leftover folders (`frontend/`, `customer/src/app/admin/`) can be deleted by
+  hand.
+
+#### Step 0.9 - Docs for three apps (done 2026-10-16)
+
+- `DESIGN.md`:
+  - the token source is now `shared/styles/glass.css`
+  - the layout section describes both apps
+  - the admin sidebar replaces the old admin menu
+  - the mobile tab bar rule is written down before it is built (0.10)
+  - the navigation entry matches the new links
+- `README.md`:
+  - project structure with `customer/`, `admin/` and `shared/`
+  - setup copies both apps' `.env.local`
+  - how to run the three apps, and that their sign-ins are separate
+  - the scripts and frontend settings tables
+- `PRODUCT.md` points at the shared styles. ADR-0002 was written in 0.7.
+
+Learning note: write the rule for a new screen pattern before building it. The tab bar's
+rules (which items, when it shows, how it avoids covering content) were settled in
+`DESIGN.md` first, so 0.10 builds to a known target.
+
+#### Step 0.10 - Customer site frame (done 2026-10-16)
+
+Built
+
+- `customer/src/components/layout/navItems.ts`: the site's pages in one list (Home, Prices,
+  Vehicles, Profile today). The header, the mobile tab bar and the footer all read it, so a
+  new page appears everywhere at once. Its comment says how the list becomes Home, Book Now,
+  Journeys, Wallet, Profile as those pages are built.
+- `MobileTabBar`: below 640px, a bar fixed to the bottom of the screen with an icon and a
+  word per page, on the near-opaque menu surface; the current page is marked. The floating
+  header keeps only the brand and the account links on a phone.
+- `SiteFooter`: the same pages and the copyright line, with room left under it for the tab
+  bar.
+- The header shows Home, Prices and Vehicles from 640px up.
+- The home page is one hero: "Pre-booked travel in and around London", an exact price before
+  booking, "Get a price" and "See the vehicles". The journey-stage card is gone; the fleet
+  joins in 3.9 and the booking widget in 5.13.
+
+Verified
+
+- Typecheck and lint pass for every workspace; 18 unit tests pass; production builds pass for
+  the customer site (12 routes) and the admin panel (12 routes).
+- **Desktop:** the header marks the current page on /, /quote and /vehicles, and the tab bar
+  is hidden.
+- **Phone:**
+  - the tab bar shows Home, Prices, Vehicles and Profile with the current one marked, and
+    tapping Prices opened /quote
+  - the header shows only the brand and the sign-in links
+  - the footer's last line sits 39px above the tab bar
+- No horizontal scrolling at 1440, 390 and 360px.
+
+### Module 0 rework summary
+
+The project is now three apps and a shared package:
+
+- the backend
+- `customer/`, the customer website on port 3000
+- `admin/`, the admin panel on port 3001, with its own staff sign-in
+- `@ukride/shared`, the shared package
+
+Staff and customer sessions are separate, and refreshes at the same moment no longer sign
+people out. The admin screens moved to the admin panel, and the customer site has a header,
+footer and mobile tab bar.
+
+Built on the branch `module-00-three-apps`, merged into `main` and tagged `module-00-v2`.
+
+Open items
+
+- Empty leftover folders that Windows would not let me delete: `frontend/` (only ignored
+  `.next`, `node_modules`) and `customer/src/app/admin/`. Delete them by hand once no
+  program has them open.
+- The /vehicles page still says prices are not published; it folds into the home page in 3.9.
+- The tests on GitHub still describe the old single web app.

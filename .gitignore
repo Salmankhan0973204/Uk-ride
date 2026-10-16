@@ -42,4 +42,5 @@ Thumbs.db
 .idea/
 
 # Screenshots taken for design reviews
-frontend/.impeccable/review/
+customer/.impeccable/review/
+admin/.impeccable/review/

@@ -10,6 +10,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 import { requestId } from './middleware/requestId.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { staffAuthRouter } from './modules/auth/auth.staff.routes.js';
 import { adminPricingRouter } from './modules/pricing/pricing.routes.js';
 import { quotesRouter } from './modules/quotes/quotes.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
@@ -61,6 +62,7 @@ api.use('/users', usersRouter);
 api.use('/vehicle-types', vehicleTypesRouter);
 api.use('/quotes', quotesRouter);
 // Everything under /admin is for the operator's staff.
+api.use('/admin/auth', staffAuthRouter);
 api.use('/admin/vehicle-types', adminVehicleTypesRouter);
 api.use('/admin/vehicles', adminVehiclesRouter);
 api.use('/admin/pricing', adminPricingRouter);

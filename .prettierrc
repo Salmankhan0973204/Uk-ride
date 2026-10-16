@@ -4,5 +4,24 @@
   "printWidth": 100,
   "trailingComma": "all",
   "plugins": ["prettier-plugin-tailwindcss"],
-  "tailwindStylesheet": "./frontend/src/app/globals.css"
+  "overrides": [
+    {
+      "files": "customer/**",
+      "options": {
+        "tailwindStylesheet": "./customer/src/app/globals.css"
+      }
+    },
+    {
+      "files": "admin/**",
+      "options": {
+        "tailwindStylesheet": "./admin/src/app/globals.css"
+      }
+    },
+    {
+      "files": "shared/**",
+      "options": {
+        "tailwindStylesheet": "./customer/src/app/globals.css"
+      }
+    }
+  ]
 }

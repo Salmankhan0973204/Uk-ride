@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../../middleware/requireAuth.js';
+import { requireStaffAuth } from '../../middleware/requireAuth.js';
 import { requireRole } from '../../middleware/requireRole.js';
 import { validate, validateQuery } from '../../middleware/validate.js';
 import { changeStatus, create, getOne, list, update } from './vehicles.controller.js';
@@ -13,7 +13,7 @@ import {
 export const adminVehiclesRouter = Router();
 
 // The fleet is managed by admins only.
-adminVehiclesRouter.use(requireAuth, requireRole('ADMIN'));
+adminVehiclesRouter.use(requireStaffAuth, requireRole('ADMIN'));
 
 adminVehiclesRouter.get('/', validateQuery(listVehiclesQuery), list);
 adminVehiclesRouter.post('/', validate(createVehicleSchema), create);

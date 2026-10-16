@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express';
 import { currentUserId } from '../../middleware/requireAuth.js';
+import { AppError } from '../../shared/AppError.js';
 import { sendSuccess } from '../../shared/response.js';
 import { clearRefreshCookie, readRefreshCookie, setRefreshCookie } from './auth.cookies.js';
 import {
@@ -18,6 +19,9 @@ import type {
 import { checkCredentials, getCurrentUser, registerUser } from './auth.service.js';
 import { createSession, endSession, rotateSession } from './auth.sessions.js';
 import { signAccessToken } from './auth.tokens.js';
+
+/** True for the 401 that means the session is over, false for a retryable conflict. */
+export const isSessionEnd = (err: unknown) => err instanceof AppError && err.statusCode === 401;
 
 /** Creates an account. The body was already checked by the validate middleware. */
 export const register: RequestHandler = async (req, res) => {
@@ -44,7 +48,7 @@ export const login: RequestHandler = async (req, res) => {
     message: 'Signed in',
     data: {
       user,
-      ...signAccessToken({ userId: user.id, sessionId: session.sessionId }),
+      ...signAccessToken({ userId: user.id, sessionId: session.sessionId, audience: 'customer' }),
       tokenType: 'Bearer',
     },
   });
@@ -59,17 +63,18 @@ export const refresh: RequestHandler = async (req, res) => {
 
   let session;
   try {
-    session = await rotateSession(readRefreshCookie(req));
+    session = await rotateSession(readRefreshCookie(req), 'CUSTOMER');
   } catch (err) {
-    // A cookie that no longer works is removed, so the browser stops sending it.
-    clearRefreshCookie(res);
+    // A cookie that no longer works is removed, so the browser stops sending
+    // it. A "try again" keeps it: the browser already holds the newer one.
+    if (isSessionEnd(err)) clearRefreshCookie(res);
     throw err;
   }
 
   setRefreshCookie(res, session.refreshToken, session.expiresAt);
   sendSuccess(res, {
     message: 'Session refreshed',
-    data: { ...signAccessToken(session), tokenType: 'Bearer' },
+    data: { ...signAccessToken({ ...session, audience: 'customer' }), tokenType: 'Bearer' },
   });
 };
 

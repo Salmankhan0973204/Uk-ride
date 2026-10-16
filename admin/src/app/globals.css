@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+@import '@ukride/shared/styles/glass.css';
+
+/* Tailwind scans this app's folder only; the shared components need it too. */
+@source '../../../shared/src';

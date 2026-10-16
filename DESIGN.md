@@ -195,7 +195,7 @@ components:
 
 Every page sits on one deep indigo-to-violet backdrop that stays fixed while the content scrolls. Content lives on frosted glass panels: a faint white fill, a blur of whatever is behind, a thin light border and a soft shadow that falls below the panel. The feel is calm and spacious, with white text, large touch targets and few colours. This is the customer-facing register; driver and admin screens do not exist yet, so nothing here describes them.
 
-The look was chosen by the user on 2026-10-07 ("Glass and gradient", accent "Indigo / violet") after an earlier road-sign design was rejected on sight. An independent finish review on 2026-10-08 found eight issues; all were fixed, and the rules that came out of it are recorded below as named rules. This file describes what the shipped code does. The source of every token is `frontend/src/app/globals.css`. It is the full record of the design system; PRODUCT.md carries a short version of the visual direction, and where the two differ this file wins.
+The look was chosen by the user on 2026-10-07 ("Glass and gradient", accent "Indigo / violet") after an earlier road-sign design was rejected on sight. An independent finish review on 2026-10-08 found eight issues; all were fixed, and the rules that came out of it are recorded below as named rules. This file describes what the shipped code does. The source of every token is `shared/styles/glass.css`. It is the full record of the design system; PRODUCT.md carries a short version of the visual direction, and where the two differ this file wins.
 
 One thing is deliberately outside this system: the HTML emails sent by the backend (`backend/src/modules/auth/auth.emails.ts`) use Arial on a light layout, because mail clients do not load web fonts or support backdrop blur. Do not copy the email styling into the web app, and do not "fix" the emails to match the web app.
 
@@ -267,9 +267,13 @@ The status colours.
 
 ## Layout
 
-One centred column, at most 1024px wide, with 16px side gutters that grow to 24px from 640px. The navigation bar floats above it, 12px from the top (16px from 640px), and stays there while the page scrolls. Page content starts 40px below the bar (56px from 640px) and ends with 64px of space (96px from 640px).
+Two apps share this system: the customer site and the admin panel (2026-10-16). Both import the same tokens and classes from `shared/styles/glass.css` and the same UI primitives from `shared/src/ui/`.
+
+**Customer site.** One centred column, at most 1024px wide, with 16px side gutters that grow to 24px from 640px. The navigation bar floats above it, 12px from the top (16px from 640px), and stays there while the page scrolls. Page content starts 40px below the bar (56px from 640px) and ends with 64px of space (96px from 640px).
 
 Forms and single-purpose panels are narrow and centred: 576px at most for register and account, 448px for sign in, forgot password, reset password and email confirmation. The status page puts two panels side by side from 1024px; the home page splits into a wide text column and a narrower panel (1.3 to 0.7) from 1024px. Below those widths everything stacks in one column. Only two breakpoints are in use: 640px and 1024px.
+
+**Admin panel.** A sidebar and a working area, at most 1280px wide together, with 16px gutters (24px from 640px). From 1024px the sidebar is a 240px glass panel on the left that stays in view while the page scrolls; the page sits beside it. Below 1024px the sidebar becomes a panel above the page, and its links wrap onto as many rows as they need. Admin pages fill the working area instead of being narrow and centred, because tables need the width; forms stay at 576px.
 
 Spacing follows a 4px step. The recurring distances are: 8px from a label to its control, 20px between fields, 28px between the sections of a panel, 24px of padding inside a panel (32px from 640px), and 12px to 16px between items in a row. Detail rows are a label on the left and a value on the right, separated by divider lines, with about 12px to 14px above and below.
 
@@ -330,7 +334,7 @@ Icons are drawn inline as SVG on a 24 unit grid: one stroke in the current text 
 - **Field:** a visible label above (8px gap), then the control, then one line below it: a hint in Muted Ink, replaced by the error when there is one.
 - **Hover / Focus:** the border brightens on hover. On focus the border turns Focus Lavender, the fill brightens to 14% and the 4px Focus Halo appears.
 - **Error:** Rose border and a Rose 4px ring on the control; under it, a small alert icon and the message in Rose, medium weight.
-- **Password:** a "Show" / "Hide" text control sits inside the right end of the input. New forms use the shared `PasswordInput` component (`frontend/src/components/ui/PasswordInput.tsx`).
+- **Password:** a "Show" / "Hide" text control sits inside the right end of the input. New forms use the shared `PasswordInput` component (`shared/src/ui/PasswordInput.tsx`).
 - **Text area:** the same look, three lines tall to start, 12px of padding above and below, resizable downwards only.
 - **Numbers:** a text input with a numeric keyboard, not the browser's number spinner.
 - **Examples:** an example value ("Like SW1A 1AA.") goes in the hint under the box, never as a placeholder inside it: an example in an empty box looks like an answer already given.
@@ -341,7 +345,7 @@ Icons are drawn inline as SVG on a 24 unit grid: one stroke in the current text 
 The project's own dropdown, not the browser's list. The trigger looks like an input with a chevron that turns over when open. The list opens 8px below the trigger on the Menu Surface, with 16px corners and 6px of padding. Each option is a 44px row with 12px corners; the highlighted row is Strong Glass, and the chosen row shows a Focus Lavender tick. A "No answer" row in Muted Ink clears an optional field. It is fully keyboard operable (arrows, Home, End, Enter, Space, Escape, type a letter to jump).
 
 ### Navigation
-A floating glass bar, fully rounded, as wide as the content column. Brand mark and name on the left; links on the right. A link is a 44px tall, fully rounded target in Muted Ink at label size; hover gives it a Glass fill and white text, and the current page gets a Strong Glass fill. On screens narrower than 640px the "Prices" and "Vehicles" links are hidden, and "Status" below 1024px; the home page links to all three. When signed in, the links collapse to one link named after the person. A link stays highlighted on the sub-pages of its section.
+A floating glass bar, fully rounded, as wide as the content column. Brand mark and name on the left; links on the right. A link is a 44px tall, fully rounded target in Muted Ink at label size; hover gives it a Glass fill and white text, and the current page gets a Strong Glass fill. A link stays highlighted on the sub-pages of its section. Signed out, the account links are "Sign in" and a glass "Sign up"; signed in, they collapse to one link named after the person. Below 640px the page links move to the mobile tab bar and the floating bar keeps only the brand and the account link.
 
 ### Notices
 A tinted box inside a panel for a message about the whole form or page: 16px corners, a 1px border in the status colour at 50%, and a fill of the same colour at about 12%. An error notice sets its text in Rose, medium weight, small size. A warning notice keeps white text and may hold one compact ghost button. A confirmation is a warning notice that asks a question in its first, semibold sentence and holds two compact ghost buttons: the answer that does it ("Yes, switch it off") and the one that does not ("Keep it on"). It opens under the row it is about, takes focus, and closes on Escape. A success notice (Mint border and tint, white text, medium weight) sits at the top of a panel to confirm something that was just saved.
@@ -358,8 +362,11 @@ Under the table: "21 to 25 of 25 vehicles, page 2 of 2" in Muted Ink at small si
 ### Choice rows
 For choosing one of a few options that each need a sentence of explanation, such as a vehicle's status: radio buttons in divider rows, the label in medium weight and the meaning below it in Muted Ink. The radio is drawn by hand: a 20px circle with a 2px Muted Ink outline, which becomes a 6px Focus Lavender ring when chosen. The current value is marked "(now)". Choosing changes nothing until the button below is pressed; that button names the action ("Retire SK24 SUP") and says "Choose a new status" while there is nothing to do. A choice with consequences adds a warning notice above the button.
 
-### Admin menu
-Above every admin panel, outside it: the word "Admin" in Muted Ink (hidden on phones, still read by screen readers), then one fully rounded 44px link per admin screen. The current screen has a Strong Glass fill and a Glass Border; the others are Muted Ink until hovered.
+### Admin sidebar
+A glass panel with 24px corners and 16px of padding. At the top, the brand mark and "UkRide admin". Then one 44px link per section, with 12px corners: Muted Ink until hovered (Glass fill, white text), Strong Glass for the current section, which stays marked on its own forms. Sections join the list as they are built. At the bottom, under a divider line, the staff member's name and role and a compact glass "Sign out" button. There is no accent button in the sidebar: the accent belongs to each page's own main action.
+
+### Mobile tab bar (customer site)
+Below 640px the customer site gets a bar fixed to the bottom of the screen, as on ukride.uk: Home, Book Now, Journeys, Wallet, Profile, each a 44px-tall target with a small icon above a short label. It is a glass panel with the menu surface's near-opaque fill, so page content scrolling under it never shows through the labels. The current page's item is white with a Strong Glass fill; the others are Muted Ink. Pages keep enough bottom space that the bar never covers their last line. An item appears only once its page exists. From 640px up the bar is gone and the floating navigation bar carries the same links.
 
 ### Registration plates
 Shown in Geist Mono, semibold, slightly tracked, never wrapped. Current UK plates are shown with their space ("AB12 CDE") though they are stored without it.
@@ -397,7 +404,7 @@ Panels rise in once when a page loads: 14px upward with a fade, over 520ms on a 
 - **Do** use Geist for interface text and Geist Mono only for machine-produced values.
 - **Do** draw icons as inline single-stroke SVG in the current text colour.
 - **Do** keep motion short and remove it under `prefers-reduced-motion`.
-- **Do** reuse the shared classes in `frontend/src/app/globals.css` (`.glass`, `.btn`, `.btn-primary`, `.btn-ghost`, `.control`, `.pill`, `.lift`, `.tabular`, `.rise`, `.pop`) before writing new styles.
+- **Do** reuse the shared classes in `shared/styles/glass.css` (`.glass`, `.btn`, `.btn-primary`, `.btn-ghost`, `.control`, `.pill`, `.lift`, `.tabular`, `.rise`, `.pop`) before writing new styles.
 
 ### Don't:
 - **Don't** add a colour outside indigo and violet to the backdrop, or size its pools in pixels.

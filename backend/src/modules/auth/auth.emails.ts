@@ -92,7 +92,7 @@ function escapeHtml(value: string) {
 
 export async function sendVerificationEmail(user: Recipient) {
   const token = await createEmailToken(user.id, 'VERIFY_EMAIL', VERIFY_TTL_MINUTES);
-  const url = `${env.WEB_APP_URL}/verify-email?token=${token}`;
+  const url = `${env.CUSTOMER_APP_URL}/verify-email?token=${token}`;
 
   await sendEmail({
     to: user.email,
@@ -109,7 +109,7 @@ export async function sendVerificationEmail(user: Recipient) {
 
 async function sendPasswordResetEmail(user: Recipient) {
   const token = await createEmailToken(user.id, 'RESET_PASSWORD', RESET_TTL_MINUTES);
-  const url = `${env.WEB_APP_URL}/reset-password?token=${token}`;
+  const url = `${env.CUSTOMER_APP_URL}/reset-password?token=${token}`;
 
   await sendEmail({
     to: user.email,

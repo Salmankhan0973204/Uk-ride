@@ -8,12 +8,15 @@
   },
   "workspaces": [
     "backend",
-    "frontend"
+    "customer",
+    "admin",
+    "shared"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "dev": "concurrently -n api,customer,admin -c blue,green,magenta \"npm run dev -w backend\" \"npm run dev -w customer\" \"npm run dev -w admin\"",
     "dev:api": "npm run dev -w backend",
-    "dev:web": "npm run dev -w frontend",
+    "dev:customer": "npm run dev -w customer",
+    "dev:admin": "npm run dev -w admin",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",

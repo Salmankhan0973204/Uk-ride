@@ -11,32 +11,35 @@ and runs on a local machine.
 
 ## Status
 
-**Modules 0 to 5 of 17 are complete.** You can create an account, sign in, confirm your
-email, reset a forgotten password, edit your profile, change your password, browse the
-vehicle types and get an exact price for a journey. An admin can manage vehicle types, the
-fleet and the prices. Booking is next. The full tracker is in
-[docs/PROGRESS.md](docs/PROGRESS.md).
+**40 of 113 steps are done.** You can create an account, sign in, edit your profile, browse the
+vehicle types and get an exact price between two postcodes. An admin can manage vehicle types,
+the fleet and the prices.
 
-| #   | Module                                        | Status   |
-| --- | --------------------------------------------- | -------- |
-| 0   | Foundation: health check + first screen       | Complete |
-| 1   | Authentication: register, login, current user | Complete |
-| 2   | Profile management                            | Complete |
-| 3   | Vehicle types: admin CRUD + customer catalog  | Complete |
-| 4   | Fleet vehicles                                | Complete |
-| 5   | Pricing rules + quote engine                  | Complete |
-| 6   | Booking creation                              | Next     |
-| 7   | My bookings: list + detail                    | Planned  |
-| 8   | Booking edit + cancellation                   | Planned  |
-| 9   | Driver + dispatch operations                  | Planned  |
-| 10  | Stripe payments + refunds (test mode)         | Planned  |
-| 11  | Notifications + email                         | Planned  |
-| 12  | Real-time booking status + driver location    | Planned  |
-| 13  | File uploads + driver documents               | Planned  |
-| 14  | Reviews + customer feedback                   | Planned  |
-| 15  | Admin dashboard + reporting                   | Planned  |
-| 16  | Production hardening + automated testing      | Planned  |
-| 17  | Docker + CI/CD + deployment                   | Planned  |
+On 2026-10-16 the roadmap changed: UkRide now follows the customer flow of
+[ukride.uk](https://ukride.uk) in three apps (backend, customer website, admin panel). The focus
+is auth, booking, payment, wallet, journeys and reviews. Modules 0-5 are being reworked to that
+flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
+
+| #   | Module                       | Status   |
+| --- | ---------------------------- | -------- |
+| 0   | Foundation: three apps       | Next     |
+| 1   | Auth like ukride.uk          | Rework   |
+| 2   | Profile                      | Rework   |
+| 3   | Fleet classes                | Rework   |
+| 4   | Fleet vehicles               | Complete |
+| 5   | Pricing and quotes           | Rework   |
+| 6   | Booking                      | Planned  |
+| 7   | Wallet                       | Planned  |
+| 8   | Card payment (Stripe)        | Planned  |
+| 9   | Journeys                     | Planned  |
+| 10  | Edit and cancel              | Planned  |
+| 11  | Admin operations             | Planned  |
+| 12  | Reviews                      | Planned  |
+| 13  | Notifications                | Planned  |
+| 14  | Driver API and live status   | Planned  |
+| 15  | Admin dashboard and reports  | Planned  |
+| 16  | Hardening and tests          | Planned  |
+| 17  | Docker, CI/CD and deployment | Planned  |
 
 ## Tech stack
 

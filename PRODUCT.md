@@ -11,19 +11,20 @@ web
 
 ## Product
 
-UkRide is a booking platform for chauffeur-driven, private-hire travel in the UK, positioned as
-an executive chauffeur firm: airport transfers and business travel, booked ahead.
-Customers get a price, book a trip, pay and follow the trip. Drivers work through their
-assigned jobs. Dispatchers and admins run the operation.
+UkRide is a booking platform for pre-booked private-hire travel in and around London: airport
+transfers and A-to-B journeys, booked ahead. Since 2026-10-16 it follows the customer flow of
+the live site https://ukride.uk (but not its look, which stays our own).
+Customers get a price, book (as a guest or signed in), pay by wallet and/or card, and follow
+their journeys. Dispatchers and admins run the operation in a separate admin panel.
 
 ## Users
 
-| Role       | Device and situation                             | What they need most                             |
-| ---------- | ------------------------------------------------ | ----------------------------------------------- |
-| Customer   | Phone, often in a hurry, sometimes at an airport | A price they trust and a clear next step        |
-| Driver     | Phone, in a vehicle, one hand, bright light      | The next action, large targets, no reading      |
-| Dispatcher | Desktop, many bookings at once, long sessions    | Density, scanning speed, clear exceptions       |
-| Admin      | Desktop, occasional, careful work                | Accuracy, audit trail, safe destructive actions |
+| Role       | Device and situation                                   | What they need most                             |
+| ---------- | ------------------------------------------------------ | ----------------------------------------------- |
+| Customer   | Phone, often in a hurry, sometimes at an airport       | A price they trust and a clear next step        |
+| Driver     | No app of their own yet; the admin panel acts for them | Jobs assigned clearly; a driver API comes later |
+| Dispatcher | Desktop, many bookings at once, long sessions          | Density, scanning speed, clear exceptions       |
+| Admin      | Desktop, occasional, careful work                      | Accuracy, audit trail, safe destructive actions |
 
 ## Product Purpose
 
@@ -39,10 +40,21 @@ Screens never ask a customer to compare or choose between operators.
 
 ## Operating Context
 
-- Customer: quote, book, pay, then follow the trip, mostly on a phone.
-- Driver: receives assigned jobs and works through them on a phone in the vehicle.
-- Dispatcher: assigns and monitors many bookings at once on a desktop, in long sessions.
-- Admin: maintains vehicle types, fleet vehicles and pricing rules, and reviews reports.
+Three apps:
+
+- **Backend API** (`backend/`): every rule and every sum of money.
+- **Customer website** (`customer/`), mostly used on a phone. Customers:
+  - sign up and sign in with a code to their mobile
+  - get a quote and book, as a guest or signed in
+  - pay from the wallet and/or by card
+  - see, pay, edit and cancel their journeys
+  - review a finished journey
+- **Admin panel** (`admin/`), on a desktop. Admins and dispatchers:
+  - manage fleet classes, cars and prices
+  - assign drivers and move rides through their statuses
+  - credit wallets, and hide or show reviews
+
+Drivers have no app among the three yet; the admin panel acts for them.
 
 ## Capabilities and Constraints
 
@@ -52,8 +64,11 @@ Screens never ask a customer to compare or choose between operators.
   `/vehicles` catalogue and the admin screens under `/admin/vehicle-types` (Module 3); the
   fleet screens under `/admin/vehicles` (Module 4); the `/quote` page and the admin pricing
   screens under `/admin/pricing` (Module 5).
-- Planned, in order: bookings, driver and dispatch operations, Stripe payments and refunds, notifications,
-  real-time status and driver location, document uploads, reviews, admin reporting.
+- Planned, in order (docs/PROGRESS.md): the three-app split, then auth, profile, fleet and
+  quote rework to the ukride.uk flow, then booking, wallet, card payment, journeys, edit and
+  cancel, admin operations, reviews, notifications, a driver API, reports.
+- Not built: CMS content pages (blogs, airport, terminal, hotel, station, services, about
+  pages), a support contact form, Drive With Us applications, a driver app.
 - Prices, payment state and booking status always come from the server.
 - Customer-facing copy uses British English.
 - Undecided: the operator's trading name and licensing details, service area, and the actual
@@ -95,6 +110,7 @@ below are the short version and must agree with it. Where they differ, DESIGN.md
 
 - Glass on a gradient. The user chose this look on 2026-10-07 ("Glass and gradient", accent
   "Indigo / violet") after rejecting a road-sign direction; it replaces every earlier palette.
+  On 2026-10-16 the user chose to keep it rather than copy ukride.uk's black and gold.
 - One deep indigo-to-violet backdrop sits behind every page and stays fixed while content
   scrolls. Its colour pools are sized to the viewport and use indigo and violet only. Every
   glass panel has a dark scrim under its fill, so muted text on glass passes 4.5:1 on a phone

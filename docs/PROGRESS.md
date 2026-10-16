@@ -2,52 +2,57 @@
 
 Update this file after every coding session.
 
-- **Current module:** none in progress
-- **Last completed:** Module 5 - Pricing Rules + Quote Engine
-- **Next step:** 6.1 - first step of Module 6, Booking Creation
+- **Current module:** Module 0 rework - three apps (branch `module-00-three-apps`)
+- **Last completed:** Module 5 - Pricing Rules + Quote Engine (v1), plus real road distance
+- **Next step:** 0.7 - split into `customer/`, `admin/` and `shared/`
 - **Steps done:** 40 of 113
+- **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
+  (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
-A module is **Complete** only when all five stages are Done and the flow works end to end.
+A module is **Complete** when every step is done and its flow works end to end in every app it
+touches. Modules 0-5 were finished as v1 (tags `module-00` to `module-05`); their new steps
+rework them to the ukride.uk flow, and each is tagged `module-NN-v2` when its rework is done.
 Do not start two modules at the same time.
 
-Stage values: `Done`, `In progress`, `-` (not started), `n/a`.
+Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (not started),
+`n/a`.
 
-| #   | Module                                             | Steps | Backend | API Tested | Frontend UI | TanStack Query | Tailwind / Impeccable Polish | Status   |
-| --- | -------------------------------------------------- | ----- | ------- | ---------- | ----------- | -------------- | ---------------------------- | -------- |
-| 0   | Foundation: Health Check + First Full-Stack Screen | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 1   | Authentication: Register + Login + Current User    | 8/8   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 2   | Profile Management                                 | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 3   | Vehicle Types: Admin CRUD + Customer Catalog       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 4   | Fleet Vehicles                                     | 6/6   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 5   | Pricing Rules + Quote Engine                       | 7/7   | Done    | Done       | Done        | Done           | Done (manual pass)           | Complete |
-| 6   | Booking Creation                                   | 0/6   | -       | -          | -           | -              | -                            | Next     |
-| 7   | My Bookings: List + Detail                         | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 8   | Booking Edit + Cancellation                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 9   | Driver + Dispatch Operations                       | 0/8   | -       | -          | -           | -              | -                            | -        |
-| 10  | Stripe Payments + Refunds                          | 0/7   | -       | -          | -           | -              | -                            | -        |
-| 11  | Notifications + Email                              | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 12  | Real-Time Booking Status + Driver Location         | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 13  | File Uploads + Driver Documents                    | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 14  | Reviews + Customer Feedback                        | 0/5   | -       | -          | -           | -              | -                            | -        |
-| 15  | Admin Dashboard + Reporting                        | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 16  | Production Hardening + Automated Testing           | 0/6   | -       | -          | -           | -              | -                            | -        |
-| 17  | Docker + CI/CD + Deployment                        | 0/6   | -       | -          | -           | -              | -                            | -        |
+| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
+| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
+| 0   | Foundation: three apps       | 6/10  | Rework  | Rework        | -           | Next     |
+| 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Rework   |
+| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework   |
+| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
+| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
+| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
+| 6   | Booking                      | 0/6   | -       | -             | -           | -        |
+| 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
+| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
+| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -        |
+| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -        |
+| 11  | Admin operations             | 0/6   | -       | -             | -           | -        |
+| 12  | Reviews                      | 0/4   | -       | -             | -           | -        |
+| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -        |
+| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -        |
+| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -        |
+| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -        |
+| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -        |
 
 ## Steps
 
 Each module is split into small steps. A step teaches one thing and ends with something that
 runs.
 
-- Do one step at a time, in order. Backend steps come first and are tested in Swagger UI
-  (`/api/v1/docs`) before the next step starts.
+- Do one step at a time, in order. Backend steps come first and are tested against the running
+  API before the screens are built.
 - Build the smallest version that works. Extras wait for a later step.
 - Tick the step and make a small commit when it works. The module commit and tag come after
   the last step.
 - Steps of later modules are a first draft. Adjust them when the module starts.
-- From Module 5 on, each module is built on its own branch (`module-05-pricing`). Step
-  commits go to that branch; the finished module is merged into `main` and tagged there.
+- Each module is built on its own branch (for example `module-00-three-apps`). Step commits
+  go to that branch; the finished module is merged into `main` with `--no-ff` and tagged.
 
-### Module 0 - Foundation
+### Module 0 - Foundation: three apps
 
 - [x] 0.1 npm workspace, shared tooling, Docker Compose. _Learn: monorepo layout._
 - [x] 0.2 Express app: env validation, logging, request IDs, envelopes, error handling.
@@ -56,8 +61,15 @@ runs.
 - [x] 0.4 Next.js shell, design tokens, Badge, Card, Spinner. _Learn: App Router, Tailwind v4._
 - [x] 0.5 System status screen. _Learn: TanStack Query basics._
 - [x] 0.6 Swagger UI at `/api/v1/docs`. _Learn: OpenAPI documents._
+- [ ] 0.7 Split into three apps: `customer/` (today's `frontend/`), a new `admin/` and the
+      `shared/` package. _Learn: workspace packages shared by two Next.js apps._
+- [ ] 0.8 Staff sign-in with its own sessions, the admin app shell, the admin screens moved,
+      and a fix for two sign-ins refreshing at the same moment.
+      _Learn: token audiences, race conditions._
+- [ ] 0.9 Docs for three apps: `DESIGN.md`, `README.md`, ADR-0002.
+- [ ] 0.10 Customer site frame: header, footer, mobile tab bar. _Learn: responsive navigation._
 
-### Module 1 - Authentication
+### Module 1 - Auth like ukride.uk
 
 - [x] 1.1 PostgreSQL + Prisma, `User` model, first migration, database readiness check.
       _Learn: ORM, schema, migrations._
@@ -68,8 +80,17 @@ runs.
 - [x] 1.6 Register page. _Learn: forms, field errors, mutations._
 - [x] 1.7 Login page and `useMe()`. _Learn: auth state with TanStack Query._
 - [x] 1.8 Protected page, logout button, design pass. _Learn: route guards._
+- [ ] 1.9 OTP codes: stored hashed, 6 digits, 10 minutes, resend after 60 s, 5 tries,
+      per-number limits in Redis, a short-lived signed ticket after verifying. "SMS" goes to
+      Mailpit for now. _Learn: one-time codes, Redis counters._
+- [ ] 1.10 Sign-up like ukride.uk: check the email, code to the mobile, verify, register,
+      signed in. Email-link confirmation is retired. _Learn: multi-step flows on the server._
+- [ ] 1.11 Login with "Remember me": each session keeps its own lifetime (30 days or 1 day);
+      signing out in one tab signs out all tabs. _Learn: per-session lifetimes._
+- [ ] 1.12 Forgot password with a 6-digit code, then a new password, then signed in.
+- [ ] 1.13 `/login`, `/signup` and `/forgot-password` pages; old addresses redirect.
 
-### Module 2 - Profile Management
+### Module 2 - Profile
 
 - [x] 2.1 Return the profile from `GET /users/me`. (Name and mobile were added to `User` early,
       with registration, on 2026-10-07.)
@@ -79,8 +100,10 @@ runs.
 - [x] 2.4 Profile page. _Learn: reading cached data._
 - [x] 2.5 Edit profile form. _Learn: updating the cache after a mutation._
 - [x] 2.6 Change password form, design pass.
+- [ ] 2.7 Change the mobile only with a code; the profile edit can no longer change it.
+- [ ] 2.8 `/profile` page like ukride.uk, replacing `/account`.
 
-### Module 3 - Vehicle Types
+### Module 3 - Fleet classes
 
 - [x] 3.1 `VehicleType` model and seed data. _Learn: database seeding._
 - [x] 3.2 Public list and detail endpoints. _Learn: public read endpoints._
@@ -89,8 +112,11 @@ runs.
 - [x] 3.5 Customer catalogue page. _Learn: list queries._
 - [x] 3.6 Admin table with create and edit form. _Learn: query invalidation._
 - [x] 3.7 Deactivate with confirmation, design pass.
+- [ ] 3.8 The six ukride.uk classes (8 Seater, Executive, MPV, Estate, Mercedes S Class,
+      Saloon): example models, hand-luggage capacity, an optional image address.
+- [ ] 3.9 Fleet section on the home page; `/vehicles` folds into it.
 
-### Module 4 - Fleet Vehicles
+### Module 4 - Fleet vehicles
 
 - [x] 4.1 `Vehicle` model linked to `VehicleType`. _Learn: relations, unique constraints._
 - [x] 4.2 Admin CRUD endpoints.
@@ -99,7 +125,9 @@ runs.
 - [x] 4.5 Create and edit form with a vehicle type select. _Learn: dependent data._
 - [x] 4.6 Change vehicle status (active, maintenance), design pass.
 
-### Module 5 - Pricing Rules + Quote Engine
+No new steps: the screens move to the admin app in 0.8, and cars are linked to drivers in 11.2.
+
+### Module 5 - Pricing and quotes
 
 - [x] 5.1 `PricingRule` model per vehicle type. _Learn: money as integer pence._
 - [x] 5.2 Admin pricing endpoints.
@@ -109,118 +137,124 @@ runs.
 - [x] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
 - [x] 5.6 Admin pricing screen.
 - [x] 5.7 Customer quote form with the price breakdown, design pass.
+- [ ] 5.8 Address search with suggestions (Photon and postcodes.io).
+      _Learn: autocomplete, debouncing._
+- [ ] 5.9 Airport detection by postcode: seven airports seeded, editable in the admin app.
+- [ ] 5.10 Settings, discounts and `GET /config`: Meet & Greet (£10), booking lead time
+      (4 h), edit cut-off (4 h), unpaid expiry (30 min), driver details shown 60 min before
+      pick-up, a discount % per class. _Learn: configuration as data._
+- [ ] 5.11 Engine v2, unit tested: discount, Meet & Greet per leg, automatic airport fee,
+      stops as route waypoints, each leg priced, passenger and luggage fit.
+- [ ] 5.12 `POST /quotes` v2, saved with an id and an expiry: every class with original
+      price, discount, price, seats, luggage, distance and duration; the first class that fits
+      is recommended; the booking rules (4 h ahead, pick-up not the drop-off, return after
+      pick-up, at most 5 stops, 8 passengers and 8 bags).
+- [ ] 5.13 The "BOOK YOUR JOURNEY" widget on the home page, opening `/booking`; `/quote` is
+      retired.
 
-### Module 6 - Booking Creation
+### Module 6 - Booking
 
-- [ ] 6.1 `Booking` model, status enum, booking reference. _Learn: enums, generated codes._
-- [ ] 6.2 `POST /bookings` that re-calculates the price on the server.
-      _Learn: never trust a client price, transactions._
-- [ ] 6.3 Booking rules, such as pickup time in the future. _Learn: business validation._
-- [ ] 6.4 Booking form, step 1: trip details and quote.
-- [ ] 6.5 Booking form, step 2: review and confirm. _Learn: multi-step forms._
-- [ ] 6.6 Confirmation page, design pass.
+- [ ] 6.1 `Booking` model: a reference such as UKR-7F3K9Q, a trip linking outbound and return
+      legs, a status and a separate payment status, flight number and Meet & Greet per leg, a
+      price snapshot, an expiry and an event history. _Learn: enums, generated codes._
+- [ ] 6.2 `POST /bookings` from a saved quote: 1 or 2 pending legs (the return runs the stops
+      in reverse); 409 "price changed" if the price moved. _Learn: never trust a client price._
+- [ ] 6.3 Guest flow: a code to the phone, then a passwordless account; an existing full
+      account must sign in. _Learn: account ownership._
+- [ ] 6.4 `/booking` page for guests and signed-in customers, with the stale-quote guard.
+- [ ] 6.5 Unpaid-booking expiry job.
+- [ ] 6.6 Design pass.
 
-### Module 7 - My Bookings
+### Module 7 - Wallet
 
-- [ ] 7.1 `GET /bookings` for the signed-in user, with pages and a status filter.
+- [ ] 7.1 Wallet ledger and `GET /wallet`. _Learn: a ledger instead of a balance column._
+- [ ] 7.2 Wallet split calculator, unit tested: capped at the real balance, card part 0 or at
+      least 30p, per-leg whole pence.
+- [ ] 7.3 Pay fully from the wallet, then `/thank-you`. _Learn: transactions and row locks._
+- [ ] 7.4 `/wallet` page: search, 5 per page, newest first.
+- [ ] 7.5 Admin credit with a reason, recorded.
+
+### Module 8 - Card payment (Stripe)
+
+- [ ] 8.1 Stripe test setup and the `Payment` model. _Learn: test mode keys._
+- [ ] 8.2 Checkout Session for card, or wallet plus card with the wallet share held; the total
+      comes from the database; card part 30p to £9,999.99.
+- [ ] 8.3 Webhook: signed, safe to repeat, one transaction confirms every leg; frees the hold
+      on expiry; refunds a payment that arrives late. _Learn: signatures, idempotency._
+- [ ] 8.4 `/thank-you` page: retry, "payment not completed", pay later.
+- [ ] 8.5 Guest "Set a password".
+- [ ] 8.6 Receipt email, design pass.
+
+### Module 9 - Journeys
+
+- [ ] 9.1 `GET /bookings` and `GET /bookings/:reference`, owner only.
       _Learn: ownership checks._
-- [ ] 7.2 `GET /bookings/:id`. _Learn: 404 against 403._
-- [ ] 7.3 Bookings list page with upcoming and past tabs.
-- [ ] 7.4 Booking detail page. _Learn: detail queries and cache keys._
-- [ ] 7.5 Empty, loading and error states, design pass.
+- [ ] 9.2 `/journeys` with actions per status: unpaid Pay Now or Cancel; paid and not started
+      Edit or Cancel.
+- [ ] 9.3 `/journeys/[reference]`: route, timeline, price breakdown.
+- [ ] 9.4 Pay Now dialog (wallet and card).
+- [ ] 9.5 Design pass.
 
-### Module 8 - Booking Edit + Cancellation
+### Module 10 - Edit and cancel
 
-- [ ] 8.1 Status transition rules with unit tests. _Learn: state machines._
-- [ ] 8.2 `PATCH /bookings/:id` before a cut-off time, with a new quote.
-- [ ] 8.3 `POST /bookings/:id/cancel` with a reason and a fee rule.
-- [ ] 8.4 Edit booking form.
-- [ ] 8.5 Cancel dialog. _Learn: optimistic updates._
-- [ ] 8.6 Design pass.
+- [ ] 10.1 Cancellation policy tiers and calculator, unit tested.
+      _Learn: state machines, policies as data._
+- [ ] 10.2 Cancel unpaid, with a reason (10-250 characters).
+- [ ] 10.3 Cancel paid: preview of refund, driver payment and amount kept, then confirm; the
+      refund goes to the wallet.
+- [ ] 10.4 Edit at least 4 h before pick-up: new quote, the difference, then a refund to the
+      wallet or payment first (the webhook applies the change).
+- [ ] 10.5 Edit and cancel screens, design pass.
 
-### Module 9 - Driver + Dispatch Operations
+### Module 11 - Admin operations
 
-- [ ] 9.1 Driver role and driver profile; admin creates a driver.
-- [ ] 9.2 Dispatcher list of unassigned bookings.
-- [ ] 9.3 Assign a driver and a vehicle. _Learn: conflict checks._
-- [ ] 9.4 Driver list of own jobs.
-- [ ] 9.5 Driver status updates: accepted, on the way, arrived, picked up, completed.
-- [ ] 9.6 Dispatcher board. _Learn: dense desktop screens._
-- [ ] 9.7 Assign dialog.
-- [ ] 9.8 Driver jobs screen for phones, design pass.
+- [ ] 11.1 Bookings list and detail. _Learn: dense desktop screens._
+- [ ] 11.2 Drivers (PCO licence, status, linked car) and staff accounts (dispatcher access).
+- [ ] 11.3 Assign a driver and car. _Learn: conflict checks._
+- [ ] 11.4 Status lifecycle for the driver: accepted, on route, arrived, on board, completed,
+      no-show.
+- [ ] 11.5 The driver card on the customer's journey from 1 h before pick-up.
+- [ ] 11.6 Customers and the settings screen.
 
-### Module 10 - Stripe Payments + Refunds
+### Module 12 - Reviews
 
-- [ ] 10.1 Stripe test account and `Payment` model. _Learn: test mode keys._
-- [ ] 10.2 Endpoint that creates a PaymentIntent. _Learn: server-side amounts._
-- [ ] 10.3 Webhook that marks the booking paid. _Learn: signatures, idempotency._
-- [ ] 10.4 Payment form with Stripe Elements.
-- [ ] 10.5 Payment states on the booking page.
-- [ ] 10.6 Refund endpoint.
-- [ ] 10.7 Refund screen for admins, design pass.
+- [ ] 12.1 `Review` model and API: one per finished journey, 1-5 stars and a comment; the
+      driver's average rating. _Learn: aggregate queries._
+- [ ] 12.2 Rate a journey on `/journeys/[reference]`.
+- [ ] 12.3 `/reviews` page of our own customers' reviews, with the average.
+- [ ] 12.4 Admin: hide or show a review.
 
-### Module 11 - Notifications + Email
+### Module 13 - Notifications
 
-- [ ] 11.1 Email service sending to Mailpit, booking confirmation template.
-- [ ] 11.2 Redis + BullMQ queue and worker, Redis readiness check.
-      _Learn: background jobs, retries._
-- [ ] 11.3 Emails for confirmed, cancelled and driver assigned.
-- [ ] 11.4 `Notification` model, list and mark-as-read endpoints.
-- [ ] 11.5 Notification bell and list. _Learn: polling._
-- [ ] 11.6 Design pass.
+- [ ] 13.1 Emails for booked, paid, changed, cancelled with refund, driver assigned.
+- [ ] 13.2 Development SMS for the same events.
+- [ ] 13.3 Redis + BullMQ queue and worker. _Learn: background jobs, retries._
 
-### Module 12 - Real-Time Status + Driver Location
+### Module 14 - Driver API and live status
 
-- [ ] 12.1 Socket.IO server with an authenticated connection. _Learn: WebSockets._
-- [ ] 12.2 One room per booking; send status changes to it.
-- [ ] 12.3 Client socket hook that updates the TanStack Query cache.
-- [ ] 12.4 Driver sends a simulated location. _Learn: throttling._
-- [ ] 12.5 Customer tracking screen with a Leaflet map.
-- [ ] 12.6 Reconnect handling, design pass.
+- [ ] 14.1 Driver sign-in and jobs API.
+- [ ] 14.2 Status updates from the driver API.
+- [ ] 14.3 Live status on the journey page. _Learn: server-sent events._
 
-### Module 13 - File Uploads + Driver Documents
+### Module 15 - Admin dashboard and reports
 
-- [ ] 13.1 Upload endpoint saving to local disk. _Learn: multipart, size and type checks._
-- [ ] 13.2 `DriverDocument` model with type and expiry date.
-- [ ] 13.3 Protected download endpoint. _Learn: access control for files._
-- [ ] 13.4 Admin approve and reject endpoints.
-- [ ] 13.5 Driver upload screen with progress.
-- [ ] 13.6 Admin review screen, design pass.
+- [ ] 15.1 Dashboard. _Learn: counting and grouping._
+- [ ] 15.2 CSV export.
+- [ ] 15.3 Audit log.
 
-### Module 14 - Reviews + Customer Feedback
+### Module 16 - Hardening and tests
 
-- [ ] 14.1 `Review` model, one per completed booking.
-- [ ] 14.2 `POST /bookings/:id/review` with its rules.
-- [ ] 14.3 Average rating per driver. _Learn: aggregate queries._
-- [ ] 14.4 Review form after a trip.
-- [ ] 14.5 Admin reviews list, design pass.
+- [ ] 16.1 Redis rate limits everywhere.
+- [ ] 16.2 Security headers.
+- [ ] 16.3 Tests for the money flows.
+- [ ] 16.4 Monitoring and backups.
 
-### Module 15 - Admin Dashboard + Reporting
+### Module 17 - Docker, CI/CD and deployment
 
-- [ ] 15.1 Summary numbers endpoint. _Learn: counting and grouping._
-- [ ] 15.2 Bookings and revenue per day for a date range.
-- [ ] 15.3 Dashboard with summary cards.
-- [ ] 15.4 One chart. _Learn: a chart library._
-- [ ] 15.5 CSV export.
-- [ ] 15.6 Design pass.
-
-### Module 16 - Production Hardening + Automated Testing
-
-- [ ] 16.1 Security headers and rate limiting.
-- [ ] 16.2 Integration tests against a test database.
-- [ ] 16.3 Frontend component tests. _Learn: Testing Library._
-- [ ] 16.4 Playwright test: register, book, pay. _Learn: end-to-end tests._
-- [ ] 16.5 Database indexes and slow query review.
-- [ ] 16.6 Accessibility and performance audit.
-
-### Module 17 - Docker + CI/CD + Deployment
-
-- [ ] 17.1 Backend Dockerfile. _Learn: multi-stage builds._
-- [ ] 17.2 Frontend Dockerfile.
-- [ ] 17.3 Production Compose file.
-- [ ] 17.4 GitHub Actions: lint, typecheck, test.
-- [ ] 17.5 Build images in CI.
-- [ ] 17.6 Deploy to a free host and run migrations on deploy.
+- [ ] 17.1 Dockerfiles for the three apps. _Learn: multi-stage builds._
+- [ ] 17.2 Production Compose file.
+- [ ] 17.3 CI: lint, typecheck, test, build.
+- [ ] 17.4 Deploy: domains and an API proxy, the Stripe live webhook, real SMS or email codes.
 
 ## Module notes
 
@@ -2112,3 +2146,79 @@ Open items
 - No map is drawn; the route is described in words.
 - The "airport" box is still ticked by hand, not worked out from the postcodes.
 - A journey with no road route (`NoRoute`) is handled in code but was not met in testing.
+
+## v2 re-plan (2026-10-16)
+
+Why: the user asked for UkRide to follow the live site https://ukride.uk, pasted an analysis of
+its customer flow, and set the shape to three apps: a backend, a customer website and an admin
+panel.
+
+What was read on ukride.uk:
+
+- **Customer flow:** the "BOOK YOUR JOURNEY" widget, `/booking`, Stripe Checkout and a
+  thank-you page, My Journeys, Wallet, Profile, sign-up, login and forgot-password with SMS
+  codes, and a mobile bottom tab bar.
+- **Fleet:** six classes with "or similar" example models.
+- **CMS content:** airport and terminal pages, hotel, station and London taxi pages, services,
+  about, a Google-fed reviews page and a blog.
+
+The user's decisions:
+
+- Keep the indigo glass look; ukride.uk's black and gold is not copied.
+- Remove everything CMS-related: blogs, airport pages, services and service pages.
+- Main focus: auth, booking, payment, wallet, journeys and reviews.
+- The booking flow follows ukride.uk for guests and signed-in customers, with airport
+  Meet & Greet, return booking, and wallet and card payment.
+- Phone codes go to Mailpit for now; a real SMS provider is a later decision.
+- Addresses come from free OpenStreetMap search (Photon) plus postcodes.io.
+
+The booking flow to build:
+
+- **Everyone:**
+  - the widget opens `/booking` with the journey in the address
+  - an airport pick-up needs a flight number and offers Meet & Greet (£10 from settings),
+    per leg
+  - the server saves a quote with every class and its price, and recommends the first class
+    that fits
+  - a return books two legs, the second with the stops reversed
+  - rules: 4 hours ahead, return after pick-up, pick-up not the drop-off, at most 5 stops,
+    8 passengers and 8 bags
+  - any change clears the price, and a moved price answers "price changed"
+- **Signed-in customers** pay from the wallet, by card through Stripe Checkout, or both:
+  - the wallet share is held while at Stripe
+  - the card part is at least 30p
+  - the webhook confirms every leg in one transaction
+- **Guests:**
+  - verify their mobile with a code
+  - get a passwordless account, or are asked to sign in if a full account already uses those
+    details
+  - pay by card only
+  - may set a password on the thank-you page
+- **After booking:**
+  - My Journeys offers Pay Now, Edit (at least 4 hours before) and Cancel
+  - refunds go to the wallet
+  - the driver's details show from 1 hour before pick-up
+  - a finished journey can be reviewed
+
+An independent review of the first draft changed four things:
+
+- the wallet comes before card payment, because the split decides the card amount
+- staff and customers get separate sign-ins, because two apps on localhost would otherwise
+  share one refresh cookie and could sign each other out
+- the driver card moves to the admin operations module
+- several guest, session and Stripe safety details were added
+
+It also found two things to fix in the existing code:
+
+- the profile edit can change the mobile without a code (fixed in 2.7)
+- "Remember me" needs each session to keep its own lifetime (1.11)
+
+Removed or not planned:
+
+- **CMS pages:** blogs, airport and terminal pages, hotel, station and London taxi pages,
+  services, about, the Google reviews page.
+- **Not planned now:** the support contact form, Drive With Us applications, image uploads,
+  a driver app, company (B2B) accounts, mobile apps, flight tracking.
+
+The old Module 6-17 step lists are replaced by the roadmap above. Their numbers are reused,
+so a reference such as "Module 10" in notes written before this date means the old plan.

@@ -33,6 +33,18 @@ const envSchema = z.object({
   SMTP_HOST: z.string().min(1).default('localhost'),
   SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(1025),
   MAIL_FROM: z.string().min(3).default('UkRide <no-reply@ukride.local>'),
+  // Finds UK postcodes on the map. postcodes.io is free and needs no key.
+  POSTCODES_API_URL: z
+    .url()
+    .default('https://api.postcodes.io')
+    .transform((value) => value.replace(/\/+$/, '')),
+  // Measures road distance: an OSRM server. The default is the public demo
+  // server, free but with no promise of staying up; point this at another
+  // host, or our own OSRM, before going live.
+  ROUTING_API_URL: z
+    .url()
+    .default('https://router.project-osrm.org')
+    .transform((value) => value.replace(/\/+$/, '')),
   // Address of the web app, used to build the links inside emails.
   WEB_APP_URL: z
     .url()

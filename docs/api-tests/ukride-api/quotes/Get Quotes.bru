@@ -12,7 +12,8 @@ post {
 
 body:json {
   {
-    "distanceMiles": 12.4,
+    "pickupPostcode": "SW1A 1AA",
+    "dropoffPostcode": "TW6 1EW",
     "pickupAt": "2026-11-02T23:30:00Z",
     "airport": true
   }
@@ -24,6 +25,7 @@ assert {
 }
 
 docs {
-  Public. Add "vehicleType": "executive" to price one type only. quotes is empty until an
+  Public. The road distance between the postcodes is measured; or send "distanceMiles"
+  instead of the two postcodes. Add "vehicleType": "executive" to price one type only. quotes is empty until an
   admin has set prices (Admin Set Pricing).
 }

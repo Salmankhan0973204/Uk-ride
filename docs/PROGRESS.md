@@ -2055,3 +2055,60 @@ Open items
 - A quote is not saved, and a price change is not recorded anywhere (no history of old prices).
 - Rate limits are per server process, as before.
 - The tests on GitHub are still out of date; locally, only the quote calculation's tests exist.
+
+### Module 5 follow-up - Real road distance (done 2026-10-16, branch `module-05-real-distance`)
+
+Asked for by the user: "prices depend on real distance". They chose UK postcodes with
+postcodes.io and OSRM, built straight away, before Module 6.
+
+Built
+
+- `backend/src/modules/geo/`: `findPostcode()` asks postcodes.io (free, no key) for a postcode's
+  map position and council area; `findRoadRoute()` asks an OSRM server for the driving distance
+  and time; `TtlCache` remembers both for a day.
+- Two settings, with defaults: `POSTCODES_API_URL` (`https://api.postcodes.io`) and
+  `ROUTING_API_URL` (`https://router.project-osrm.org`, the public OSRM demo server).
+- `POST /quotes` takes `pickupPostcode` and `dropoffPostcode` and measures the road distance.
+  `distanceMiles` still works instead of them, for admins and for when the map services are
+  down; sending both ways at once is refused. The answer has a `route`: both postcodes with
+  their council area, the miles by road and the minutes.
+- An unknown postcode is a 400 on its field; an unreachable service is a 503 "try again".
+  Only postcodes and map positions are sent to the services, never a name.
+- `/quote` asks for a pick-up and a drop-off postcode instead of a distance, and shows
+  "SW1A 1AA (Westminster) to TW6 1EW (Hillingdon): 16.2 miles by road, about 34 minutes."
+
+Verified (by hand against the running API and in a real browser)
+
+- Westminster (SW1A 1AA) to Heathrow (TW6 1EW): 16.21 miles, 34 minutes. Asked again, the
+  answer came from the cache in 0.01 seconds instead of 0.7.
+- Manchester (M1 1AE) to Leeds (LS1 4AP): 42.7 miles, 56 minutes; at 23:30 to an airport with
+  test prices, £121.46, matching the arithmetic by hand.
+- An unknown postcode, "Heathrow", the same postcode twice, one postcode, none, and postcodes
+  with a distance each answered 400 on the right field.
+- Both services made unreachable in a separate run: each answered 503 with "We could not reach
+  the ... service. Try again in a moment."
+- In the browser: the form's mistakes are caught on their fields; "sw1a1aa" is tidied to
+  "SW1A 1AA" when the box is left; no horizontal scrolling at 1440px, 390px and 360px.
+- The 18 unit tests still pass. Test prices and the test account were deleted afterwards.
+
+Found on the way
+
+- Windows' own `curl` cannot open a secure connection to the OSRM server (a TLS error), while
+  Node.js, which the API uses, can. Use Node or PowerShell to test it from this machine.
+
+Learning notes
+
+- Calling another service: set a timeout, expect it to fail, and turn its failures into
+  answers the customer can act on (400 for their mistake, 503 for ours).
+- A cache in front of a free service is fast for the customer and polite to the service.
+- The service's address is a setting, not code, so the free demo server can be replaced by a
+  paid or self-hosted one without changing a line.
+
+Open items
+
+- The public OSRM server is a demo with no promise of staying up. Before going live: a paid
+  routing service, or our own OSRM with the UK map in Docker.
+- Postcodes only; full addresses with suggestions would need a geocoding service.
+- No map is drawn; the route is described in words.
+- The "airport" box is still ticked by hand, not worked out from the postcodes.
+- A journey with no road route (`NoRoute`) is handled in code but was not met in testing.

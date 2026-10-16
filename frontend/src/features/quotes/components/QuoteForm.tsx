@@ -13,28 +13,46 @@ import { useQuote } from '../hooks/useQuote';
 import type { QuoteRequest, QuoteResult } from '../types';
 
 interface Values {
-  distance: string;
+  from: string;
+  to: string;
   /** "2026-11-02T23:30" from the date-and-time box, or empty for now. */
   pickup: string;
   airport: boolean;
 }
-type Errors = Partial<Record<'distance' | 'pickup', string>>;
+type FieldName = 'from' | 'to' | 'pickup';
+type Errors = Partial<Record<FieldName, string>>;
+
+const FIELD_ORDER: FieldName[] = ['from', 'to', 'pickup'];
+
+/** The shape of a UK postcode, spaces ignored. The API checks that it exists. */
+const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/;
+const compact = (text: string) => text.replace(/\s+/g, '').toUpperCase();
+
+/** "sw1a1aa" becomes "SW1A 1AA" once it has a postcode's shape; anything else stays as typed. */
+function tidy(text: string) {
+  const code = compact(text);
+  return UK_POSTCODE.test(code) ? `${code.slice(0, -3)} ${code.slice(-3)}` : text;
+}
+
+function checkPostcode(text: string, which: string) {
+  if (!text.trim()) return `Enter the ${which} postcode.`;
+  if (!UK_POSTCODE.test(compact(text))) return 'Enter a UK postcode, like SW1A 1AA.';
+}
 
 function check(values: Values): Errors {
-  const errors: Errors = {};
-  const distance = values.distance.trim();
-  if (!distance) errors.distance = 'Enter the distance in miles.';
-  else if (!/^\d{1,4}(\.\d+)?$/.test(distance))
-    errors.distance = 'Enter a number of miles, like 12.5.';
-  else if (Number(distance) < 0.1) errors.distance = 'Enter at least 0.1 miles.';
-  else if (Number(distance) > 1000) errors.distance = 'Enter 1000 miles or less.';
-
+  const errors: Errors = {
+    from: checkPostcode(values.from, 'pick-up'),
+    to: checkPostcode(values.to, 'drop-off'),
+  };
+  if (!errors.from && !errors.to && compact(values.from) === compact(values.to)) {
+    errors.to = 'The drop-off postcode is the same as the pick-up.';
+  }
   if (values.pickup) {
     const when = ukLocalToDate(values.pickup);
     if (!when) errors.pickup = 'Enter a date and time.';
     else if (when.getTime() < Date.now() - 60_000) errors.pickup = 'Choose a time from now on.';
   }
-  return errors;
+  return Object.fromEntries(Object.entries(errors).filter(([, message]) => message));
 }
 
 /** Messages from the API, placed on the field they belong to. */
@@ -42,7 +60,8 @@ function apiErrors(error: ApiError): Errors | undefined {
   if (error.code !== 'VALIDATION_ERROR') return;
   const details = (error.details ?? {}) as Record<string, string[]>;
   const errors: Errors = {};
-  if (details.distanceMiles?.[0]) errors.distance = `${details.distanceMiles[0]}.`;
+  if (details.pickupPostcode?.[0]) errors.from = `${details.pickupPostcode[0]}.`;
+  if (details.dropoffPostcode?.[0]) errors.to = `${details.dropoffPostcode[0]}.`;
   if (details.pickupAt?.[0]) errors.pickup = `${details.pickupAt[0]}.`;
   return Object.keys(errors).length > 0 ? errors : undefined;
 }
@@ -50,27 +69,32 @@ function apiErrors(error: ApiError): Errors | undefined {
 export function QuoteForm() {
   const formId = useId();
   const formRef = useRef<HTMLFormElement>(null);
-  const [values, setValues] = useState<Values>({ distance: '', pickup: '', airport: false });
+  const [values, setValues] = useState<Values>({ from: '', to: '', pickup: '', airport: false });
   const [errors, setErrors] = useState<Errors>({});
   const [request, setRequest] = useState<QuoteRequest>();
   const quote = useQuote(request);
   const shownErrors = { ...(quote.error ? apiErrors(quote.error) : undefined), ...errors };
 
   const id = (name: string) => `${formId}-${name}`;
-  const distanceHint = 'The distance of the journey. A map will measure it for you later.';
   const pickupHint = 'UK time. Leave it empty for now.';
+
+  function setValue(name: FieldName, value: string) {
+    setValues((current) => ({ ...current, [name]: value }));
+    if (errors[name]) setErrors((current) => ({ ...current, [name]: undefined }));
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const found = check(values);
     setErrors(found);
-    if (Object.keys(found).length > 0) {
-      const first = found.distance ? 'distance' : 'pickup';
+    const first = FIELD_ORDER.find((name) => found[name]);
+    if (first) {
       formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
       return;
     }
     const next: QuoteRequest = {
-      distanceMiles: Number(values.distance.trim()),
+      pickupPostcode: values.from.trim(),
+      dropoffPostcode: values.to.trim(),
       airport: values.airport,
       ...(values.pickup ? { pickupAt: ukLocalToDate(values.pickup)!.toISOString() } : {}),
     };
@@ -79,6 +103,26 @@ export function QuoteForm() {
     if (JSON.stringify(next) === JSON.stringify(request)) void quote.refetch();
     else setRequest(next);
   }
+
+  // The examples are hints under the box, not placeholders inside it: an
+  // example inside an empty box looks like an answer already given.
+  const postcode = (name: 'from' | 'to', label: string, hint: string, autoComplete: string) => (
+    <Field id={id(name)} label={label} hint={hint} error={shownErrors[name]}>
+      <input
+        id={id(name)}
+        name={name}
+        type="text"
+        autoComplete={autoComplete}
+        autoCapitalize="characters"
+        spellCheck={false}
+        value={values[name]}
+        onChange={(event) => setValue(name, event.target.value)}
+        onBlur={() => setValues((current) => ({ ...current, [name]: tidy(current[name]) }))}
+        {...describedBy(id(name), { hint, error: shownErrors[name] })}
+        className="control uppercase"
+      />
+    </Field>
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -89,37 +133,19 @@ export function QuoteForm() {
               Get a price
             </h1>
             <p className="max-w-[56ch] text-base leading-relaxed text-ink-muted">
-              The exact fare for your journey in each of our vehicles, with how it is worked out.
+              Enter where you are going from and to. We measure the route by road and give you the
+              exact fare in each of our vehicles.
             </p>
           </div>
 
           <form ref={formRef} noValidate onSubmit={handleSubmit} className="space-y-5">
             <div className="grid gap-5 sm:grid-cols-2 sm:gap-4">
-              <Field
-                id={id('distance')}
-                label="Distance in miles"
-                hint={distanceHint}
-                error={shownErrors.distance}
-              >
-                <input
-                  id={id('distance')}
-                  name="distance"
-                  type="text"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={values.distance}
-                  onChange={(event) => {
-                    setValues((current) => ({ ...current, distance: event.target.value }));
-                    if (errors.distance)
-                      setErrors((current) => ({ ...current, distance: undefined }));
-                  }}
-                  {...describedBy(id('distance'), {
-                    hint: distanceHint,
-                    error: shownErrors.distance,
-                  })}
-                  className="control tabular"
-                />
-              </Field>
+              {postcode('from', 'Pick-up postcode', 'Like SW1A 1AA.', 'shipping postal-code')}
+              {postcode('to', 'Drop-off postcode', 'Like TW6 1EW for Heathrow.', 'off')}
+            </div>
+
+            {/* Half width, label and all, so "Optional" sits by its own box. */}
+            <div className="grid sm:grid-cols-2 sm:gap-4">
               <Field
                 id={id('pickup')}
                 label="Pick-up time"
@@ -132,10 +158,7 @@ export function QuoteForm() {
                   name="pickup"
                   type="datetime-local"
                   value={values.pickup}
-                  onChange={(event) => {
-                    setValues((current) => ({ ...current, pickup: event.target.value }));
-                    if (errors.pickup) setErrors((current) => ({ ...current, pickup: undefined }));
-                  }}
+                  onChange={(event) => setValue('pickup', event.target.value)}
                   {...describedBy(id('pickup'), { hint: pickupHint, error: shownErrors.pickup })}
                   className="control tabular"
                 />
@@ -163,7 +186,7 @@ export function QuoteForm() {
               {quote.isFetching ? (
                 <>
                   <Spinner />
-                  Working out the prices
+                  Measuring the route
                 </>
               ) : (
                 'Get prices'
@@ -187,7 +210,7 @@ function Results({ quote }: { quote: ReturnType<typeof useQuote> }) {
       <Card>
         <div role="status" className="flex items-center gap-3">
           <Spinner />
-          <p className="text-base text-ink-muted">Working out the prices</p>
+          <p className="text-base text-ink-muted">Measuring the route and working out the prices</p>
         </div>
       </Card>
     );
@@ -200,7 +223,8 @@ function Results({ quote }: { quote: ReturnType<typeof useQuote> }) {
       <Card>
         <div role="alert" className="space-y-4">
           <p className="text-base leading-relaxed">
-            {quote.error.status === 429
+            {/* 429: too many quotes. 503: a map service is down. Both say what to do. */}
+            {quote.error.status === 429 || quote.error.status === 503
               ? quote.error.message
               : quote.error.isNetworkError
                 ? 'We could not reach the server, so there are no prices to show. Try again.'
@@ -218,9 +242,15 @@ function Results({ quote }: { quote: ReturnType<typeof useQuote> }) {
 }
 
 function Prices({ result, updating }: { result: QuoteResult; updating: boolean }) {
-  const summary = `${plural(result.chargedMiles, 'mile')}, picked up ${formatUkTime(result.pickupAt)} UK time${
-    result.airport ? ', to or from an airport' : ''
-  }.`;
+  const route = result.route;
+  const place = (point: { postcode: string; district: string }) =>
+    point.district ? `${point.postcode} (${point.district})` : point.postcode;
+  const summary = [
+    route
+      ? `${place(route.pickup)} to ${place(route.dropoff)}: ${route.distanceMiles.toFixed(1)} miles by road, about ${route.durationMinutes} minutes.`
+      : `${plural(result.chargedMiles, 'mile')}.`,
+    `Picked up ${formatUkTime(result.pickupAt)} UK time${result.airport ? ', to or from an airport' : ''}.`,
+  ].join(' ');
 
   return (
     <Card className={`rise transition-opacity duration-200 ${updating ? 'opacity-60' : ''}`}>

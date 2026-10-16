@@ -616,3 +616,25 @@ With Executive at 350 / 210 / 1200, 25% and 500p: 2450p for the fare, 613p night
 | `"pickupAt":"2026-11-20T21:30:00Z"`          | day: 21:30 in London, on GMT                   |
 | a time in the past, or more than a year away | `400`                                          |
 | a time with no zone, `"2026-11-02T23:30:00"` | `400`: it could mean any time zone             |
+
+### Real road distance from two postcodes
+
+Give two UK postcodes instead of a distance. postcodes.io finds them and an OSRM server
+measures the road between them. The machine running the API needs internet access.
+
+```powershell
+$body = '{"pickupPostcode":"SW1A 1AA","dropoffPostcode":"TW6 1EW"}'
+(Invoke-RestMethod http://localhost:4000/api/v1/quotes -Method Post -ContentType 'application/json' -Body $body).data.route
+```
+
+Expect Westminster to Hillingdon (Heathrow), about 16.2 miles and 34 minutes. Asking again is
+answered from memory for a day.
+
+| Body                                   | Answer                                          |
+| -------------------------------------- | ----------------------------------------------- |
+| `"pickupPostcode":"ZZ9 9ZZ"`           | `400` "We could not find the postcode ZZ9 9ZZ"  |
+| `"pickupPostcode":"Heathrow"`          | `400` "... is not a UK postcode, like SW1A 1AA" |
+| the same postcode twice                | `400` on `dropoffPostcode`                      |
+| one postcode only, or nothing          | `400` naming the missing one                    |
+| postcodes and `distanceMiles` together | `400` "Send postcodes or a distance, not both"  |
+| a map service cannot be reached        | `503` "We could not reach the ... service"      |

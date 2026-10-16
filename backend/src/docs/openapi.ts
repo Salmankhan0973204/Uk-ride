@@ -900,7 +900,9 @@ export const openApiDocument = {
         summary: 'Price a journey',
         description:
           'Public. Prices the journey in every vehicle type that is on offer and has prices, ' +
-          'or only in `vehicleType`. The distance is charged to the nearest tenth of a mile. ' +
+          'or only in `vehicleType`. Give two UK postcodes and the road distance is measured ' +
+          '(postcodes.io and OSRM), or give `distanceMiles` instead. The distance is charged ' +
+          'to the nearest tenth of a mile. ' +
           'Amounts are whole pence, and each total is the sum of its lines. Nothing is saved.',
         requestBody: {
           required: true,
@@ -908,10 +910,16 @@ export const openApiDocument = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['distanceMiles'],
                 additionalProperties: false,
                 properties: {
-                  distanceMiles: { type: 'number', minimum: 0.1, maximum: 1000, example: 12.4 },
+                  pickupPostcode: { type: 'string', example: 'SW1A 1AA' },
+                  dropoffPostcode: { type: 'string', example: 'TW6 1EW' },
+                  distanceMiles: {
+                    type: 'number',
+                    minimum: 0.1,
+                    maximum: 1000,
+                    description: 'Instead of the two postcodes, not with them',
+                  },
                   pickupAt: {
                     type: 'string',
                     format: 'date-time',
@@ -937,6 +945,9 @@ export const openApiDocument = {
             $ref: '#/components/schemas/ApiFailure',
           }),
           429: { $ref: '#/components/responses/RateLimited' },
+          503: jsonResponse('The postcode or routing service could not be reached', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
           500: { $ref: '#/components/responses/Error' },
         },
       },
@@ -1328,6 +1339,29 @@ export const openApiDocument = {
           distanceMiles: { type: 'number', example: 12.44 },
           chargedMiles: { type: 'number', example: 12.4 },
           pickupAt: { type: 'string', format: 'date-time' },
+          route: {
+            nullable: true,
+            description: 'The measured route, or null when distanceMiles was typed in',
+            type: 'object',
+            properties: {
+              pickup: {
+                type: 'object',
+                properties: {
+                  postcode: { type: 'string', example: 'SW1A 1AA' },
+                  district: { type: 'string', example: 'Westminster' },
+                },
+              },
+              dropoff: {
+                type: 'object',
+                properties: {
+                  postcode: { type: 'string', example: 'TW6 1EW' },
+                  district: { type: 'string', example: 'Hillingdon' },
+                },
+              },
+              distanceMiles: { type: 'number', example: 16.21 },
+              durationMinutes: { type: 'integer', example: 34 },
+            },
+          },
           night: { type: 'boolean', description: 'Pick-up between 22:00 and 06:00 UK time' },
           airport: { type: 'boolean' },
           currency: { type: 'string', enum: ['GBP'] },

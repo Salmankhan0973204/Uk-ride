@@ -3,7 +3,7 @@ import { ForgotPasswordForm } from '@/features/auth/components/ForgotPasswordFor
 
 export const metadata: Metadata = {
   title: 'Forgot your password',
-  description: 'Get a link to choose a new UkRide password.',
+  description: 'Get a code by email and choose a new UkRide password.',
 };
 
 export default function Page() {

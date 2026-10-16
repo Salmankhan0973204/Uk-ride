@@ -184,7 +184,7 @@ export function LoginForm() {
         <p className="-mt-4 text-sm text-ink-muted">
           New to UkRide?{' '}
           <Link
-            href="/register"
+            href="/signup"
             className="font-medium text-ink underline decoration-ring/70 decoration-2 underline-offset-4 hover:decoration-ring"
           >
             Create an account

@@ -1,33 +1,41 @@
 import { apiFetch, authFetch } from '@/lib/api/client';
-import type { LoginInput, LoginResult, RegisterInput, User } from '../types';
+import type { CodeSent, CodeTicket, LoginInput, LoginResult, RegisterInput, User } from '../types';
+
+const post = (body: unknown) => ({ method: 'POST', body: JSON.stringify(body) });
 
 /** Raw HTTP functions only. No React hooks in this file. */
 export const authApi = {
-  register: (input: RegisterInput) =>
-    apiFetch<{ user: User }>('/auth/register', { method: 'POST', body: JSON.stringify(input) }),
+  /** Sign-up, step 1: is this email free? */
+  checkEmail: (email: string) =>
+    apiFetch<{ available: boolean }>('/auth/check-email', post({ email })),
+
+  /** Sign-up, step 2: a code to the mobile by text message. */
+  sendSignupCode: (mobile: string) =>
+    apiFetch<CodeSent>('/auth/otp/send', post({ purpose: 'SIGNUP', mobile })),
+
+  /** Sign-up, step 3: the code is exchanged for a ticket. */
+  verifySignupCode: (input: { mobile: string; code: string }) =>
+    apiFetch<CodeTicket>('/auth/otp/verify', post({ purpose: 'SIGNUP', ...input })),
+
+  /** Sign-up, last step: creates the account and signs in, like a login. */
+  register: (input: RegisterInput) => apiFetch<LoginResult>('/auth/register', post(input)),
 
   /** Also makes the API set the httpOnly refresh cookie. */
-  login: (input: LoginInput) =>
-    apiFetch<LoginResult>('/auth/login', { method: 'POST', body: JSON.stringify(input) }),
+  login: (input: LoginInput) => apiFetch<LoginResult>('/auth/login', post(input)),
 
   /** Revokes the refresh token on the server and clears the cookie. */
   logout: () => apiFetch<null>('/auth/logout', { method: 'POST' }),
 
-  /** Confirms an email address with the token from the emailed link. */
-  verifyEmail: (token: string) =>
-    apiFetch<null>('/auth/verify-email', { method: 'POST', body: JSON.stringify({ token }) }),
+  /** Forgot password, step 1: a code to the email. Answers the same for every address. */
+  forgotPassword: (email: string) => apiFetch<CodeSent>('/auth/forgot-password', post({ email })),
 
-  /** Sends the confirmation link again. `sent` is false when already confirmed. */
-  resendVerification: () =>
-    authFetch<{ sent: boolean }>('/auth/resend-verification', { method: 'POST' }),
+  /** Forgot password, step 2: the code is exchanged for a ticket. */
+  verifyResetCode: (input: { email: string; code: string }) =>
+    apiFetch<CodeTicket>('/auth/forgot-password/verify', post(input)),
 
-  /** Asks for a reset link. Answers the same for every address. */
-  forgotPassword: (email: string) =>
-    apiFetch<null>('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
-
-  /** Sets a new password with the token from the emailed link. */
-  resetPassword: (input: { token: string; password: string }) =>
-    apiFetch<null>('/auth/reset-password', { method: 'POST', body: JSON.stringify(input) }),
+  /** Forgot password, step 3: the new password. Ends every session, then signs in here. */
+  resetPassword: (input: { email: string; otpTicket: string; password: string }) =>
+    apiFetch<LoginResult>('/auth/reset-password', post(input)),
 
   /** The signed-in user. Needs a session; authFetch refreshes the token if it must. */
   me: (signal?: AbortSignal) => authFetch<{ user: User }>('/auth/me', { signal }),

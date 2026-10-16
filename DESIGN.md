@@ -377,6 +377,9 @@ Amounts are shown as pounds with two decimals ("£35.63"), in tabular figures, n
 ### Price breakdown
 Under each price, a disclosure link "How this price is worked out" with a chevron that turns over when open. Open, it lists each line of the price on the left in Muted Ink with its amount on the right, then a 1px line and a semibold Total. The lines always add up to the total shown above.
 
+### Code entry
+One box for a 6-digit code, not six: it takes a paste, the phone's one-time-code suggestion and a screen reader without focus juggling. The digits are 24px tabular figures, centred, with wide letter-spacing; anything that is not a digit is dropped as it is typed. The sixth digit sends the code; the primary button is there too. A refused code empties the box, keeps focus in it and shows the API's message under it ("That code is not right. 4 tries left.") until the person types again. Under the button, "No code? You can ask for a new one in 0:42" counts down from the wait the API gave, then becomes a "Send a new code" text link. Multi-step forms say "Step 2 of 2" in Muted Ink above the heading.
+
 ### Checkbox
 Drawn by hand like the choice-row radio: a 20px square with 6px corners and a 2px Muted Ink outline; checked, it fills with Focus Lavender and shows a dark tick. The whole label is the target, at least 44px tall.
 

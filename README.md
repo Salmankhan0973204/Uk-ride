@@ -11,8 +11,9 @@ and runs on a local machine.
 
 ## Status
 
-**44 of 113 steps are done.** You can create an account, sign in, edit your profile, browse the
-vehicle types and get an exact price between two postcodes. An admin can manage vehicle types,
+**49 of 113 steps are done.** You can sign up with a code texted to your mobile, sign in (with
+"Remember me"), reset a forgotten password with a code sent by email, edit your profile, browse
+the vehicle types and get an exact price between two postcodes. An admin can manage vehicle types,
 the fleet and the prices.
 
 On 2026-10-16 the roadmap changed: UkRide now follows the customer flow of
@@ -23,8 +24,8 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 | #   | Module                       | Status   |
 | --- | ---------------------------- | -------- |
 | 0   | Foundation: three apps       | Complete |
-| 1   | Auth like ukride.uk          | Next     |
-| 2   | Profile                      | Rework   |
+| 1   | Auth like ukride.uk          | Complete |
+| 2   | Profile                      | Next     |
 | 3   | Fleet classes                | Rework   |
 | 4   | Fleet vehicles               | Complete |
 | 5   | Pricing and quotes           | Rework   |
@@ -159,8 +160,11 @@ npm run dev
 `npm run dev` starts all three. Each can also run alone: `npm run dev:api`,
 `npm run dev:customer`, `npm run dev:admin`.
 
-On the customer site, create an account at http://localhost:3000/register, sign in at
-http://localhost:3000/login and see your profile at http://localhost:3000/account. The vehicle
+On the customer site, create an account at http://localhost:3000/signup, sign in at
+http://localhost:3000/login and see your profile at http://localhost:3000/account. Phone and
+email codes arrive in Mailpit at http://localhost:8025 (a "text message" is an email to
+`<number>@sms.ukride.local`); a forgotten password is reset at
+http://localhost:3000/forgot-password. The vehicle
 types are at http://localhost:3000/vehicles and prices between two postcodes at
 http://localhost:3000/quote.
 

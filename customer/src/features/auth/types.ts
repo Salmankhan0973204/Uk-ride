@@ -19,6 +19,8 @@ export interface RegisterInput {
   /** Left out when the customer does not answer. */
   gender?: Gender;
   password: string;
+  /** From checking the SIGNUP code sent to `mobile`. */
+  otpTicket: string;
 }
 
 /** The user as the API returns it. The password hash never leaves the server. */
@@ -32,7 +34,9 @@ export interface User {
   gender: Gender | null;
   /** What the person may do. Everyone who registers is a customer. */
   role: Role;
-  /** When the person confirmed their email address, or null if not yet. */
+  /** When the person proved they hold the mobile with a code, or null. */
+  phoneVerifiedAt: string | null;
+  /** When the person proved they read the mailbox with a code, or null. */
   emailVerifiedAt: string | null;
   createdAt: string;
 }
@@ -52,6 +56,22 @@ export interface LoginResult {
   tokenType: 'Bearer';
   /** Seconds until the access token expires. */
   expiresIn: number;
+}
+
+/** Answer of every "send a code" request. */
+export interface CodeSent {
+  /** Masked, for example "+44 •••• ••3456" or "s•••@example.com". */
+  sentTo: string;
+  channel: 'SMS' | 'EMAIL';
+  expiresInSeconds: number;
+  /** How long before another code may be asked for. */
+  resendAfterSeconds: number;
+}
+
+/** Answer of checking a code: proof for the next step, valid 15 minutes, usable once. */
+export interface CodeTicket {
+  ticket: string;
+  expiresInSeconds: number;
 }
 
 /** `details` of a 400 VALIDATION_ERROR: the messages for each field. */

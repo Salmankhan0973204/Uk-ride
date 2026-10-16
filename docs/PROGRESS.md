@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 1 rework - auth like ukride.uk (branch `module-01-auth-otp`)
-- **Last completed:** Module 0 rework - three apps (tag `module-00-v2`)
-- **Next step:** 1.13 - `/login`, `/signup` and `/forgot-password` pages
-- **Steps done:** 48 of 113
+- **Current module:** none - Module 2 rework (profile) starts when asked
+- **Last completed:** Module 1 rework - auth like ukride.uk (tag `module-01-v2`)
+- **Next step:** 2.7 - change the mobile only with a code
+- **Steps done:** 49 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -17,26 +17,26 @@ Do not start two modules at the same time.
 Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (not started),
 `n/a`.
 
-| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
-| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
-| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete    |
-| 1   | Auth like ukride.uk          | 12/13 | Rework  | Rework        | n/a         | In progress |
-| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
-| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
-| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
-| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework      |
-| 6   | Booking                      | 0/6   | -       | -             | -           | -           |
-| 7   | Wallet                       | 0/5   | -       | -             | -           | -           |
-| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -           |
-| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -           |
-| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -           |
-| 11  | Admin operations             | 0/6   | -       | -             | -           | -           |
-| 12  | Reviews                      | 0/4   | -       | -             | -           | -           |
-| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -           |
-| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -           |
-| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -           |
-| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -           |
-| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -           |
+| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
+| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
+| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
+| 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete |
+| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework   |
+| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
+| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
+| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
+| 6   | Booking                      | 0/6   | -       | -             | -           | -        |
+| 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
+| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
+| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -        |
+| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -        |
+| 11  | Admin operations             | 0/6   | -       | -             | -           | -        |
+| 12  | Reviews                      | 0/4   | -       | -             | -           | -        |
+| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -        |
+| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -        |
+| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -        |
+| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -        |
+| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -        |
 
 ## Steps
 
@@ -88,7 +88,7 @@ runs.
 - [x] 1.11 Login with "Remember me": each session keeps its own lifetime (30 days or 1 day);
       signing out in one tab signs out all tabs. _Learn: per-session lifetimes._
 - [x] 1.12 Forgot password with a 6-digit code, then a new password, then signed in.
-- [ ] 1.13 `/login`, `/signup` and `/forgot-password` pages; old addresses redirect.
+- [x] 1.13 `/login`, `/signup` and `/forgot-password` pages; old addresses redirect.
 
 ### Module 2 - Profile
 
@@ -2598,3 +2598,77 @@ Learning notes
   runs after the answer, so a stopwatch learns nothing.
 - Validate everything cheap before spending something single-use: a too-short password is
   refused while the ticket is still good.
+
+#### Step 1.13 - Sign-in, sign-up and forgot-password pages (done 2026-10-16)
+
+Built (customer site)
+
+- **`/signup`, two steps as on ukride.uk:**
+  1. details: name, email, mobile, gender (optional), password. "Continue" checks the email is
+     free, then texts a code to the mobile.
+  2. code: checked, then the account is created and the person is signed in, landing on
+     `/account` with "Welcome to UkRide. Your account is ready and your mobile is confirmed."
+  - A taken email shows "Is it yours? Sign in or reset the password". A taken mobile is
+    marked on its field.
+  - "Change your details" goes back with everything kept. Going on again with the same mobile
+    does not send another text; a ticket already earned is reused.
+- **`/forgot-password`, three steps:** email, then the code from the email, then the new
+  password. The person lands signed in on `/account` with "Your password has been changed.
+  Other devices have been signed out; this one is signed in." Step 2 says "if it has a UkRide
+  account", the same for every address.
+- **`CodeEntry`,** shared by both pages:
+  - one box that takes typing, a paste or the phone's one-time-code suggestion; the sixth
+    digit sends it
+  - a refused code empties the box and shows the API's message ("4 tries left")
+  - "ask for a new one in 0:42" counts down the API's wait, then becomes "Send a new code"
+  - recorded in DESIGN.md
+- `useStartSession()`: login, sign-up and reset all keep the token, set the hint (which also
+  tells other tabs) and fill the user cache the same way.
+- **Removed:**
+  - `/register`, `/verify-email` and `/reset-password`, with the old register, verify and
+    reset components and their hooks
+  - the "confirm your email" banner, its resend button and the email badge on the account
+    page
+- **Old addresses redirect (308):** `/register` to `/signup`, `/reset-password` to
+  `/forgot-password`, `/verify-email` to `/account`. Header, sign-in page and README links
+  point at `/signup`.
+
+Verified (headless Edge against the running API and Mailpit)
+
+- **Sign-up:**
+  - an empty submit marked all five required fields and focused the first
+  - a taken email showed the message and both help links
+  - continuing reached "Check your phone", focused on the code box, with a 1:00 countdown
+  - a wrong code: "That code is not right. 4 tries left." with the box emptied
+  - back and on again went straight to the code step, and the same code worked
+  - it landed on `/account?done=welcome` with the welcome line, and the header showed
+    "Ayesha"
+- **Forgot password, signed out:**
+  - the email was typed as "U-UI@ukride.test"; the emailed code was accepted
+  - a 5-character password was refused with "Use at least 8 characters. You have 5."
+  - a good one landed on `/account?done=reset`, signed in
+- The three old addresses redirected as listed.
+- Checked at 1440 and 360px with no horizontal scroll. Typecheck, lint and production builds
+  pass for both apps.
+
+Learning notes
+
+- A multi-step form keeps what each step earned (the code sent, the ticket), so going back to
+  fix a typo costs nothing.
+- One code box with `autocomplete="one-time-code"` beats six boxes: paste, autofill and screen
+  readers all just work.
+
+### Module 1 rework summary (complete 2026-10-16, tag `module-01-v2`)
+
+Sign-in now works like ukride.uk:
+
+- **Codes (1.9):** one-time codes by text or email, stored hashed, with resend waits, hourly
+  caps and single-use tickets.
+- **Sign-up (1.10):** proves the mobile with a code, and signs the person in.
+- **Sign-in (1.11):** "Remember me" (30 days, or 1 day without it), 5 tries a minute, and
+  sign-out across tabs.
+- **Forgot password (1.12):** a code to the email, and it ends every other session.
+- **Email links are gone** (1.10 and 1.12).
+- **Pages (1.13):** the customer site's three pages follow the same steps.
+
+Staff keep their own 12-hour sessions on the admin panel (0.8).

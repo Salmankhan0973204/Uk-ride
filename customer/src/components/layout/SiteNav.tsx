@@ -67,11 +67,11 @@ export function SiteNav() {
             // action. On the sign-up page it is only a marker of where you are.
             <>
               {link('/login', 'Sign in')}
-              {pathname === '/register' ? (
-                link('/register', 'Sign up')
+              {pathname === '/signup' ? (
+                link('/signup', 'Sign up')
               ) : (
                 <Link
-                  href="/register"
+                  href="/signup"
                   className="btn btn-ghost min-h-11! rounded-full! px-5! py-0! text-sm whitespace-nowrap"
                 >
                   Sign up

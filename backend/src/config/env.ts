@@ -13,7 +13,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   CORS_ORIGINS: z
     .string()
-    .default('http://localhost:3000')
+    .default('http://localhost:3000,http://localhost:3001')
     .transform((value) =>
       value
         .split(',')
@@ -45,10 +45,15 @@ const envSchema = z.object({
     .url()
     .default('https://router.project-osrm.org')
     .transform((value) => value.replace(/\/+$/, '')),
-  // Address of the web app, used to build the links inside emails.
-  WEB_APP_URL: z
+  // Addresses of the two web apps. Links inside customer emails go to the
+  // customer site; links for staff go to the admin panel.
+  CUSTOMER_APP_URL: z
     .url()
     .default('http://localhost:3000')
+    .transform((value) => value.replace(/\/+$/, '')),
+  ADMIN_APP_URL: z
+    .url()
+    .default('http://localhost:3001')
     .transform((value) => value.replace(/\/+$/, '')),
 });
 

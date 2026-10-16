@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 0 rework - three apps (branch `module-00-three-apps`)
 - **Last completed:** Module 5 - Pricing Rules + Quote Engine (v1), plus real road distance
-- **Next step:** 0.7 - split into `customer/`, `admin/` and `shared/`
-- **Steps done:** 40 of 113
+- **Next step:** 0.8 - staff sign-in, admin app shell, admin screens moved
+- **Steps done:** 41 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -17,26 +17,26 @@ Do not start two modules at the same time.
 Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (not started),
 `n/a`.
 
-| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
-| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
-| 0   | Foundation: three apps       | 6/10  | Rework  | Rework        | -           | Next     |
-| 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Rework   |
-| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework   |
-| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
-| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
-| 6   | Booking                      | 0/6   | -       | -             | -           | -        |
-| 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
-| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
-| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -        |
-| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -        |
-| 11  | Admin operations             | 0/6   | -       | -             | -           | -        |
-| 12  | Reviews                      | 0/4   | -       | -             | -           | -        |
-| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -        |
-| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -        |
-| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -        |
-| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -        |
-| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -        |
+| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
+| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
+| 0   | Foundation: three apps       | 7/10  | Rework  | Rework        | -           | In progress |
+| 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Rework      |
+| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
+| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
+| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
+| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework      |
+| 6   | Booking                      | 0/6   | -       | -             | -           | -           |
+| 7   | Wallet                       | 0/5   | -       | -             | -           | -           |
+| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -           |
+| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -           |
+| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -           |
+| 11  | Admin operations             | 0/6   | -       | -             | -           | -           |
+| 12  | Reviews                      | 0/4   | -       | -             | -           | -           |
+| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -           |
+| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -           |
+| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -           |
+| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -           |
+| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -           |
 
 ## Steps
 
@@ -61,7 +61,7 @@ runs.
 - [x] 0.4 Next.js shell, design tokens, Badge, Card, Spinner. _Learn: App Router, Tailwind v4._
 - [x] 0.5 System status screen. _Learn: TanStack Query basics._
 - [x] 0.6 Swagger UI at `/api/v1/docs`. _Learn: OpenAPI documents._
-- [ ] 0.7 Split into three apps: `customer/` (today's `frontend/`), a new `admin/` and the
+- [x] 0.7 Split into three apps: `customer/` (today's `frontend/`), a new `admin/` and the
       `shared/` package. _Learn: workspace packages shared by two Next.js apps._
 - [ ] 0.8 Staff sign-in with its own sessions, the admin app shell, the admin screens moved,
       and a fix for two sign-ins refreshing at the same moment.
@@ -2222,3 +2222,57 @@ Removed or not planned:
 
 The old Module 6-17 step lists are replaced by the roadmap above. Their numbers are reused,
 so a reference such as "Module 10" in notes written before this date means the old plan.
+
+### Module 0 rework - three apps (branch `module-00-three-apps`)
+
+#### Step 0.7 - Split into three apps (done 2026-10-16)
+
+Built
+
+- **Workspaces:** `backend/`, `customer/` (was `frontend/`, port 3000), a new `admin/` (Next.js,
+  port 3001) and `shared/` (`@ukride/shared`), with one root lockfile. Root scripts are
+  `dev` (all three), `dev:api`, `dev:customer` and `dev:admin`; `dev:web` is gone.
+- **`@ukride/shared`** is TypeScript source with an `exports` map. It holds:
+  - the API client factory `createApiClient({ baseUrl, refreshPath, hintKey })`
+  - money, UK time and phone helpers
+  - Card, Badge, Field, Select, Spinner and PasswordInput
+  - the glass styles (`shared/styles/glass.css`)
+- **The customer app's `lib/api/client.ts`** creates its own client (marked `client-only`)
+  and re-exports the same names as before, so feature code did not change. 23 files had their
+  imports rewritten to `@ukride/shared/...`.
+- **Each app's `globals.css`** is three lines: Tailwind, the shared styles, and an `@source`
+  line for `shared/src`.
+- **The admin app** has its layout and a placeholder page; the shell comes in 0.8.
+- **Backend settings:**
+  - `CORS_ORIGINS` allows ports 3000 and 3001
+  - `WEB_APP_URL` became `CUSTOMER_APP_URL` and `ADMIN_APP_URL`
+  - email links use the customer address
+- **Docs:** `.prettierrc` sorts Tailwind classes per app; `docs/decisions/ADR-0002-three-apps.md`
+  records the split.
+
+Verified
+
+- Typecheck passes for backend, shared, customer and admin; lint for backend, customer and
+  admin.
+- Production builds pass for both web apps. Next.js 16 compiled the shared package without
+  `transpilePackages`.
+- In a real browser, the customer site's home, sign-in, register, vehicles and quote pages
+  showed the glass styles from the shared package, with no horizontal scrolling. The admin app
+  rendered on port 3001 in the same style.
+- A request from the admin app's origin to the API passed CORS.
+
+Found on the way
+
+- Stopping a dev server task left its `node` child processes running; they were found by
+  their UkRide paths and stopped by PID.
+- Windows refused to rename the `frontend` folder even with nothing of ours running,
+  probably because the editor holds it open. The tracked files were moved one by one instead.
+  An empty `frontend/` folder with only ignored leftovers (`.next`, `node_modules`)
+  remains; delete it once the editor has let go.
+
+Learning notes
+
+- A workspace package can be plain TypeScript: the apps that import it compile it.
+- Code that holds a secret in a module variable must never run on the server, where one module
+  instance serves every visitor. `client-only` turns that rule into a build error.
+- A factory (`createApiClient`) lets two apps share code while keeping separate state.

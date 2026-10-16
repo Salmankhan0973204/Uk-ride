@@ -1,6 +1,7 @@
 import type { RequestHandler, Response } from 'express';
 import { isSessionActive, sessionEnded } from '../modules/auth/auth.sessions.js';
 import { verifyAccessToken } from '../modules/auth/auth.tokens.js';
+import type { Audience } from '../modules/auth/auth.tokens.js';
 import { AppError } from '../shared/AppError.js';
 
 /**
@@ -17,29 +18,40 @@ import { AppError } from '../shared/AppError.js';
  * controller. On failure the request ends here with 401 and the controller
  * never runs.
  */
-export const requireAuth: RequestHandler = async (req, res, next) => {
-  // Tells a client how this route expects to be authenticated.
-  res.set('WWW-Authenticate', 'Bearer');
+export const requireAuthFor =
+  (audience: Audience): RequestHandler =>
+  async (req, res, next) => {
+    // Tells a client how this route expects to be authenticated.
+    res.set('WWW-Authenticate', 'Bearer');
 
-  const [scheme, token, ...rest] = (req.get('authorization') ?? '').trim().split(/\s+/);
+    const [scheme, token, ...rest] = (req.get('authorization') ?? '').trim().split(/\s+/);
 
-  if (!scheme) {
-    throw AppError.unauthenticated('Sign in to continue');
-  }
-  if (scheme.toLowerCase() !== 'bearer' || !token || rest.length > 0) {
-    throw AppError.unauthenticated('The Authorization header must be "Bearer <token>"');
-  }
+    if (!scheme) {
+      throw AppError.unauthenticated('Sign in to continue');
+    }
+    if (scheme.toLowerCase() !== 'bearer' || !token || rest.length > 0) {
+      throw AppError.unauthenticated('The Authorization header must be "Bearer <token>"');
+    }
 
-  const { userId, sessionId } = verifyAccessToken(token);
-  if (!(await isSessionActive(sessionId))) {
-    throw sessionEnded();
-  }
+    const { userId, sessionId } = verifyAccessToken(token, audience);
+    if (!(await isSessionActive(sessionId))) {
+      throw sessionEnded();
+    }
 
-  res.locals.userId = userId;
-  res.locals.sessionId = sessionId;
-  res.removeHeader('WWW-Authenticate');
-  next();
-};
+    res.locals.userId = userId;
+    res.locals.sessionId = sessionId;
+    res.removeHeader('WWW-Authenticate');
+    next();
+  };
+
+/** For the customer site's routes: a customer access token. */
+export const requireAuth = requireAuthFor('customer');
+
+/**
+ * For the admin panel's routes: a staff access token, issued by
+ * POST /admin/auth/login. Follow it with requireRole for the role check.
+ */
+export const requireStaffAuth = requireAuthFor('staff');
 
 /** The id of the signed-in user. Only valid after requireAuth has run. */
 export function currentUserId(res: Response): string {

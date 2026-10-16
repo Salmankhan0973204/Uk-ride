@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { Badge } from '@ukride/shared/ui/Badge';
 import { Card } from '@ukride/shared/ui/Card';
-import { StatusSummary } from '@/features/health/components/StatusSummary';
 
 /**
  * The stages of a UkRide journey, in order.
@@ -115,10 +114,6 @@ export default function HomePage() {
           </div>
         </Card>
       </section>
-
-      <div className="rise" style={order(2)}>
-        <StatusSummary />
-      </div>
 
       <p className="max-w-[70ch] px-1 text-sm leading-relaxed text-ink-muted">
         UkRide is being built one stage at a time. Prices and the area served have not been

@@ -16,7 +16,8 @@
     "./ui/PasswordInput": "./src/ui/PasswordInput.tsx",
     "./ui/Select": "./src/ui/Select.tsx",
     "./ui/Spinner": "./src/ui/Spinner.tsx",
-    "./styles/glass.css": "./styles/glass.css"
+    "./styles/glass.css": "./styles/glass.css",
+    "./text": "./src/text/plural.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

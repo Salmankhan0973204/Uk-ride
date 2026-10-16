@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../../middleware/requireAuth.js';
+import { requireStaffAuth } from '../../middleware/requireAuth.js';
 import { requireRole } from '../../middleware/requireRole.js';
 import { validate } from '../../middleware/validate.js';
 import { list, set } from './pricing.controller.js';
@@ -7,7 +7,7 @@ import { pricingRuleSchema } from './pricing.schemas.js';
 
 export const adminPricingRouter = Router();
 
-adminPricingRouter.use(requireAuth, requireRole('ADMIN'));
+adminPricingRouter.use(requireStaffAuth, requireRole('ADMIN'));
 
 adminPricingRouter.get('/', list);
 // PUT, not POST or PATCH: the body is the whole rule, and sending the same

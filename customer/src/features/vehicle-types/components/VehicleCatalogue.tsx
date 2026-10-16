@@ -1,11 +1,9 @@
 'use client';
 
+import { plural } from '@ukride/shared/text';
 import { Card } from '@ukride/shared/ui/Card';
 import { Spinner } from '@ukride/shared/ui/Spinner';
 import { useVehicleTypes } from '../hooks/useVehicleTypes';
-
-/** "1 passenger", "4 passengers". */
-export const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
 /** The public catalogue. One panel; each vehicle type is a row in it. */
 export function VehicleCatalogue() {

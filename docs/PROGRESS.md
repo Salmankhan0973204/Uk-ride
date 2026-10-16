@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 0 rework - three apps (branch `module-00-three-apps`)
 - **Last completed:** Module 5 - Pricing Rules + Quote Engine (v1), plus real road distance
-- **Next step:** 0.8 - staff sign-in, admin app shell, admin screens moved
-- **Steps done:** 41 of 113
+- **Next step:** 0.9 - docs for three apps
+- **Steps done:** 42 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -19,7 +19,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 
 | #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
 | --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
-| 0   | Foundation: three apps       | 7/10  | Rework  | Rework        | -           | In progress |
+| 0   | Foundation: three apps       | 8/10  | Rework  | Rework        | -           | In progress |
 | 1   | Auth like ukride.uk          | 8/13  | Rework  | Rework        | n/a         | Rework      |
 | 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework      |
 | 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
@@ -63,7 +63,7 @@ runs.
 - [x] 0.6 Swagger UI at `/api/v1/docs`. _Learn: OpenAPI documents._
 - [x] 0.7 Split into three apps: `customer/` (today's `frontend/`), a new `admin/` and the
       `shared/` package. _Learn: workspace packages shared by two Next.js apps._
-- [ ] 0.8 Staff sign-in with its own sessions, the admin app shell, the admin screens moved,
+- [x] 0.8 Staff sign-in with its own sessions, the admin app shell, the admin screens moved,
       and a fix for two sign-ins refreshing at the same moment.
       _Learn: token audiences, race conditions._
 - [ ] 0.9 Docs for three apps: `DESIGN.md`, `README.md`, ADR-0002.
@@ -2276,3 +2276,71 @@ Learning notes
 - Code that holds a secret in a module variable must never run on the server, where one module
   instance serves every visitor. `client-only` turns that rule into a build error.
 - A factory (`createApiClient`) lets two apps share code while keeping separate state.
+
+#### Step 0.8 - Staff sign-in, admin shell, admin screens moved (done 2026-10-16)
+
+Built
+
+- **Separate staff sessions:**
+  - `POST /admin/auth/login`, `/refresh`, `/logout` and `GET /admin/auth/me`, for ADMIN
+    or DISPATCHER accounts only
+  - their own cookie `ukride_staff_refresh` on the path `/api/v1/admin/auth`
+  - a session `audience` column (CUSTOMER or STAFF; migration `add_session_audience`)
+  - an `aud` claim in every access token
+  - `requireAuth` takes customer tokens only and the new `requireStaffAuth` takes staff
+    tokens only; every `/admin/*` route now uses `requireStaffAuth`
+  - staff sessions last `STAFF_SESSION_HOURS` (12)
+- **Refreshes at the same moment:**
+  - a refresh token exchanged less than 30 s ago answers 409 with `details.retry` and keeps
+    the cookie, instead of being treated as stolen; after 30 s a returning old token still
+    ends every session
+  - a failed refresh clears the cookie only on a real 401
+  - the shared client makes tabs take turns with `navigator.locks` and retries once on the 409
+- **Admin app:**
+  - `/login` (staff sign-in) and a `(panel)` route group whose layout runs the staff check
+    once and draws the sidebar: Vehicles, Vehicle types, Pricing, System status, plus the
+    staff member's name and role and Sign out
+  - an account that is no longer staff is told so, with a sign-out button
+- **Moved from the customer app:**
+  - the vehicles, pricing, admin vehicle-type and system status screens
+  - their features and query keys
+  - their addresses lost the `/admin` prefix
+- **Customer app:**
+  - keeps only the public vehicle-type list
+  - lost `/admin/**`, `/system-status`, the Status link and the home page's status panel
+  - an admin's account page links to the admin panel (`NEXT_PUBLIC_ADMIN_URL`)
+- `plural()` moved to `@ukride/shared/text`.
+
+Verified
+
+- Typecheck passes for all four workspaces; lint passes for all three apps.
+- **Against the running API:**
+  - a customer token got 401 on `/admin/vehicles` and a staff token 200
+  - a staff token got 401 on `/auth/me`
+  - a customer account got 403 at staff sign-in
+  - the two cookies have their own names and paths
+  - a staff cookie sent to the customer refresh got 401
+  - after staff sign-out the staff refresh got 401 while the customer session still worked
+  - two refreshes at once with one cookie gave 200 and 409; the same old cookie 2 s later
+    gave 409 and the session survived; 31 s later it gave 401 and every session of that
+    user ended
+- **In a real browser:**
+  - signed out, `/vehicles` on the admin app went to its sign-in
+  - a customer account was refused there
+  - an admin signed in to both apps; vehicles, vehicle types (adding one worked), pricing and
+    system status all ran in the admin app
+  - signing out of either app left the other signed in
+  - no horizontal scrolling at 1440 and 390px; on a phone the section links wrap
+- Test accounts and the test vehicle type were deleted.
+
+Learning notes
+
+- Who a token is for (its audience) is as important as who it belongs to. The same admin
+  person now holds two independent sessions, one per app.
+- A security rule that fires on normal behaviour (two tabs refreshing together) teaches
+  people to ignore it. The 30-second window keeps the replay check for real replays.
+- A layout in a route group runs for every page inside it, so a new admin page cannot forget
+  the staff check.
+- Windows would not rename folders that the dev server was watching; moving files one by one
+  worked. Empty leftover folders (`frontend/`, `customer/src/app/admin/`) can be deleted by
+  hand.

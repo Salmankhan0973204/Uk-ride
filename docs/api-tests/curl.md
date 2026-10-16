@@ -638,3 +638,24 @@ answered from memory for a day.
 | one postcode only, or nothing          | `400` naming the missing one                    |
 | postcodes and `distanceMiles` together | `400` "Send postcodes or a distance, not both"  |
 | a map service cannot be reached        | `503` "We could not reach the ... service"      |
+
+## Module 0 rework - staff sign-in (step 0.8)
+
+Every `/admin/*` route now needs a **staff** access token. A customer token from
+`/auth/login` is refused there with 401, even for an admin account.
+
+```powershell
+$staff = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+$body = '{"email":"you@example.com","password":"your-password"}'
+$login = Invoke-RestMethod http://localhost:4000/api/v1/admin/auth/login -Method Post -ContentType 'application/json' -Body $body -WebSession $staff
+$headers = @{ Authorization = "Bearer $($login.data.accessToken)" }
+Invoke-RestMethod http://localhost:4000/api/v1/admin/vehicles -Headers $headers
+```
+
+| Request                                    | Answer                                          |
+| ------------------------------------------ | ----------------------------------------------- |
+| staff sign-in with a customer account      | `403` "This sign-in is for UkRide staff"        |
+| a customer token on `/admin/*`             | `401`                                           |
+| a staff token on `/auth/me` or `/users/me` | `401`                                           |
+| two refreshes at once with one cookie      | one `200`, the other `409` with `details.retry` |
+| an old refresh cookie more than 30 s later | `401`, and every session of that user ends      |

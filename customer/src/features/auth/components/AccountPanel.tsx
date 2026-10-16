@@ -12,6 +12,8 @@ import { GENDER_OPTIONS } from '../types';
 import type { User } from '../types';
 import { AccountGate } from './AccountGate';
 
+const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'http://localhost:3001';
+
 const memberSince = (value: string) =>
   new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -136,12 +138,13 @@ function Profile({ user, onSigningOut }: { user: User; onSigningOut: () => void 
         {user.role === 'ADMIN' ? (
           <p className="text-base leading-relaxed">
             You are an administrator.{' '}
-            <Link
-              href="/admin/vehicles"
+            {/* The admin panel is a separate app with its own staff sign-in. */}
+            <a
+              href={ADMIN_URL}
               className="font-medium underline decoration-ring/70 decoration-2 underline-offset-4 hover:decoration-ring"
             >
-              Open the admin area
-            </Link>
+              Open the admin panel
+            </a>
           </p>
         ) : null}
 

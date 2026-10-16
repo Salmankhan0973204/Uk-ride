@@ -1,6 +1,7 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { prisma } from '../../config/db.js';
 import { env } from '../../config/env.js';
+import type { SessionAudience } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
 
 /**
@@ -28,7 +29,30 @@ import { AppError } from '../../shared/AppError.js';
  * of when the access token expires.
  */
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+
+/**
+ * How long a refresh token lives. Customers stay signed in for days; staff
+ * for one working day, because the admin panel can move money and bookings.
+ */
+const lifetimeMs = (audience: SessionAudience) =>
+  audience === 'STAFF' ? env.STAFF_SESSION_HOURS * HOUR_MS : env.REFRESH_TOKEN_TTL_DAYS * DAY_MS;
+
+/**
+ * Two refreshes a moment apart with the same cookie are normal: two tabs
+ * opened together, or a page that reloads while a refresh is under way. The
+ * later one finds the token already exchanged. Within this window that is
+ * answered "try again" (the browser by then holds the new cookie) instead of
+ * being treated as a stolen token, which would sign the person out
+ * everywhere. After the window, a used token coming back is still a replay.
+ */
+const REUSE_GRACE_MS = 30_000;
+
+export const refreshConflict = () =>
+  new AppError(409, 'CONFLICT', 'Your session was refreshed a moment ago. Try again.', {
+    retry: true,
+  });
 
 /** SHA-256 is enough here: the token is 256 random bits, not a guessable password. */
 const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
@@ -37,12 +61,18 @@ export const sessionEnded = () =>
   AppError.unauthenticated('Your session has ended. Sign in again.');
 
 /** Issues a refresh token inside a session. A new session gets a new id. */
-export async function createSession(userId: string, sessionId: string = randomUUID()) {
+export async function createSession(
+  userId: string,
+  {
+    audience = 'CUSTOMER',
+    sessionId = randomUUID(),
+  }: { audience?: SessionAudience; sessionId?: string } = {},
+) {
   const refreshToken = randomBytes(32).toString('base64url');
-  const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * DAY_MS);
+  const expiresAt = new Date(Date.now() + lifetimeMs(audience));
 
   await prisma.refreshToken.create({
-    data: { userId, sessionId, tokenHash: hashToken(refreshToken), expiresAt },
+    data: { userId, sessionId, audience, tokenHash: hashToken(refreshToken), expiresAt },
   });
 
   return { sessionId, refreshToken, expiresAt };
@@ -62,18 +92,25 @@ export function endAllSessions(userId: string, except?: { sessionId: string }) {
  * Exchanges a refresh token for a new one in the same session. The old token
  * stops working. Returns the user id, session id and new token, or throws 401.
  */
-export async function rotateSession(refreshToken: string | undefined) {
+export async function rotateSession(
+  refreshToken: string | undefined,
+  audience: SessionAudience = 'CUSTOMER',
+) {
   if (!refreshToken) throw sessionEnded();
 
   const stored = await prisma.refreshToken.findUnique({
     where: { tokenHash: hashToken(refreshToken) },
   });
-  if (!stored) throw sessionEnded();
+  // A staff cookie is no good at the customer endpoint, and the other way round.
+  if (!stored || stored.audience !== audience) throw sessionEnded();
 
-  // A token that was already exchanged for a newer one is being presented
-  // again. Either it was stolen or the real owner is replaying it; nobody can
-  // tell which, so all of the user's sessions end.
   if (stored.revokedAt) {
+    // Exchanged a moment ago: almost certainly two tabs refreshing together.
+    if (Date.now() - stored.revokedAt.getTime() < REUSE_GRACE_MS) throw refreshConflict();
+
+    // Exchanged long ago and presented again. Either it was stolen or the
+    // real owner is replaying it; nobody can tell which, so all of the
+    // user's sessions end.
     await endAllSessions(stored.userId);
     throw sessionEnded();
   }
@@ -86,11 +123,14 @@ export async function rotateSession(refreshToken: string | undefined) {
     where: { id: stored.id, revokedAt: null },
     data: { revokedAt: new Date() },
   });
-  // The loser of such a tie is refused, but nothing else is revoked: two tabs
-  // of the same browser refreshing in the same instant is not an attack.
-  if (claimed.count !== 1) throw sessionEnded();
+  // The loser of such a tie is told to try again, and nothing is revoked:
+  // two tabs of the same browser refreshing in the same instant is not an attack.
+  if (claimed.count !== 1) throw refreshConflict();
 
-  return { userId: stored.userId, ...(await createSession(stored.userId, stored.sessionId)) };
+  return {
+    userId: stored.userId,
+    ...(await createSession(stored.userId, { audience, sessionId: stored.sessionId })),
+  };
 }
 
 /** Ends the session a refresh token belongs to. Safe with no token or an unknown one. */

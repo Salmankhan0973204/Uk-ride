@@ -5,7 +5,7 @@ import { Badge } from '@ukride/shared/ui/Badge';
 import { Card } from '@ukride/shared/ui/Card';
 import { Field, describedBy } from '@ukride/shared/ui/Field';
 import { Spinner } from '@ukride/shared/ui/Spinner';
-import { plural } from '@/features/vehicle-types/components/VehicleCatalogue';
+import { plural } from '@ukride/shared/text';
 import type { ApiError } from '@/lib/api/client';
 import { formatPence } from '@ukride/shared/money';
 import { formatUkTime, ukLocalToDate } from '@ukride/shared/time';

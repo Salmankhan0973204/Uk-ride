@@ -471,6 +471,95 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/auth/login': {
+      post: {
+        tags: ['Admin'],
+        summary: 'Staff sign-in for the admin panel',
+        description:
+          'The same email and password as on the customer site, for an ADMIN or DISPATCHER ' +
+          'account. Returns a staff access token (audience ukride-staff) and sets the ' +
+          'httpOnly cookie `ukride_staff_refresh` on the path /api/v1/admin/auth. Staff ' +
+          'sessions last 12 hours and are separate from customer sessions.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/LoginRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Signed in',
+            successEnvelope({ $ref: '#/components/schemas/LoginResult' }),
+          ),
+          401: jsonResponse('Email or password is incorrect', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          403: jsonResponse('The account is not staff', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/auth/refresh': {
+      post: {
+        tags: ['Admin'],
+        summary: 'New staff access token',
+        description:
+          'Uses the `ukride_staff_refresh` cookie. A token exchanged less than 30 seconds ' +
+          'ago answers 409 with `details.retry` (try again: the browser already holds the ' +
+          'new cookie); one exchanged earlier is treated as stolen and ends every session.',
+        security: [{ staffRefreshCookie: [] }],
+        responses: {
+          200: jsonResponse(
+            'Session refreshed',
+            successEnvelope({ $ref: '#/components/schemas/AccessToken' }),
+          ),
+          401: jsonResponse('The session has ended', { $ref: '#/components/schemas/ApiFailure' }),
+          409: jsonResponse('Refreshed a moment ago: try again', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/auth/logout': {
+      post: {
+        tags: ['Admin'],
+        summary: 'Staff sign-out',
+        description: 'Ends the staff session only; a customer sign-in in the same browser stays.',
+        security: [{ staffRefreshCookie: [] }],
+        responses: {
+          200: jsonResponse('Signed out', successEnvelope({ nullable: true })),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/auth/me': {
+      get: {
+        tags: ['Admin'],
+        summary: 'The signed-in staff member',
+        description: 'Needs a staff access token. The role is checked again on every call.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'Signed-in staff member',
+            successEnvelope({
+              type: 'object',
+              required: ['user'],
+              properties: { user: { $ref: '#/components/schemas/User' } },
+            }),
+          ),
+          401: jsonResponse('Not signed in as staff', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but no longer staff', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
     '/admin/vehicle-types': {
       get: {
         tags: ['Admin'],
@@ -957,6 +1046,7 @@ export const openApiDocument = {
     securitySchemes: {
       bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       refreshCookie: { type: 'apiKey', in: 'cookie', name: 'ukride_refresh' },
+      staffRefreshCookie: { type: 'apiKey', in: 'cookie', name: 'ukride_staff_refresh' },
     },
     schemas: {
       LinkToken: {

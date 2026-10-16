@@ -192,23 +192,24 @@ Database commands belong to the backend workspace.
 
 ### Backend (`backend/.env`)
 
-| Variable                 | Default                                       | Purpose                                          |
-| ------------------------ | --------------------------------------------- | ------------------------------------------------ |
-| `NODE_ENV`               | `development`                                 | `development`, `test` or `production`            |
-| `PORT`                   | `4000`                                        | API port                                         |
-| `LOG_LEVEL`              | `debug`                                       | Pino log level                                   |
-| `CORS_ORIGINS`           | `http://localhost:3000,http://localhost:3001` | Comma-separated origins allowed to call the API  |
-| `DATABASE_URL`           | none, required                                | PostgreSQL connection string                     |
-| `JWT_ACCESS_SECRET`      | none, required                                | Signs login tokens; 32 characters or more        |
-| `JWT_ACCESS_TTL_SECONDS` | `900`                                         | Lifetime of an access token                      |
-| `REFRESH_TOKEN_TTL_DAYS` | `7`                                           | How long someone stays signed in                 |
-| `SMTP_HOST`              | `localhost`                                   | Mail server; the default is Mailpit              |
-| `SMTP_PORT`              | `1025`                                        | Mail server port                                 |
-| `MAIL_FROM`              | `UkRide <no-reply@ukride.local>`              | Sender shown on emails                           |
-| `CUSTOMER_APP_URL`       | `http://localhost:3000`                       | The customer site; links in customer emails      |
-| `ADMIN_APP_URL`          | `http://localhost:3001`                       | The admin panel; links in staff emails           |
-| `POSTCODES_API_URL`      | `https://api.postcodes.io`                    | Finds UK postcodes on the map; free, no key      |
-| `ROUTING_API_URL`        | `https://router.project-osrm.org`             | Road distance (OSRM); the default is a free demo |
+| Variable                 | Default                                       | Purpose                                                    |
+| ------------------------ | --------------------------------------------- | ---------------------------------------------------------- |
+| `NODE_ENV`               | `development`                                 | `development`, `test` or `production`                      |
+| `PORT`                   | `4000`                                        | API port                                                   |
+| `LOG_LEVEL`              | `debug`                                       | Pino log level                                             |
+| `CORS_ORIGINS`           | `http://localhost:3000,http://localhost:3001` | Comma-separated origins allowed to call the API            |
+| `DATABASE_URL`           | none, required                                | PostgreSQL connection string                               |
+| `JWT_ACCESS_SECRET`      | none, required                                | Signs login tokens; 32 characters or more                  |
+| `JWT_ACCESS_TTL_SECONDS` | `900`                                         | Lifetime of an access token                                |
+| `REFRESH_TOKEN_TTL_DAYS` | `7`                                           | How long someone stays signed in                           |
+| `STAFF_SESSION_HOURS`    | `12`                                          | How long a staff member stays signed in to the admin panel |
+| `SMTP_HOST`              | `localhost`                                   | Mail server; the default is Mailpit                        |
+| `SMTP_PORT`              | `1025`                                        | Mail server port                                           |
+| `MAIL_FROM`              | `UkRide <no-reply@ukride.local>`              | Sender shown on emails                                     |
+| `CUSTOMER_APP_URL`       | `http://localhost:3000`                       | The customer site; links in customer emails                |
+| `ADMIN_APP_URL`          | `http://localhost:3001`                       | The admin panel; links in staff emails                     |
+| `POSTCODES_API_URL`      | `https://api.postcodes.io`                    | Finds UK postcodes on the map; free, no key                |
+| `ROUTING_API_URL`        | `https://router.project-osrm.org`             | Road distance (OSRM); the default is a free demo           |
 
 The API refuses to start if a value is invalid.
 
@@ -244,6 +245,10 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/vehicle-types`                | The catalogue of vehicle types (public)                   |
 | GET    | `/vehicle-types/:slug`          | One vehicle type, for example `executive` (public)        |
 | POST   | `/quotes`                       | The price of a journey between two postcodes (public)     |
+| POST   | `/admin/auth/login`             | Staff sign-in for the admin panel (ADMIN or DISPATCHER)   |
+| POST   | `/admin/auth/refresh`           | New staff access token from the staff cookie              |
+| POST   | `/admin/auth/logout`            | Staff sign-out; the customer sign-in is not touched       |
+| GET    | `/admin/auth/me`                | The signed-in staff member                                |
 | GET    | `/admin/vehicle-types`          | Every vehicle type, including switched-off ones (admin)   |
 | POST   | `/admin/vehicle-types`          | Add a vehicle type (admin)                                |
 | PATCH  | `/admin/vehicle-types/:id`      | Change a vehicle type, or switch it back on (admin)       |

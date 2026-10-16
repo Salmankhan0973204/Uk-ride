@@ -170,9 +170,38 @@ export function createApiClient({ baseUrl, refreshPath, hintKey }: ApiClientConf
    */
   let pending: Promise<string> | null = null;
 
+  /**
+   * One refresh request. Two more rules keep tabs from tripping over each
+   * other:
+   *   - `navigator.locks` lets only one tab of this app refresh at a time;
+   *     the others wait, then send the newer cookie.
+   *   - if the API still answers "refreshed a moment ago, try again" (409
+   *     with `retry`), the browser already holds the newer cookie, so one
+   *     more attempt shortly after succeeds.
+   */
+  async function requestNewToken(): Promise<string> {
+    const send = () => apiFetch<{ accessToken: string }>(refreshPath, { method: 'POST' });
+    const sendWithRetry = async () => {
+      try {
+        return (await send()).accessToken;
+      } catch (error) {
+        const retry =
+          error instanceof ApiError &&
+          error.status === 409 &&
+          (error.details as { retry?: boolean } | undefined)?.retry === true;
+        if (!retry) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        return (await send()).accessToken;
+      }
+    };
+
+    const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
+    return locks ? locks.request(`${hintKey}:refresh`, sendWithRetry) : sendWithRetry();
+  }
+
   function refreshAccessToken(): Promise<string> {
-    pending ??= apiFetch<{ accessToken: string }>(refreshPath, { method: 'POST' })
-      .then(({ accessToken: token }) => {
+    pending ??= requestNewToken()
+      .then((token) => {
         setAccessToken(token);
         setSessionHint(true);
         return token;

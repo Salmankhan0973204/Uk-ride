@@ -53,7 +53,6 @@ export function SiteNav() {
           {/* On a phone there is no room for these; the home page links to both. */}
           {link('/quote', 'Prices', 'max-sm:hidden')}
           {link('/vehicles', 'Vehicles', 'max-sm:hidden')}
-          {link('/system-status', 'Status', 'max-lg:hidden')}
 
           {user ? (
             // Signed in: one way into the account, named after the person.

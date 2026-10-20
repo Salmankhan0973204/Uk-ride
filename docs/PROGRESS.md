@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** none - Module 2 rework (profile) starts when asked
+- **Current module:** Module 2 rework - profile (branch `module-02-profile`)
 - **Last completed:** Module 1 rework - auth like ukride.uk (tag `module-01-v2`)
-- **Next step:** 2.7 - change the mobile only with a code
-- **Steps done:** 49 of 113
+- **Next step:** 2.8 - `/profile` page like ukride.uk
+- **Steps done:** 50 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -17,26 +17,26 @@ Do not start two modules at the same time.
 Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (not started),
 `n/a`.
 
-| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
-| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
-| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
-| 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete |
-| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework   |
-| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
-| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
-| 6   | Booking                      | 0/6   | -       | -             | -           | -        |
-| 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
-| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
-| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -        |
-| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -        |
-| 11  | Admin operations             | 0/6   | -       | -             | -           | -        |
-| 12  | Reviews                      | 0/4   | -       | -             | -           | -        |
-| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -        |
-| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -        |
-| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -        |
-| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -        |
-| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -        |
+| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
+| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
+| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete    |
+| 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete    |
+| 2   | Profile                      | 7/8   | Rework  | Rework        | n/a         | In progress |
+| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
+| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
+| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework      |
+| 6   | Booking                      | 0/6   | -       | -             | -           | -           |
+| 7   | Wallet                       | 0/5   | -       | -             | -           | -           |
+| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -           |
+| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -           |
+| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -           |
+| 11  | Admin operations             | 0/6   | -       | -             | -           | -           |
+| 12  | Reviews                      | 0/4   | -       | -             | -           | -           |
+| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -           |
+| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -           |
+| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -           |
+| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -           |
+| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -           |
 
 ## Steps
 
@@ -100,7 +100,7 @@ runs.
 - [x] 2.4 Profile page. _Learn: reading cached data._
 - [x] 2.5 Edit profile form. _Learn: updating the cache after a mutation._
 - [x] 2.6 Change password form, design pass.
-- [ ] 2.7 Change the mobile only with a code; the profile edit can no longer change it.
+- [x] 2.7 Change the mobile only with a code; the profile edit can no longer change it.
 - [ ] 2.8 `/profile` page like ukride.uk, replacing `/account`.
 
 ### Module 3 - Fleet classes
@@ -2672,3 +2672,54 @@ Sign-in now works like ukride.uk:
 - **Pages (1.13):** the customer site's three pages follow the same steps.
 
 Staff keep their own 12-hour sessions on the admin panel (0.8).
+
+### Module 2 rework - profile like ukride.uk (branch `module-02-profile`)
+
+#### Step 2.7 - Change the mobile only with a code (done 2026-10-20)
+
+Built
+
+- **Two new endpoints, as on ukride.uk:**
+  1. `POST /users/me/mobile/code` `{ mobile }`: a CHANGE_MOBILE code by text to the new number
+     (the code rules from 1.9: 10 minutes, a new one after 60 s, 5 an hour)
+  2. `POST /users/me/mobile` `{ mobile, code }`: the right code for that number replaces the
+     mobile and sets `phoneVerifiedAt`; the answer is the updated profile
+- **Refused before any text is sent, and again before saving:**
+  - the number you already have (400 "This is already your mobile number")
+  - another account's number (409 on `mobile`)
+- **`PATCH /users/me` no longer takes `mobile`:** it is refused with "Only firstName, lastName
+  and gender can be changed here. The mobile is changed with a code".
+- `consumeOtp()` is split out of `verifyOtp()`. It checks a code and uses it up, for a step that
+  acts at once; `verifyOtp()` wraps it and issues a ticket.
+- **Customer site:**
+  - a new `/profile/mobile` page with two steps, the new number then the code (the shared
+    `CodeEntry`)
+  - a wrong number or a taken one is marked on the field
+  - success returns to the profile with "Your mobile number has been changed and confirmed."
+  - the edit form shows the mobile as text with a "Change mobile" link
+
+Verified (against the running API and Mailpit)
+
+- **Refusals:**
+  - a PATCH with `mobile` was refused, while a PATCH of the first name still worked
+  - a code to your own number, another account's (409), a landline and without a token (401)
+    were each refused
+  - asking again at once: 429 "Wait 59 seconds"
+- **Codes:**
+  - a wrong code: "4 tries left"
+  - the right code sent with a different number was refused
+  - a code asked for at sign-up (purpose SIGNUP) was not accepted for a change
+- **Change:** the right code changed the number and set `phoneVerifiedAt`. The same request
+  again was refused, as the number was now yours.
+- **Headless Edge:**
+  - the edit form had only first and last name (plus gender) and the "Change mobile" link
+  - on `/profile/mobile`, your own number and a taken one were marked on the field
+  - a new one reached the code step; the texted code changed it and returned to the profile
+    with the new number shown
+  - no horizontal scroll at 1440 and 360px
+
+Learning notes
+
+- A contact detail that receives codes is a key to the account. Changing it with a plain form
+  would let anyone at an unlocked laptop move future codes to their own phone.
+- The old number stays until the new one is proven, so a typo never locks anyone out.

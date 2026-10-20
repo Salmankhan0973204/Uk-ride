@@ -1,9 +1,20 @@
 import { Router } from 'express';
-import { passwordLimiter } from '../../middleware/rateLimit.js';
+import { otpSendLimiter, otpVerifyLimiter, passwordLimiter } from '../../middleware/rateLimit.js';
 import { requireAuth } from '../../middleware/requireAuth.js';
 import { validate } from '../../middleware/validate.js';
-import { changeMyPassword, getMe, updateMe } from './users.controller.js';
-import { changePasswordSchema, updateProfileSchema } from './users.schemas.js';
+import {
+  changeMyMobile,
+  changeMyPassword,
+  getMe,
+  sendMyMobileCode,
+  updateMe,
+} from './users.controller.js';
+import {
+  changeMobileSchema,
+  changePasswordSchema,
+  mobileCodeSchema,
+  updateProfileSchema,
+} from './users.schemas.js';
 
 export const usersRouter = Router();
 
@@ -16,3 +27,6 @@ usersRouter.patch('/me', validate(updateProfileSchema), updateMe);
 // POST, not PATCH: this is an action with consequences (other devices are
 // signed out), not a field being edited.
 usersRouter.post('/me/password', passwordLimiter, validate(changePasswordSchema), changeMyPassword);
+// The mobile is changed only with a code to the new number, as on ukride.uk.
+usersRouter.post('/me/mobile/code', otpSendLimiter, validate(mobileCodeSchema), sendMyMobileCode);
+usersRouter.post('/me/mobile', otpVerifyLimiter, validate(changeMobileSchema), changeMyMobile);

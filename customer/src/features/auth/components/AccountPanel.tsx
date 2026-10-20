@@ -19,6 +19,7 @@ const memberSince = (value: string) =>
 const DONE: Record<string, string> = {
   profile: 'Your profile has been updated.',
   password: 'Your password has been changed. Other devices have been signed out.',
+  mobile: 'Your mobile number has been changed and confirmed.',
   welcome: 'Welcome to UkRide. Your account is ready and your mobile is confirmed.',
   reset:
     'Your password has been changed. Other devices have been signed out; this one is signed in.',

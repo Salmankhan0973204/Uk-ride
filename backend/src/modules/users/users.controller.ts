@@ -1,8 +1,19 @@
 import type { RequestHandler } from 'express';
 import { currentSessionId, currentUserId } from '../../middleware/requireAuth.js';
 import { sendSuccess } from '../../shared/response.js';
-import type { ChangePasswordInput, UpdateProfileInput } from './users.schemas.js';
-import { changePassword, getProfile, updateProfile } from './users.service.js';
+import type {
+  ChangeMobileInput,
+  ChangePasswordInput,
+  MobileCodeInput,
+  UpdateProfileInput,
+} from './users.schemas.js';
+import {
+  changeMobile,
+  changePassword,
+  getProfile,
+  sendMobileCode,
+  updateProfile,
+} from './users.service.js';
 
 /**
  * Every handler here acts on "me": the user named by the access token. There
@@ -35,4 +46,21 @@ export const changeMyPassword: RequestHandler = async (req, res) => {
     message: 'Password changed. Other devices have been signed out',
     data: null,
   });
+};
+
+/** Changing the mobile, step 1: a code by text to the new number. */
+export const sendMyMobileCode: RequestHandler = async (req, res) => {
+  const { mobile } = req.body as MobileCodeInput;
+  const sent = await sendMobileCode(currentUserId(res), mobile);
+
+  res.set('Cache-Control', 'no-store');
+  sendSuccess(res, { message: `Code sent to ${sent.sentTo}`, data: sent });
+};
+
+/** Changing the mobile, step 2: the code, and the number is changed. */
+export const changeMyMobile: RequestHandler = async (req, res) => {
+  const user = await changeMobile(currentUserId(res), req.body as ChangeMobileInput);
+
+  res.set('Cache-Control', 'no-store');
+  sendSuccess(res, { message: 'Mobile number changed', data: { user } });
 };

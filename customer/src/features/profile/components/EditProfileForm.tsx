@@ -12,21 +12,21 @@ import { GENDER_OPTIONS } from '@/features/auth/types';
 import type { Gender, User } from '@/features/auth/types';
 import { checkName } from '@/features/auth/validation';
 import type { ApiError } from '@/lib/api/client';
-import { checkMobile, formatMobile, normaliseMobile } from '@ukride/shared/phone';
+import { formatMobile } from '@ukride/shared/phone';
 import type { ProfileChanges } from '../api/profile.api';
 import { useUpdateProfile } from '../hooks/useProfileActions';
+import { PROFILE_PATH } from '../paths';
 
 interface Values {
   firstName: string;
   lastName: string;
-  mobile: string;
   gender: Gender | '';
 }
 type FieldName = keyof Values;
 type Errors = Partial<Record<FieldName, string>>;
 
 /** Top to bottom, as on screen. Focus goes to the first one with an error. */
-const FIELD_ORDER: FieldName[] = ['firstName', 'lastName', 'mobile', 'gender'];
+const FIELD_ORDER: FieldName[] = ['firstName', 'lastName', 'gender'];
 
 function checkField(name: FieldName, values: Values): string | undefined {
   switch (name) {
@@ -34,8 +34,6 @@ function checkField(name: FieldName, values: Values): string | undefined {
       return checkName(values.firstName, 'first name');
     case 'lastName':
       return checkName(values.lastName, 'last name');
-    case 'mobile':
-      return checkMobile(values.mobile);
     case 'gender':
       return;
   }
@@ -50,23 +48,16 @@ function changedFields(user: User, values: Values): ProfileChanges {
   const changes: ProfileChanges = {};
   const firstName = values.firstName.trim();
   const lastName = values.lastName.trim();
-  const mobile = normaliseMobile(values.mobile);
   const gender = values.gender || null;
 
   if (firstName !== user.firstName) changes.firstName = firstName;
   if (lastName !== user.lastName) changes.lastName = lastName;
-  if (mobile !== user.mobile) changes.mobile = mobile;
   if (gender !== user.gender) changes.gender = gender;
   return changes;
 }
 
 /** Turns an API failure into messages placed where the user can act on them. */
 function readApiError(error: ApiError): { fields: Errors; form?: string } {
-  if (error.code === 'CONFLICT') {
-    return {
-      fields: { mobile: 'This mobile number belongs to another account. Use a different number.' },
-    };
-  }
   if (error.code === 'VALIDATION_ERROR') {
     const details = (error.details ?? {}) as Partial<Record<FieldName, string[]>>;
     const fields: Errors = {};
@@ -99,7 +90,6 @@ function Form({ user }: { user: User }) {
   const [values, setValues] = useState<Values>(() => ({
     firstName: user.firstName,
     lastName: user.lastName,
-    mobile: formatMobile(user.mobile),
     gender: user.gender ?? '',
   }));
   const [errors, setErrors] = useState<Errors>({});
@@ -145,11 +135,11 @@ function Form({ user }: { user: User }) {
 
     const changes = changedFields(user, values);
     // Nothing was changed: there is nothing to save, so just go back.
-    if (Object.keys(changes).length === 0) return router.push('/account');
+    if (Object.keys(changes).length === 0) return router.push(PROFILE_PATH);
 
     setErrors({});
     mutate(changes, {
-      onSuccess: () => router.push('/account?done=profile'),
+      onSuccess: () => router.push(`${PROFILE_PATH}?done=profile`),
       onError: (error) => {
         const { fields, form } = readApiError(error);
         showErrors(fields);
@@ -157,8 +147,6 @@ function Form({ user }: { user: User }) {
       },
     });
   }
-
-  const mobileHint = 'Include the country code, like +44 7400 123456.';
 
   return (
     <Card className="rise mx-auto max-w-xl">
@@ -191,10 +179,6 @@ function Form({ user }: { user: User }) {
             </Field>
           </div>
 
-          <Field id={id('mobile')} label="Mobile number" hint={mobileHint} error={errors.mobile}>
-            <input {...input('mobile', mobileHint)} type="tel" inputMode="tel" autoComplete="tel" />
-          </Field>
-
           <Field id={id('gender')} label="Gender" optional error={errors.gender}>
             <Select
               id={id('gender')}
@@ -207,6 +191,20 @@ function Form({ user }: { user: User }) {
               {...describedBy(id('gender'), { error: errors.gender })}
             />
           </Field>
+
+          {/* Changed on its own page, with a code to the new number (step 2.7). */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Mobile number</p>
+            <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="tabular text-ink-muted">{formatMobile(user.mobile)}</span>
+              <Link
+                href="/profile/mobile"
+                className="text-sm font-medium text-ink underline decoration-ring/70 decoration-2 underline-offset-4 hover:decoration-ring"
+              >
+                Change mobile
+              </Link>
+            </p>
+          </div>
 
           {/* Shown, not editable: changing it safely needs the new address confirmed first. */}
           <div className="space-y-2">
@@ -226,7 +224,7 @@ function Form({ user }: { user: User }) {
                 'Save changes'
               )}
             </button>
-            <Link href="/account" className="btn btn-ghost">
+            <Link href={PROFILE_PATH} className="btn btn-ghost">
               Cancel
             </Link>
           </div>

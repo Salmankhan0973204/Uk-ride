@@ -131,8 +131,13 @@ export async function sendOtp(purpose: OtpPurpose, channel: OtpChannel, target: 
 
 const codeProblem = (message: string) => AppError.validation({ code: [message] });
 
-/** Checks a code. The right one becomes a ticket; see the top of this file. */
-export async function verifyOtp(purpose: OtpPurpose, target: string, code: string) {
+/**
+ * Checks a code and uses it up, returning the code's id. A wrong, expired or
+ * used code throws a 400 on `code` saying which. For a step that acts at once (changing
+ * a signed-in user's mobile); a step that hands over to another request uses
+ * verifyOtp() below and gets a ticket.
+ */
+export async function consumeOtp(purpose: OtpPurpose, target: string, code: string) {
   const otp = await prisma.otpCode.findFirst({
     where: { purpose, target, consumedAt: null },
     orderBy: { createdAt: 'desc' },
@@ -165,10 +170,17 @@ export async function verifyOtp(purpose: OtpPurpose, target: string, code: strin
   });
   if (used.count !== 1) throw codeProblem('This code was just used. Ask for a new one');
 
+  return otp.id;
+}
+
+/** Checks a code. The right one becomes a ticket; see the top of this file. */
+export async function verifyOtp(purpose: OtpPurpose, target: string, code: string) {
+  const otpId = await consumeOtp(purpose, target, code);
+
   const ticket = jwt.sign({ purpose }, env.JWT_ACCESS_SECRET, {
     subject: target,
     audience: TICKET_AUDIENCE,
-    jwtid: otp.id,
+    jwtid: otpId,
     expiresIn: TICKET_TTL_SECONDS,
     algorithm: 'HS256',
   });

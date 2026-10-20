@@ -3,7 +3,7 @@ import { EditProfileForm } from '@/features/profile/components/EditProfileForm';
 
 export const metadata: Metadata = {
   title: 'Edit your profile',
-  description: 'Change the name, mobile number or gender on your UkRide profile.',
+  description: 'Change the name or gender on your UkRide profile.',
 };
 
 export default function EditProfilePage() {

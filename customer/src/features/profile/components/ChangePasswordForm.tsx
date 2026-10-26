@@ -11,6 +11,7 @@ import { AccountGate } from '@/features/auth/components/AccountGate';
 import { MIN_PASSWORD, checkNewPassword } from '@/features/auth/validation';
 import type { ApiError } from '@/lib/api/client';
 import { useChangePassword } from '../hooks/useProfileActions';
+import { PROFILE_PATH } from '../paths';
 
 type FieldName = 'currentPassword' | 'newPassword';
 type Errors = Partial<Record<FieldName, string>>;
@@ -80,7 +81,7 @@ function Form() {
     mutate(
       { currentPassword, newPassword },
       {
-        onSuccess: () => router.push('/account?done=password'),
+        onSuccess: () => router.push(`${PROFILE_PATH}?done=password`),
         onError: (error) => {
           const { fields, form } = readApiError(error);
           // A wrong current password has to be typed again anyway.
@@ -159,7 +160,7 @@ function Form() {
                 'Change password'
               )}
             </button>
-            <Link href="/account" className="btn btn-ghost">
+            <Link href={PROFILE_PATH} className="btn btn-ghost">
               Cancel
             </Link>
           </div>

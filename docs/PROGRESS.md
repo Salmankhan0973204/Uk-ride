@@ -101,7 +101,7 @@ runs.
 - [x] 2.5 Edit profile form. _Learn: updating the cache after a mutation._
 - [x] 2.6 Change password form, design pass.
 - [x] 2.7 Change the mobile only with a code; the profile edit can no longer change it.
-- [ ] 2.8 `/profile` page like ukride.uk, replacing `/account`.
+- [x] 2.8 `/profile` page like ukride.uk, replacing `/account`.
 
 ### Module 3 - Fleet classes
 
@@ -2723,3 +2723,58 @@ Learning notes
 - A contact detail that receives codes is a key to the account. Changing it with a plain form
   would let anyone at an unlocked laptop move future codes to their own phone.
 - The old number stays until the new one is proven, so a typo never locks anyone out.
+
+#### Step 2.8 - `/profile` like ukride.uk (done 2026-10-26)
+
+Built
+
+- **One page for the whole account, `/profile`** (`ProfilePage.tsx`), in three cards:
+  1. who you are: initials, name, "Member since", Sign out, and the admin panel link for
+     administrators
+  2. personal details: first name, last name and gender, edited in place
+     (`PersonalDetailsForm.tsx`); it sends only what changed, says "Nothing has changed." when
+     nothing did, and the saved name shows in the header at once
+  3. sign-in details: the email, the mobile with its Verified badge and "Change mobile", and the
+     password as dots with "Change password"
+- **Moved:** change password is now `/profile/password`; `/profile/mobile` stays where 2.7 put
+  it.
+- **Removed:** the `/account`, `/account/edit` and `/account/password` pages, `AccountPanel` and
+  `EditProfileForm`.
+- **Old addresses redirect** (308): `/account` and `/account/edit` to `/profile`,
+  `/account/password` to `/profile/password`, and `/verify-email` now to `/profile`.
+- Sign-in, sign-up, password reset, the header and the tab bar all go to `/profile`; the
+  "done" messages (welcome, reset, password, mobile) moved with them.
+
+Verified
+
+- Typecheck, lint and Prettier pass for the customer app.
+- **Redirects:** the four old addresses answered 308 to the right new one, also while signed
+  in.
+- **Headless Chrome, with a new test account (`step28.*@example.com`):**
+  - signed out, `/profile` went to `/login`; signing in landed on `/profile`
+  - Save with nothing changed: "Nothing has changed."
+  - an empty first name: "Enter your first name." on the field, with focus moved there
+  - a new first name: "Your details have been saved."; the heading and the header link changed
+    without a reload, and the name was still there after one
+  - `?done=mobile` and `?done=welcome` showed their messages
+  - Cancel on `/profile/password` goes back to `/profile`; Sign out went home
+  - five reloads in a row each made one refresh and showed the page
+  - no horizontal scroll at 390px; the sign-in rows stack with their links underneath
+
+Open items
+
+- **Reload during a refresh (Module 1 code, not this step):** if a page is left while
+  `/auth/refresh` is still answering, the browser can lose the new cookie. The next load then
+  gets 409 "refreshed a moment ago" twice, and after 30 seconds the old cookie counts as a
+  replay and ends every session. Seen once when the test script navigated very quickly; normal
+  reloads were fine.
+- The dev server logs "Router action dispatched before initialization" and a React "state
+  update on a component that hasn't mounted" warning on some loads. `/profile/mobile` from 2.7
+  does the same, so they are not from this page; check again in a production build.
+
+Learning notes
+
+- Retiring a route: keep the old address as a permanent redirect, so bookmarks and links in
+  old emails still land somewhere useful.
+- Editing in place, the form reads the cached user once. Later cache updates, including its
+  own save, must not overwrite what the person is typing.

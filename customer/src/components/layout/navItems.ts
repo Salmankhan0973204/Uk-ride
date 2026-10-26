@@ -22,7 +22,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Home', icon: 'home', inHeader: true },
   { href: '/quote', label: 'Prices', icon: 'tag', inHeader: true },
   { href: '/vehicles', label: 'Vehicles', icon: 'car', inHeader: true },
-  { href: '/account', label: 'Profile', icon: 'user', inHeader: false },
+  { href: '/profile', label: 'Profile', icon: 'user', inHeader: false },
 ];
 
 /** A section stays marked on its own sub-pages; Home only on the home page itself. */

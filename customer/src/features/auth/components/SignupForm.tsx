@@ -32,7 +32,7 @@ import {
 import { CodeEntry } from './CodeEntry';
 
 /** Where a new account lands, with a welcome line. */
-const AFTER_SIGNUP = '/account?done=welcome';
+const AFTER_SIGNUP = '/profile?done=welcome';
 
 /** Everything step 1 holds. Gender is '' until the customer picks one. */
 type Values = Omit<RegisterInput, 'gender' | 'otpTicket'> & { gender: Gender | '' };
@@ -125,7 +125,7 @@ export function SignupForm() {
 
   // Signed in already: there is nothing to sign up for.
   useEffect(() => {
-    if (user && !finishing.current) router.replace('/account');
+    if (user && !finishing.current) router.replace('/profile');
   }, [user, router]);
 
   const id = (name: FieldName) => `${formId}-${name}`;

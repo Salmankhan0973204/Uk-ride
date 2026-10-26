@@ -22,7 +22,7 @@ import {
 import { CodeEntry } from './CodeEntry';
 
 /** Where the person lands, signed in, with a line saying what happened. */
-const AFTER_RESET = '/account?done=reset';
+const AFTER_RESET = '/profile?done=reset';
 
 type Step = 'email' | 'code' | 'password';
 

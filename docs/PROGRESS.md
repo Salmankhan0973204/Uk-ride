@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 2 rework - profile (branch `module-02-profile`)
-- **Last completed:** Module 1 rework - auth like ukride.uk (tag `module-01-v2`)
-- **Next step:** 2.8 - `/profile` page like ukride.uk
-- **Steps done:** 50 of 113
+- **Current module:** Module 3 rework - fleet classes (not started)
+- **Last completed:** Module 2 rework - profile like ukride.uk (tag `module-02-v2`)
+- **Next step:** 3.8 - the six ukride.uk classes
+- **Steps done:** 51 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -17,26 +17,26 @@ Do not start two modules at the same time.
 Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (not started),
 `n/a`.
 
-| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status      |
-| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | ----------- |
-| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete    |
-| 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete    |
-| 2   | Profile                      | 7/8   | Rework  | Rework        | n/a         | In progress |
-| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework      |
-| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete    |
-| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework      |
-| 6   | Booking                      | 0/6   | -       | -             | -           | -           |
-| 7   | Wallet                       | 0/5   | -       | -             | -           | -           |
-| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -           |
-| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -           |
-| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -           |
-| 11  | Admin operations             | 0/6   | -       | -             | -           | -           |
-| 12  | Reviews                      | 0/4   | -       | -             | -           | -           |
-| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -           |
-| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -           |
-| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -           |
-| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -           |
-| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -           |
+| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
+| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
+| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
+| 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete |
+| 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
+| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
+| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
+| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
+| 6   | Booking                      | 0/6   | -       | -             | -           | -        |
+| 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
+| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
+| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -        |
+| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -        |
+| 11  | Admin operations             | 0/6   | -       | -             | -           | -        |
+| 12  | Reviews                      | 0/4   | -       | -             | -           | -        |
+| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -        |
+| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -        |
+| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -        |
+| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -        |
+| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -        |
 
 ## Steps
 
@@ -2761,7 +2761,7 @@ Verified
   - five reloads in a row each made one refresh and showed the page
   - no horizontal scroll at 390px; the sign-in rows stack with their links underneath
 
-Open items
+Open items (both closed on 2026-10-27, see "Module 2 follow-ups" below)
 
 - **Reload during a refresh (Module 1 code, not this step):** if a page is left while
   `/auth/refresh` is still answering, the browser can lose the new cookie. The next load then
@@ -2778,3 +2778,64 @@ Learning notes
   old emails still land somewhere useful.
 - Editing in place, the form reads the cached user once. Later cache updates, including its
   own save, must not overwrite what the person is typing.
+
+### Module 2 follow-ups (2026-10-27)
+
+#### Follow-up 1 - A refresh answer lost on the way no longer signs people out
+
+The bug
+
+- A refresh swaps cookie T1 for T2. If the page is left or reloaded before the answer arrives,
+  the browser never stores T2 and keeps sending T1.
+- T1 is already used, so for 30 seconds it got 409 "refreshed a moment ago" (the retry got the
+  same), and after that it counted as a stolen token and ended every session of the user.
+
+The fix (`auth.sessions.ts`)
+
+- A token used less than 30 seconds ago now gets the session's live token in its place: that
+  one is used up and a fresh one issued, so the browser is back in step.
+- This works however many answers were lost in a row. Every token after the returning one was
+  made inside the 30 seconds, so nothing older than the window allowed is handed out.
+- Still 409: no live token yet, because another refresh of the session is half done.
+- Still the same: a used token coming back after 30 seconds ends every session.
+- `rotateSession()` and the new `renewLostToken()` share one `claimAndRenew()`.
+
+Verified (against the running API, with a test account)
+
+- **Lost answer:** T1 refreshed, its answer ignored, T1 again: 200 (was 409).
+- **Several lost:** an old token two and three swaps behind the live one: 200.
+- **Replay:** a used token aged past the 30 seconds: 401, every token of the user gone, and
+  the token that was live afterwards also 401.
+- **Headless Chrome on the production build:** `/profile` loaded and was left the moment its
+  refresh was sent, five times in a row; the next load showed the profile, every refresh
+  answered 200, and the console was empty.
+- Typecheck, lint and Prettier pass for the backend.
+
+Learning notes
+
+- A rotation scheme must survive answers that never arrive. The server cannot tell "lost" from
+  "stolen", so a short window treats a recent reuse as lost and a late one as stolen.
+
+#### Follow-up 2 - The dev-server warnings
+
+- "Router action dispatched before initialization" and the React "state update on a component
+  that hasn't mounted" warning do not appear in a production build: `/profile`,
+  `/profile/mobile` and `/profile/password`, loaded, reloaded and left mid-refresh, gave no
+  console warnings or errors. They come from the development server, so nothing was changed.
+
+### Module 2 rework summary (complete 2026-10-27, tag `module-02-v2`)
+
+The profile now works like ukride.uk:
+
+- **Mobile (2.7):** changed only with a code to the new number; the profile edit no longer
+  takes it.
+- **One page (2.8):** `/profile` holds who you are, personal details edited in place, and the
+  sign-in details; `/account` and its pages redirect.
+- **Follow-up:** a refresh whose answer was lost is recovered instead of signing people out.
+
+Open items
+
+- Empty leftover folders from 0.7, still to delete by hand: `frontend/` (only ignored build
+  files) and `customer/src/app/admin/` (only empty folders).
+- The tests on GitHub are older than the 30-second window from 0.8: two of them replay a used
+  token at once and expect 401, which is now 200. They also still describe the single web app.

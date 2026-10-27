@@ -46,9 +46,8 @@ export function sessionHours(audience: SessionAudience, rememberMe = false) {
  * Two refreshes a moment apart with the same cookie are normal: two tabs
  * opened together, or a page that reloads while a refresh is under way. The
  * later one finds the token already exchanged. Within this window that is
- * answered "try again" (the browser by then holds the new cookie) instead of
- * being treated as a stolen token, which would sign the person out
- * everywhere. After the window, a used token coming back is still a replay.
+ * not treated as a stolen token, which would sign the person out everywhere.
+ * After the window, a used token coming back is still a replay.
  */
 const REUSE_GRACE_MS = 30_000;
 
@@ -116,8 +115,11 @@ export async function rotateSession(
   if (!stored || stored.audience !== audience) throw sessionEnded();
 
   if (stored.revokedAt) {
-    // Exchanged a moment ago: almost certainly two tabs refreshing together.
-    if (Date.now() - stored.revokedAt.getTime() < REUSE_GRACE_MS) throw refreshConflict();
+    // Exchanged a moment ago: two tabs refreshing together, or a page that
+    // was left before the answer with the new cookie arrived.
+    if (Date.now() - stored.revokedAt.getTime() < REUSE_GRACE_MS) {
+      return renewLostToken(stored, audience);
+    }
 
     // Exchanged long ago and presented again. Either it was stolen or the
     // real owner is replaying it; nobody can tell which, so all of the
@@ -128,10 +130,19 @@ export async function rotateSession(
 
   if (stored.expiresAt <= new Date()) throw sessionEnded();
 
-  // Claim the token. "revokedAt is still null" is part of the update, so of
-  // two requests arriving together with the same token only one can win.
+  return claimAndRenew(stored, audience);
+}
+
+type StoredToken = NonNullable<Awaited<ReturnType<typeof prisma.refreshToken.findUnique>>>;
+
+/**
+ * Marks a token as used and issues the next one in the same session.
+ * "revokedAt is still null" is part of the update, so of two requests
+ * arriving together with the same token only one can win.
+ */
+async function claimAndRenew(token: StoredToken, audience: SessionAudience) {
   const claimed = await prisma.refreshToken.updateMany({
-    where: { id: stored.id, revokedAt: null },
+    where: { id: token.id, revokedAt: null },
     data: { revokedAt: new Date() },
   });
   // The loser of such a tie is told to try again, and nothing is revoked:
@@ -139,14 +150,39 @@ export async function rotateSession(
   if (claimed.count !== 1) throw refreshConflict();
 
   return {
-    userId: stored.userId,
+    userId: token.userId,
     // The new token keeps the lifetime chosen at sign-in.
-    ...(await createSession(stored.userId, {
+    ...(await createSession(token.userId, {
       audience,
-      sessionId: stored.sessionId,
-      lifetimeHours: stored.lifetimeHours,
+      sessionId: token.sessionId,
+      lifetimeHours: token.lifetimeHours,
     })),
   };
+}
+
+/**
+ * A token used a moment ago has come back. Most likely the browser never
+ * received the token that replaced it: the page was left or reloaded while the
+ * refresh was answering, so the new cookie was dropped, perhaps several times
+ * in a row. Waiting would not help, as the browser can only ever send the old
+ * one, and after the grace window that would end every session. So the
+ * session's live token is used up in its place and a fresh one is issued.
+ *
+ * Every token after this one was made inside the grace window, so this hands
+ * out nothing older than the window already allowed.
+ *
+ * With no live token, another refresh of this session is half done (its token
+ * claimed, the next not yet saved), and "try again" is the right answer.
+ */
+async function renewLostToken(stored: StoredToken, audience: SessionAudience) {
+  const live = await prisma.refreshToken.findFirst({
+    where: { sessionId: stored.sessionId, revokedAt: null, createdAt: { gt: stored.createdAt } },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!live) throw refreshConflict();
+  if (live.expiresAt <= new Date()) throw sessionEnded();
+
+  return claimAndRenew(live, audience);
 }
 
 /** Ends the session a refresh token belongs to. Safe with no token or an unknown one. */

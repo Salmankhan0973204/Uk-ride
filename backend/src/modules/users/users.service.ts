@@ -3,7 +3,12 @@ import { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
 import { hashPassword, verifyPassword } from '../../shared/passwords.js';
 import { endAllSessions } from '../auth/auth.sessions.js';
-import type { ChangePasswordInput, UpdateProfileInput } from './users.schemas.js';
+import { consumeOtp, sendOtp } from '../otp/otp.service.js';
+import type {
+  ChangeMobileInput,
+  ChangePasswordInput,
+  UpdateProfileInput,
+} from './users.schemas.js';
 import { profileSelect } from './users.select.js';
 
 /**
@@ -35,14 +40,6 @@ export async function getProfile(userId: string) {
  * different from "not sent": it is a value, and it clears the column.
  */
 export async function updateProfile(userId: string, changes: UpdateProfileInput) {
-  if (changes.mobile) {
-    const other = await prisma.user.findFirst({
-      where: { mobile: changes.mobile, NOT: { id: userId } },
-      select: { id: true },
-    });
-    if (other) throw mobileTaken();
-  }
-
   try {
     return await prisma.user.update({
       where: { id: userId },
@@ -50,9 +47,51 @@ export async function updateProfile(userId: string, changes: UpdateProfileInput)
       select: profileSelect,
     });
   } catch (err) {
+    // The account was deleted while this request was on its way.
+    if (isPrismaError(err, 'P2025')) throw accountGone();
+    throw err;
+  }
+}
+
+/**
+ * Refuses a new mobile that is no change, or that another account holds.
+ * Checked before a text is sent, and again before the number is saved.
+ */
+async function assertMobileFree(userId: string, mobile: string) {
+  const holder = await prisma.user.findUnique({ where: { mobile }, select: { id: true } });
+  if (!holder) return;
+  if (holder.id === userId) {
+    throw AppError.validation({ mobile: ['This is already your mobile number'] });
+  }
+  throw mobileTaken();
+}
+
+/**
+ * Changing the mobile, step 1, as on ukride.uk: a code goes by text to the
+ * new number. Nothing changes until the code comes back.
+ */
+export async function sendMobileCode(userId: string, mobile: string) {
+  await assertMobileFree(userId, mobile);
+  return sendOtp('CHANGE_MOBILE', 'SMS', mobile);
+}
+
+/**
+ * Changing the mobile, step 2: the right code proves the person holds the new
+ * number, which then replaces the old one and is marked as verified.
+ */
+export async function changeMobile(userId: string, { mobile, code }: ChangeMobileInput) {
+  await assertMobileFree(userId, mobile);
+  await consumeOtp('CHANGE_MOBILE', mobile, code);
+
+  try {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { mobile, phoneVerifiedAt: new Date() },
+      select: profileSelect,
+    });
+  } catch (err) {
     // Someone else took the number between the check and the write.
     if (isPrismaError(err, 'P2002')) throw mobileTaken();
-    // The account was deleted while this request was on its way.
     if (isPrismaError(err, 'P2025')) throw accountGone();
     throw err;
   }

@@ -12,7 +12,7 @@ import { useLogin } from '../hooks/useLogin';
 import { useMe } from '../hooks/useMe';
 
 /** Where a signed-in user lands. */
-const AFTER_LOGIN = '/account';
+const AFTER_LOGIN = '/profile';
 
 type Errors = { email?: string; password?: string };
 

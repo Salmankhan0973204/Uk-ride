@@ -458,7 +458,8 @@ export const openApiDocument = {
         summary: 'Change your profile',
         description:
           'A partial update: send only the fields to change. `gender: null` clears it. ' +
-          'The email cannot be changed here, and any field not listed is refused.',
+          'The email and the mobile cannot be changed here (the mobile has its own ' +
+          'endpoints, with a code), and any field not listed is refused.',
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
@@ -480,10 +481,96 @@ export const openApiDocument = {
             { $ref: '#/components/schemas/ApiFailure' },
           ),
           401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/users/me/mobile/code': {
+      post: {
+        tags: ['Users'],
+        summary: 'Change your mobile: send a code to the new number',
+        description:
+          'Step 1 of 2, as on ukride.uk. A CHANGE_MOBILE code goes by text to the new number: ' +
+          'valid 10 minutes, a new one after 60 s, at most 5 an hour. Nothing changes yet.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['mobile'],
+                additionalProperties: false,
+                properties: { mobile: { type: 'string', example: '+44 7400 123456' } },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Code sent',
+            successEnvelope({
+              type: 'object',
+              properties: {
+                sentTo: { type: 'string', example: '+44 •••• ••3456' },
+                channel: { type: 'string', enum: ['SMS'] },
+                expiresInSeconds: { type: 'integer', example: 600 },
+                resendAfterSeconds: { type: 'integer', example: 60 },
+              },
+            }),
+          ),
+          400: jsonResponse('Not a mobile number, or it is already yours', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
           409: jsonResponse('The mobile number belongs to another account', {
             $ref: '#/components/schemas/ApiFailure',
           }),
-          500: { $ref: '#/components/responses/Error' },
+          429: { $ref: '#/components/responses/RateLimited' },
+        },
+      },
+    },
+    '/users/me/mobile': {
+      post: {
+        tags: ['Users'],
+        summary: 'Change your mobile: check the code',
+        description:
+          'Step 2 of 2. The right code for this number replaces the mobile and marks it as ' +
+          'verified (`phoneVerifiedAt`). Five wrong tries end the code.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['mobile', 'code'],
+                additionalProperties: false,
+                properties: {
+                  mobile: { type: 'string', example: '+44 7400 123456' },
+                  code: { type: 'string', example: '519012' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Mobile number changed',
+            successEnvelope({
+              type: 'object',
+              required: ['user'],
+              properties: { user: { $ref: '#/components/schemas/Profile' } },
+            }),
+          ),
+          400: jsonResponse('Wrong, expired or used code, or the number is already yours', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          409: jsonResponse('The mobile number belongs to another account', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
         },
       },
     },
@@ -1273,7 +1360,6 @@ export const openApiDocument = {
         properties: {
           firstName: { type: 'string', minLength: 1, maxLength: 50, example: 'Sara' },
           lastName: { type: 'string', minLength: 1, maxLength: 50, example: 'Khan' },
-          mobile: { type: 'string', example: '+44 7400 123456' },
           gender: {
             allOf: [{ $ref: '#/components/schemas/Gender' }],
             nullable: true,

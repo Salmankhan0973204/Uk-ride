@@ -11,7 +11,7 @@ export function SiteNav() {
   const { data: user } = useMe();
 
   const link = (href: string, label: string, className = '') => {
-    // A section stays highlighted on its own sub-pages: /account covers /account/edit.
+    // A section stays highlighted on its own sub-pages: /profile covers /profile/mobile.
     const active = isActive(pathname, href);
     return (
       <Link
@@ -60,7 +60,7 @@ export function SiteNav() {
 
           {user ? (
             // Signed in: one way into the account, named after the person.
-            link('/account', user.firstName)
+            link('/profile', user.firstName)
           ) : (
             // Signed out, or still checking: the two ways in. Sign up is a glass
             // pill, not the accent: the accent belongs to each page's own main

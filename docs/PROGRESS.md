@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** none - Module 2 rework (profile) starts when asked
-- **Last completed:** Module 1 rework - auth like ukride.uk (tag `module-01-v2`)
-- **Next step:** 2.7 - change the mobile only with a code
-- **Steps done:** 49 of 113
+- **Current module:** Module 3 rework - fleet classes (not started)
+- **Last completed:** Module 2 rework - profile like ukride.uk (tag `module-02-v2`)
+- **Next step:** 3.8 - the six ukride.uk classes
+- **Steps done:** 51 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -21,7 +21,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
 | 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
 | 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete |
-| 2   | Profile                      | 6/8   | Rework  | Rework        | n/a         | Rework   |
+| 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
 | 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
 | 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
@@ -100,8 +100,8 @@ runs.
 - [x] 2.4 Profile page. _Learn: reading cached data._
 - [x] 2.5 Edit profile form. _Learn: updating the cache after a mutation._
 - [x] 2.6 Change password form, design pass.
-- [ ] 2.7 Change the mobile only with a code; the profile edit can no longer change it.
-- [ ] 2.8 `/profile` page like ukride.uk, replacing `/account`.
+- [x] 2.7 Change the mobile only with a code; the profile edit can no longer change it.
+- [x] 2.8 `/profile` page like ukride.uk, replacing `/account`.
 
 ### Module 3 - Fleet classes
 
@@ -2672,3 +2672,170 @@ Sign-in now works like ukride.uk:
 - **Pages (1.13):** the customer site's three pages follow the same steps.
 
 Staff keep their own 12-hour sessions on the admin panel (0.8).
+
+### Module 2 rework - profile like ukride.uk (branch `module-02-profile`)
+
+#### Step 2.7 - Change the mobile only with a code (done 2026-10-20)
+
+Built
+
+- **Two new endpoints, as on ukride.uk:**
+  1. `POST /users/me/mobile/code` `{ mobile }`: a CHANGE_MOBILE code by text to the new number
+     (the code rules from 1.9: 10 minutes, a new one after 60 s, 5 an hour)
+  2. `POST /users/me/mobile` `{ mobile, code }`: the right code for that number replaces the
+     mobile and sets `phoneVerifiedAt`; the answer is the updated profile
+- **Refused before any text is sent, and again before saving:**
+  - the number you already have (400 "This is already your mobile number")
+  - another account's number (409 on `mobile`)
+- **`PATCH /users/me` no longer takes `mobile`:** it is refused with "Only firstName, lastName
+  and gender can be changed here. The mobile is changed with a code".
+- `consumeOtp()` is split out of `verifyOtp()`. It checks a code and uses it up, for a step that
+  acts at once; `verifyOtp()` wraps it and issues a ticket.
+- **Customer site:**
+  - a new `/profile/mobile` page with two steps, the new number then the code (the shared
+    `CodeEntry`)
+  - a wrong number or a taken one is marked on the field
+  - success returns to the profile with "Your mobile number has been changed and confirmed."
+  - the edit form shows the mobile as text with a "Change mobile" link
+
+Verified (against the running API and Mailpit)
+
+- **Refusals:**
+  - a PATCH with `mobile` was refused, while a PATCH of the first name still worked
+  - a code to your own number, another account's (409), a landline and without a token (401)
+    were each refused
+  - asking again at once: 429 "Wait 59 seconds"
+- **Codes:**
+  - a wrong code: "4 tries left"
+  - the right code sent with a different number was refused
+  - a code asked for at sign-up (purpose SIGNUP) was not accepted for a change
+- **Change:** the right code changed the number and set `phoneVerifiedAt`. The same request
+  again was refused, as the number was now yours.
+- **Headless Edge:**
+  - the edit form had only first and last name (plus gender) and the "Change mobile" link
+  - on `/profile/mobile`, your own number and a taken one were marked on the field
+  - a new one reached the code step; the texted code changed it and returned to the profile
+    with the new number shown
+  - no horizontal scroll at 1440 and 360px
+
+Learning notes
+
+- A contact detail that receives codes is a key to the account. Changing it with a plain form
+  would let anyone at an unlocked laptop move future codes to their own phone.
+- The old number stays until the new one is proven, so a typo never locks anyone out.
+
+#### Step 2.8 - `/profile` like ukride.uk (done 2026-10-26)
+
+Built
+
+- **One page for the whole account, `/profile`** (`ProfilePage.tsx`), in three cards:
+  1. who you are: initials, name, "Member since", Sign out, and the admin panel link for
+     administrators
+  2. personal details: first name, last name and gender, edited in place
+     (`PersonalDetailsForm.tsx`); it sends only what changed, says "Nothing has changed." when
+     nothing did, and the saved name shows in the header at once
+  3. sign-in details: the email, the mobile with its Verified badge and "Change mobile", and the
+     password as dots with "Change password"
+- **Moved:** change password is now `/profile/password`; `/profile/mobile` stays where 2.7 put
+  it.
+- **Removed:** the `/account`, `/account/edit` and `/account/password` pages, `AccountPanel` and
+  `EditProfileForm`.
+- **Old addresses redirect** (308): `/account` and `/account/edit` to `/profile`,
+  `/account/password` to `/profile/password`, and `/verify-email` now to `/profile`.
+- Sign-in, sign-up, password reset, the header and the tab bar all go to `/profile`; the
+  "done" messages (welcome, reset, password, mobile) moved with them.
+
+Verified
+
+- Typecheck, lint and Prettier pass for the customer app.
+- **Redirects:** the four old addresses answered 308 to the right new one, also while signed
+  in.
+- **Headless Chrome, with a new test account (`step28.*@example.com`):**
+  - signed out, `/profile` went to `/login`; signing in landed on `/profile`
+  - Save with nothing changed: "Nothing has changed."
+  - an empty first name: "Enter your first name." on the field, with focus moved there
+  - a new first name: "Your details have been saved."; the heading and the header link changed
+    without a reload, and the name was still there after one
+  - `?done=mobile` and `?done=welcome` showed their messages
+  - Cancel on `/profile/password` goes back to `/profile`; Sign out went home
+  - five reloads in a row each made one refresh and showed the page
+  - no horizontal scroll at 390px; the sign-in rows stack with their links underneath
+
+Open items (both closed on 2026-10-27, see "Module 2 follow-ups" below)
+
+- **Reload during a refresh (Module 1 code, not this step):** if a page is left while
+  `/auth/refresh` is still answering, the browser can lose the new cookie. The next load then
+  gets 409 "refreshed a moment ago" twice, and after 30 seconds the old cookie counts as a
+  replay and ends every session. Seen once when the test script navigated very quickly; normal
+  reloads were fine.
+- The dev server logs "Router action dispatched before initialization" and a React "state
+  update on a component that hasn't mounted" warning on some loads. `/profile/mobile` from 2.7
+  does the same, so they are not from this page; check again in a production build.
+
+Learning notes
+
+- Retiring a route: keep the old address as a permanent redirect, so bookmarks and links in
+  old emails still land somewhere useful.
+- Editing in place, the form reads the cached user once. Later cache updates, including its
+  own save, must not overwrite what the person is typing.
+
+### Module 2 follow-ups (2026-10-27)
+
+#### Follow-up 1 - A refresh answer lost on the way no longer signs people out
+
+The bug
+
+- A refresh swaps cookie T1 for T2. If the page is left or reloaded before the answer arrives,
+  the browser never stores T2 and keeps sending T1.
+- T1 is already used, so for 30 seconds it got 409 "refreshed a moment ago" (the retry got the
+  same), and after that it counted as a stolen token and ended every session of the user.
+
+The fix (`auth.sessions.ts`)
+
+- A token used less than 30 seconds ago now gets the session's live token in its place: that
+  one is used up and a fresh one issued, so the browser is back in step.
+- This works however many answers were lost in a row. Every token after the returning one was
+  made inside the 30 seconds, so nothing older than the window allowed is handed out.
+- Still 409: no live token yet, because another refresh of the session is half done.
+- Still the same: a used token coming back after 30 seconds ends every session.
+- `rotateSession()` and the new `renewLostToken()` share one `claimAndRenew()`.
+
+Verified (against the running API, with a test account)
+
+- **Lost answer:** T1 refreshed, its answer ignored, T1 again: 200 (was 409).
+- **Several lost:** an old token two and three swaps behind the live one: 200.
+- **Replay:** a used token aged past the 30 seconds: 401, every token of the user gone, and
+  the token that was live afterwards also 401.
+- **Headless Chrome on the production build:** `/profile` loaded and was left the moment its
+  refresh was sent, five times in a row; the next load showed the profile, every refresh
+  answered 200, and the console was empty.
+- Typecheck, lint and Prettier pass for the backend.
+
+Learning notes
+
+- A rotation scheme must survive answers that never arrive. The server cannot tell "lost" from
+  "stolen", so a short window treats a recent reuse as lost and a late one as stolen.
+
+#### Follow-up 2 - The dev-server warnings
+
+- "Router action dispatched before initialization" and the React "state update on a component
+  that hasn't mounted" warning do not appear in a production build: `/profile`,
+  `/profile/mobile` and `/profile/password`, loaded, reloaded and left mid-refresh, gave no
+  console warnings or errors. They come from the development server, so nothing was changed.
+
+### Module 2 rework summary (complete 2026-10-27, tag `module-02-v2`)
+
+The profile now works like ukride.uk:
+
+- **Mobile (2.7):** changed only with a code to the new number; the profile edit no longer
+  takes it.
+- **One page (2.8):** `/profile` holds who you are, personal details edited in place, and the
+  sign-in details; `/account` and its pages redirect.
+- **Follow-up:** a refresh whose answer was lost is recovered instead of signing people out.
+
+Open items
+
+- Empty leftover folders from 0.7, still to delete by hand: `frontend/` (only ignored build
+  files) and `customer/src/app/admin/` (only empty folders).
+- The tests on GitHub are older than the 30-second window from 0.8: two of them replay a used
+  token at once and expect 401, which is now 200. They also still describe the single web app.

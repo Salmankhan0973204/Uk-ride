@@ -64,23 +64,23 @@ enum SessionAudience {
 // cookie; this table holds only its hash, so a copy of the database cannot be
 // used to take over sessions.
 model RefreshToken {
-  id        String          @id @default(uuid())
-  userId    String          @map("user_id")
+  id            String          @id @default(uuid())
+  userId        String          @map("user_id")
   // Deleting a user removes their sessions with them.
-  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   // One sign-in on one device. Rotation replaces the token but keeps this id,
   // and the access token carries it, so ending the session cuts off both.
-  sessionId String          @map("session_id")
-  audience  SessionAudience @default(CUSTOMER)
+  sessionId     String          @map("session_id")
+  audience      SessionAudience @default(CUSTOMER)
   // How long this session lasts from its last refresh, chosen at sign-in:
   // 30 days with "Remember me", 1 day without, 12 hours for staff.
-  lifetimeHours   Int             @default(168) @map("lifetime_hours")
-  tokenHash String          @unique @map("token_hash")
-  expiresAt DateTime        @map("expires_at")
+  lifetimeHours Int             @default(168) @map("lifetime_hours")
+  tokenHash     String          @unique @map("token_hash")
+  expiresAt     DateTime        @map("expires_at")
   // Set when the token is used (rotation) or the user signs out. A revoked
   // token that shows up again means it was copied.
-  revokedAt DateTime?       @map("revoked_at")
-  createdAt DateTime        @default(now()) @map("created_at")
+  revokedAt     DateTime?       @map("revoked_at")
+  createdAt     DateTime        @default(now()) @map("created_at")
 
   @@index([userId])
   @@index([sessionId])
@@ -90,20 +90,27 @@ model RefreshToken {
 // A class of car a customer can book, for example Saloon or Executive.
 // It describes the class, not one car: the cars themselves come in Module 4.
 model VehicleType {
-  id          String   @id @default(uuid())
+  id            String   @id @default(uuid())
   // Short, stable name for addresses and code, for example "executive".
-  slug        String   @unique
-  name        String
-  description String
-  // How many passengers and suitcases fit. Bookings will check against these.
-  passengers  Int
-  suitcases   Int
+  slug          String   @unique
+  name          String
+  description   String
+  // Shown as "Cars like ... or similar": "BMW 5 Series, Mercedes E Class".
+  // The customer books the class, never one particular model.
+  exampleModels String   @default("") @map("example_models")
+  // How many passengers, suitcases and hand bags fit. Bookings will check against these.
+  passengers    Int
+  suitcases     Int
+  handLuggage   Int      @default(0) @map("hand_luggage")
+  // A picture of the class, as a web address. Uploads are not planned, so an
+  // admin pastes the address of an image hosted elsewhere. None: no picture.
+  imageUrl      String?  @map("image_url")
   // Lower numbers are listed first.
-  sortOrder   Int      @default(0) @map("sort_order")
+  sortOrder     Int      @default(0) @map("sort_order")
   // Switched off instead of deleted, so old bookings keep their vehicle type.
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   // The cars of this class. One type has many vehicles; a vehicle has one type.
   vehicles    Vehicle[]

@@ -21,8 +21,11 @@ interface Values {
   name: string;
   slug: string;
   description: string;
+  exampleModels: string;
   passengers: string;
   suitcases: string;
+  handLuggage: string;
+  imageUrl: string;
   sortOrder: string;
 }
 type FieldName = keyof Values;
@@ -33,12 +36,25 @@ const FIELD_ORDER: FieldName[] = [
   'name',
   'slug',
   'description',
+  'exampleModels',
   'passengers',
   'suitcases',
+  'handLuggage',
+  'imageUrl',
   'sortOrder',
 ];
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+/** An http or https address, as the API accepts. */
+function isWebAddress(value: string) {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 /** A whole number in a range, or the reason it is not one. */
 function checkCount(value: string, what: string, min: number, max: number) {
@@ -68,10 +84,20 @@ function checkField(name: FieldName, values: Values, editing: boolean): string |
       if (!value) return 'Enter a description.';
       if (value.length > 200) return `Use at most 200 characters. You have ${value.length}.`;
       return;
+    case 'exampleModels':
+      if (value.length > 120) return `Use at most 120 characters. You have ${value.length}.`;
+      return;
     case 'passengers':
       return checkCount(value, 'passengers', 1, 8);
     case 'suitcases':
       return checkCount(value, 'suitcases', 0, 20);
+    case 'handLuggage':
+      return checkCount(value, 'hand bags', 0, 20);
+    case 'imageUrl':
+      if (!value) return;
+      if (value.length > 500) return 'Use at most 500 characters.';
+      if (!isWebAddress(value)) return 'Enter a web address starting with https://.';
+      return;
     case 'sortOrder':
       // When adding, empty means "put it at the end".
       if (!editing && !value) return;
@@ -82,11 +108,15 @@ function checkField(name: FieldName, values: Values, editing: boolean): string |
 function toNewVehicleType(values: Values): NewVehicleType {
   const slug = values.slug.trim().toLowerCase();
   const sortOrder = values.sortOrder.trim();
+  const imageUrl = values.imageUrl.trim();
   return {
     name: values.name.trim(),
     description: values.description.trim(),
+    exampleModels: values.exampleModels.trim(),
     passengers: Number(values.passengers),
     suitcases: Number(values.suitcases),
+    handLuggage: Number(values.handLuggage),
+    ...(imageUrl ? { imageUrl } : {}),
     ...(slug ? { slug } : {}),
     ...(sortOrder ? { sortOrder: Number(sortOrder) } : {}),
   };
@@ -97,14 +127,21 @@ function changedFields(type: AdminVehicleType, values: Values): VehicleTypeChang
   const changes: VehicleTypeChanges = {};
   const name = values.name.trim();
   const description = values.description.trim();
+  const exampleModels = values.exampleModels.trim();
   const passengers = Number(values.passengers);
   const suitcases = Number(values.suitcases);
+  const handLuggage = Number(values.handLuggage);
+  // An emptied box takes the picture away.
+  const imageUrl = values.imageUrl.trim() || null;
   const sortOrder = Number(values.sortOrder);
 
   if (name !== type.name) changes.name = name;
   if (description !== type.description) changes.description = description;
+  if (exampleModels !== type.exampleModels) changes.exampleModels = exampleModels;
   if (passengers !== type.passengers) changes.passengers = passengers;
   if (suitcases !== type.suitcases) changes.suitcases = suitcases;
+  if (handLuggage !== type.handLuggage) changes.handLuggage = handLuggage;
+  if (imageUrl !== type.imageUrl) changes.imageUrl = imageUrl;
   if (sortOrder !== type.sortOrder) changes.sortOrder = sortOrder;
   return changes;
 }
@@ -212,8 +249,11 @@ function Form({ type }: { type?: AdminVehicleType }) {
     name: type?.name ?? '',
     slug: type?.slug ?? '',
     description: type?.description ?? '',
+    exampleModels: type?.exampleModels ?? '',
     passengers: type ? String(type.passengers) : '',
     suitcases: type ? String(type.suitcases) : '',
+    handLuggage: type ? String(type.handLuggage) : '',
+    imageUrl: type?.imageUrl ?? '',
     sortOrder: type ? String(type.sortOrder) : '',
   }));
   const [errors, setErrors] = useState<Errors>({});
@@ -282,6 +322,8 @@ function Form({ type }: { type?: AdminVehicleType }) {
   }
 
   const slugHint = 'Used in the address. Leave it empty to make it from the name.';
+  const modelsHint = 'Shown as "Cars like … or similar". Separate them with commas.';
+  const imageHint = 'The web address of a picture of this class. Leave it empty for none.';
   const orderHint = editing
     ? 'Lower numbers are listed first.'
     : 'Lower numbers are listed first. Leave it empty to put this type last.';
@@ -339,7 +381,17 @@ function Form({ type }: { type?: AdminVehicleType }) {
             <textarea {...control('description')} rows={3} />
           </Field>
 
-          <div className="grid gap-5 sm:grid-cols-2 sm:gap-4">
+          <Field
+            id={id('exampleModels')}
+            label="Example models"
+            optional
+            hint={modelsHint}
+            error={errors.exampleModels}
+          >
+            <input {...control('exampleModels', modelsHint)} type="text" autoComplete="off" />
+          </Field>
+
+          <div className="grid gap-5 sm:grid-cols-3 sm:gap-4">
             <Field id={id('passengers')} label="Passengers" error={errors.passengers}>
               <input
                 {...control('passengers')}
@@ -351,7 +403,32 @@ function Form({ type }: { type?: AdminVehicleType }) {
             <Field id={id('suitcases')} label="Suitcases" error={errors.suitcases}>
               <input {...control('suitcases')} type="text" inputMode="numeric" autoComplete="off" />
             </Field>
+            <Field id={id('handLuggage')} label="Hand bags" error={errors.handLuggage}>
+              <input
+                {...control('handLuggage')}
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+              />
+            </Field>
           </div>
+
+          <Field
+            id={id('imageUrl')}
+            label="Image address"
+            optional
+            hint={imageHint}
+            error={errors.imageUrl}
+          >
+            <input
+              {...control('imageUrl', imageHint)}
+              type="url"
+              inputMode="url"
+              autoComplete="off"
+              autoCapitalize="none"
+              spellCheck={false}
+            />
+          </Field>
 
           <Field
             id={id('sortOrder')}

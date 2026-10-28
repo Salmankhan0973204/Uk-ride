@@ -103,6 +103,9 @@ export function AdminVehicleTypes() {
                 <th scope="col" className="px-4 py-3 text-right font-medium max-md:hidden">
                   Suitcases
                 </th>
+                <th scope="col" className="px-4 py-3 text-right font-medium max-md:hidden">
+                  Hand bags
+                </th>
                 <th scope="col" className="px-4 py-3 text-right font-medium max-lg:hidden">
                   Order
                 </th>
@@ -130,7 +133,7 @@ function Status({ type }: { type: AdminVehicleType }) {
   return type.isActive ? <Badge variant="success">On offer</Badge> : <Badge>Switched off</Badge>;
 }
 
-const COLUMNS = 6;
+const COLUMNS = 7;
 const COMPACT = 'btn btn-ghost min-h-11! px-4! py-0! text-sm';
 
 const problem = (error: ApiError, doing: string) =>
@@ -193,7 +196,8 @@ function Row({ type }: { type: AdminVehicleType }) {
             {/* On narrow screens the columns fold into the first cell. */}
             <p className="text-sm text-ink-muted md:hidden">
               <span className="whitespace-nowrap">{plural(type.passengers, 'passenger')},</span>{' '}
-              <span className="whitespace-nowrap">{plural(type.suitcases, 'suitcase')}</span>
+              <span className="whitespace-nowrap">{plural(type.suitcases, 'suitcase')},</span>{' '}
+              <span className="whitespace-nowrap">{plural(type.handLuggage, 'hand bag')}</span>
             </p>
             <div className="pt-1 sm:hidden">
               <Status type={type} />
@@ -202,6 +206,7 @@ function Row({ type }: { type: AdminVehicleType }) {
         </th>
         <td className="px-4 py-4 text-right max-md:hidden">{type.passengers}</td>
         <td className="px-4 py-4 text-right max-md:hidden">{type.suitcases}</td>
+        <td className="px-4 py-4 text-right max-md:hidden">{type.handLuggage}</td>
         <td className="px-4 py-4 text-right text-ink-muted max-lg:hidden">{type.sortOrder}</td>
         <td className="px-4 py-4 max-sm:hidden">
           <Status type={type} />

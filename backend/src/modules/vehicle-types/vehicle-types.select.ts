@@ -9,8 +9,11 @@ export const publicVehicleType = {
   slug: true,
   name: true,
   description: true,
+  exampleModels: true,
   passengers: true,
   suitcases: true,
+  handLuggage: true,
+  imageUrl: true,
 } satisfies Prisma.VehicleTypeSelect;
 
 /** What an admin sees: the same, plus what is needed to manage the catalogue. */

@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 3 rework - fleet classes (not started)
+- **Current module:** Module 3 rework - fleet classes (branch `module-03-fleet-classes`)
 - **Last completed:** Module 2 rework - profile like ukride.uk (tag `module-02-v2`)
-- **Next step:** 3.8 - the six ukride.uk classes
-- **Steps done:** 51 of 113
+- **Next step:** 3.9 - fleet section on the home page
+- **Steps done:** 52 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -22,7 +22,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
 | 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete |
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
-| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
+| 3   | Fleet classes                | 8/9   | Rework  | Rework        | Done        | Rework   |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
 | 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
@@ -112,7 +112,7 @@ runs.
 - [x] 3.5 Customer catalogue page. _Learn: list queries._
 - [x] 3.6 Admin table with create and edit form. _Learn: query invalidation._
 - [x] 3.7 Deactivate with confirmation, design pass.
-- [ ] 3.8 The six ukride.uk classes (8 Seater, Executive, MPV, Estate, Mercedes S Class,
+- [x] 3.8 The six ukride.uk classes (8 Seater, Executive, MPV, Estate, Mercedes S Class,
       Saloon): example models, hand-luggage capacity, an optional image address.
 - [ ] 3.9 Fleet section on the home page; `/vehicles` folds into it.
 
@@ -2839,3 +2839,67 @@ Open items
   files) and `customer/src/app/admin/` (only empty folders).
 - The tests on GitHub are older than the 30-second window from 0.8: two of them replay a used
   token at once and expect 401, which is now 200. They also still describe the single web app.
+
+### Module 3 rework - fleet classes like ukride.uk (branch `module-03-fleet-classes`)
+
+#### Step 3.8 - The six ukride.uk classes (done 2026-10-28)
+
+Built
+
+- **Three new fields on `VehicleType`**, in the migration `fleet_classes_like_ukride`:
+  - `exampleModels`: text shown as "Cars like ... or similar"; empty by default
+  - `handLuggage`: hand bags, 0 to 20
+  - `imageUrl`: the address of a picture hosted elsewhere, or null. Only http and https are
+    accepted, so a `javascript:` address can never reach an image tag.
+- **The same migration turns the placeholder classes into ukride.uk's six**, in its order:
+
+  | Class            | Seats | Cases | Hand bags | Cars like ... or similar                          |
+  | ---------------- | ----- | ----- | --------- | ------------------------------------------------- |
+  | 8 Seater         | 8     | 8     | 8         | VW Transporter, Mercedes Vito                     |
+  | Executive        | 3     | 4     | 3         | BMW 5 Series, Mercedes E Class, Tesla Model S     |
+  | MPV              | 5     | 6     | 5         | Mercedes V Class, Tesla Model X, Mercedes Viano   |
+  | Estate           | 3     | 4     | 3         | MG5 EV, Toyota Auris, Tesla Model S               |
+  | Mercedes S Class | 4     | 3     | 4         | Mercedes-Benz S Class                             |
+  | Saloon           | 4     | 3     | 4         | Toyota Prius, Tesla Model 3, Mitsubishi Outlander |
+  - "Minibus" (8 seats, 8 cases) became "8 Seater", slug `8-seater`: no booking points at a
+    slug yet. "People carrier" became "MPV".
+  - Mercedes S Class is new and comes from the seed, which now lists the six.
+  - The updates are in the migration, not the seed, because the seed never changes a row that
+    exists. A new database gets the six from the seed.
+
+- **API:** the public and admin answers carry the three fields; create and update accept them;
+  `imageUrl: null` takes the picture away. Swagger shows them.
+- **Admin panel:** the form has "Example models", "Hand bags" beside passengers and suitcases,
+  and "Image address" (an emptied box sends null). The table has a "Hand bags" column, folded
+  into the first cell on narrow screens.
+
+Verified
+
+- **API:** the six classes in order with their fields; `/vehicle-types/minibus` is 404 and
+  `/vehicle-types/mercedes-s-class` answers. Refused with a message on the field: a
+  `javascript:` image, a bare file name, 21 hand bags, "3" as text, 121 characters of models.
+  An https image was saved and `null` cleared it. The test class made on the way was deleted.
+- **Headless Chrome, admin panel:**
+  - the table showed the "Hand bags" column and the six rows
+  - the Saloon form opened filled in
+  - a `javascript:` image was marked on the field, with focus moved there; so were 21 hand bags
+  - saving 5 hand bags and an image showed "The vehicle type has been updated." and the API
+    had both; emptying the image box set it back to null
+  - no horizontal scroll at 390 and 768px; no console warnings
+- Typecheck, lint and Prettier pass for the three apps; `prisma migrate diff` finds nothing
+  left between the schema and the database.
+
+Notes
+
+- Hand luggage is not published on ukride.uk, so it starts at one bag per passenger. Change it
+  in the admin panel when the real numbers are known.
+- ukride.uk writes "MGS EV" for the Estate; read as the MG5 EV estate.
+- No pictures are set. ukride.uk's are on its CMS; paste an address in the admin form to use
+  one.
+
+Learning notes
+
+- A data change that must happen once belongs in a migration, which runs exactly once per
+  database. A seed that can run again must never overwrite what an admin has changed.
+- An address typed by a person and rendered in a page is input like any other: check its
+  scheme before it reaches the browser.

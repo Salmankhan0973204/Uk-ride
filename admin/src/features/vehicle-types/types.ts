@@ -5,8 +5,13 @@ export interface VehicleType {
   slug: string;
   name: string;
   description: string;
+  /** Shown as "Cars like ... or similar". Empty when not set. */
+  exampleModels: string;
   passengers: number;
   suitcases: number;
+  handLuggage: number;
+  /** The address of a picture hosted elsewhere, or null for none. */
+  imageUrl: string | null;
 }
 
 /** A vehicle type as an admin sees it: GET /api/v1/admin/vehicle-types. */
@@ -25,8 +30,11 @@ export interface NewVehicleType {
   /** Left out: the API makes it from the name. */
   slug?: string;
   description: string;
+  exampleModels?: string;
   passengers: number;
   suitcases: number;
+  handLuggage?: number;
+  imageUrl?: string | null;
   /** Left out: the type goes to the end of the list. */
   sortOrder?: number;
 }
@@ -35,6 +43,14 @@ export interface NewVehicleType {
 export type VehicleTypeChanges = Partial<
   Pick<
     AdminVehicleType,
-    'name' | 'description' | 'passengers' | 'suitcases' | 'sortOrder' | 'isActive'
+    | 'name'
+    | 'description'
+    | 'exampleModels'
+    | 'passengers'
+    | 'suitcases'
+    | 'handLuggage'
+    | 'imageUrl'
+    | 'sortOrder'
+    | 'isActive'
   >
 >;

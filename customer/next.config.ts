@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   /**
    * Retired addresses. Old bookmarks and emailed links still land somewhere
    * useful: sign-up moved to /signup and email links were replaced by codes
-   * (step 1.13); the account pages became /profile (step 2.8).
+   * (step 1.13); the account pages became /profile (step 2.8); the vehicles
+   * page became the fleet section of the home page (step 3.9).
    */
   async redirects() {
     return [
@@ -14,6 +15,7 @@ const nextConfig: NextConfig = {
       { source: '/account', destination: '/profile', permanent: true },
       { source: '/account/edit', destination: '/profile', permanent: true },
       { source: '/account/password', destination: '/profile/password', permanent: true },
+      { source: '/vehicles', destination: '/#fleet', permanent: true },
     ];
   },
 };

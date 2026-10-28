@@ -60,8 +60,8 @@ Drivers have no app among the three yet; the admin panel acts for them.
 
 - Built so far: the app shell and the `/system-status` screen (Module 0); the `/register`,
   `/login`, `/verify-email`, `/forgot-password` and `/reset-password` screens (Module 1); the
-  `/account` profile page with `/account/edit` and `/account/password` (Module 2); the public
-  `/vehicles` catalogue and the admin screens under `/admin/vehicle-types` (Module 3); the
+  `/profile` page with `/profile/mobile` and `/profile/password` (Module 2); the fleet
+  section of the home page and the admin screens under `/admin/vehicle-types` (Module 3); the
   fleet screens under `/admin/vehicles` (Module 4); the `/quote` page and the admin pricing
   screens under `/admin/pricing` (Module 5).
 - Planned, in order (docs/PROGRESS.md): the three-app split, then auth, profile, fleet and

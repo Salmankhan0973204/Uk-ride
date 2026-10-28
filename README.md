@@ -161,11 +161,11 @@ npm run dev
 `npm run dev:customer`, `npm run dev:admin`.
 
 On the customer site, create an account at http://localhost:3000/signup, sign in at
-http://localhost:3000/login and see your profile at http://localhost:3000/account. Phone and
+http://localhost:3000/login and see your profile at http://localhost:3000/profile. Phone and
 email codes arrive in Mailpit at http://localhost:8025 (a "text message" is an email to
 `<number>@sms.ukride.local`); a forgotten password is reset at
-http://localhost:3000/forgot-password. The vehicle
-types are at http://localhost:3000/vehicles and prices between two postcodes at
+http://localhost:3000/forgot-password. The fleet is on the home page at
+http://localhost:3000/#fleet and prices between two postcodes are at
 http://localhost:3000/quote.
 
 The admin panel has its own staff sign-in. Make your account an admin once with

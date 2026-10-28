@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 3 rework - fleet classes (not started)
-- **Last completed:** Module 2 rework - profile like ukride.uk (tag `module-02-v2`)
-- **Next step:** 3.8 - the six ukride.uk classes
-- **Steps done:** 51 of 113
+- **Current module:** Module 5 rework - pricing and quotes (not started)
+- **Last completed:** Module 3 rework - fleet classes like ukride.uk (tag `module-03-v2`)
+- **Next step:** 5.8 - address search with suggestions
+- **Steps done:** 53 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -22,7 +22,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
 | 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete |
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
-| 3   | Fleet classes                | 7/9   | Rework  | Rework        | Done        | Rework   |
+| 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
 | 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
@@ -112,9 +112,9 @@ runs.
 - [x] 3.5 Customer catalogue page. _Learn: list queries._
 - [x] 3.6 Admin table with create and edit form. _Learn: query invalidation._
 - [x] 3.7 Deactivate with confirmation, design pass.
-- [ ] 3.8 The six ukride.uk classes (8 Seater, Executive, MPV, Estate, Mercedes S Class,
+- [x] 3.8 The six ukride.uk classes (8 Seater, Executive, MPV, Estate, Mercedes S Class,
       Saloon): example models, hand-luggage capacity, an optional image address.
-- [ ] 3.9 Fleet section on the home page; `/vehicles` folds into it.
+- [x] 3.9 Fleet section on the home page; `/vehicles` folds into it.
 
 ### Module 4 - Fleet vehicles
 
@@ -2839,3 +2839,123 @@ Open items
   files) and `customer/src/app/admin/` (only empty folders).
 - The tests on GitHub are older than the 30-second window from 0.8: two of them replay a used
   token at once and expect 401, which is now 200. They also still describe the single web app.
+
+### Module 3 rework - fleet classes like ukride.uk (branch `module-03-fleet-classes`)
+
+#### Step 3.8 - The six ukride.uk classes (done 2026-10-28)
+
+Built
+
+- **Three new fields on `VehicleType`**, in the migration `fleet_classes_like_ukride`:
+  - `exampleModels`: text shown as "Cars like ... or similar"; empty by default
+  - `handLuggage`: hand bags, 0 to 20
+  - `imageUrl`: the address of a picture hosted elsewhere, or null. Only http and https are
+    accepted, so a `javascript:` address can never reach an image tag.
+- **The same migration turns the placeholder classes into ukride.uk's six**, in its order:
+
+  | Class            | Seats | Cases | Hand bags | Cars like ... or similar                          |
+  | ---------------- | ----- | ----- | --------- | ------------------------------------------------- |
+  | 8 Seater         | 8     | 8     | 8         | VW Transporter, Mercedes Vito                     |
+  | Executive        | 3     | 4     | 3         | BMW 5 Series, Mercedes E Class, Tesla Model S     |
+  | MPV              | 5     | 6     | 5         | Mercedes V Class, Tesla Model X, Mercedes Viano   |
+  | Estate           | 3     | 4     | 3         | MG5 EV, Toyota Auris, Tesla Model S               |
+  | Mercedes S Class | 4     | 3     | 4         | Mercedes-Benz S Class                             |
+  | Saloon           | 4     | 3     | 4         | Toyota Prius, Tesla Model 3, Mitsubishi Outlander |
+  - "Minibus" (8 seats, 8 cases) became "8 Seater", slug `8-seater`: no booking points at a
+    slug yet. "People carrier" became "MPV".
+  - Mercedes S Class is new and comes from the seed, which now lists the six.
+  - The updates are in the migration, not the seed, because the seed never changes a row that
+    exists. A new database gets the six from the seed.
+
+- **API:** the public and admin answers carry the three fields; create and update accept them;
+  `imageUrl: null` takes the picture away. Swagger shows them.
+- **Admin panel:** the form has "Example models", "Hand bags" beside passengers and suitcases,
+  and "Image address" (an emptied box sends null). The table has a "Hand bags" column, folded
+  into the first cell on narrow screens.
+
+Verified
+
+- **API:** the six classes in order with their fields; `/vehicle-types/minibus` is 404 and
+  `/vehicle-types/mercedes-s-class` answers. Refused with a message on the field: a
+  `javascript:` image, a bare file name, 21 hand bags, "3" as text, 121 characters of models.
+  An https image was saved and `null` cleared it. The test class made on the way was deleted.
+- **Headless Chrome, admin panel:**
+  - the table showed the "Hand bags" column and the six rows
+  - the Saloon form opened filled in
+  - a `javascript:` image was marked on the field, with focus moved there; so were 21 hand bags
+  - saving 5 hand bags and an image showed "The vehicle type has been updated." and the API
+    had both; emptying the image box set it back to null
+  - no horizontal scroll at 390 and 768px; no console warnings
+- Typecheck, lint and Prettier pass for the three apps; `prisma migrate diff` finds nothing
+  left between the schema and the database.
+
+Notes
+
+- Hand luggage is not published on ukride.uk, so it starts at one bag per passenger. Change it
+  in the admin panel when the real numbers are known.
+- ukride.uk writes "MGS EV" for the Estate; read as the MG5 EV estate.
+- No pictures are set. ukride.uk's are on its CMS; paste an address in the admin form to use
+  one.
+
+Learning notes
+
+- A data change that must happen once belongs in a migration, which runs exactly once per
+  database. A seed that can run again must never overwrite what an admin has changed.
+- An address typed by a person and rendered in a page is input like any other: check its
+  scheme before it reaches the browser.
+
+#### Step 3.9 - Fleet section on the home page (done 2026-10-28)
+
+Built
+
+- **"Our fleet" on the home page** (`FleetSection.tsx`, replacing `VehicleCatalogue.tsx`), under
+  the hero, as on ukride.uk: one glass card per class, three to a row from 1024px, two from
+  640px, one on a phone. Each card has:
+  - the picture when an admin has set one, or a car icon beside the name
+  - the name and "Cars like ... or similar"
+  - the description
+  - passengers, suitcases and hand bags, each with an icon, at the bottom of the card
+- **"See the vehicles" became "See the fleet"**, a link to `#fleet`; the section's title stops
+  clear of the floating navigation bar.
+- **`/vehicles` is retired:** the page is gone and the address answers 308 to `/#fleet`.
+  "Vehicles" left the header, the tab bar and the footer, with its car icon.
+- `FLEET_ANCHOR` lives in `features/vehicle-types/paths.ts`, not in the component: a server
+  component that imports a constant from a `'use client'` file gets a client reference, not
+  the string. That first rendered the link with no address.
+- `DESIGN.md` describes the fleet cards; README and PRODUCT.md point at `/#fleet` and
+  `/profile`.
+
+Verified (headless Chrome against the dev server)
+
+- The six cards in order, with their models and counts; three, two and one to a row at 1440,
+  768 and 360px; no horizontal scroll.
+- A screen reader reads the counts as "Passengers 8, Suitcases 8, Hand bags 8"; the section is
+  labelled "Our fleet".
+- "See the fleet" scrolled the title to 112px from the top, below the bar (which ends at 74px).
+- `/vehicles` answered 308 to `/#fleet` and the browser landed there.
+- The navigation reads Home, Prices, Sign in, Sign up, Profile.
+- With a picture set on the Saloon (ukride.uk's own), it loaded above the name and the cards of
+  that row kept one height; the picture was then cleared.
+- No console warnings or errors; typecheck, lint and Prettier pass.
+
+Learning notes
+
+- Retiring a page into a section of another: redirect to its anchor (`/#fleet`), so old links
+  still land on the content.
+- In the App Router, only components cross the server/client line usefully. Plain values that
+  both sides need go in a module without `'use client'`.
+
+### Module 3 rework summary (complete 2026-10-28, tag `module-03-v2`)
+
+The fleet now follows ukride.uk:
+
+- **Classes (3.8):** the six ukride.uk classes with example models, hand luggage and an
+  optional picture; editable in the admin panel.
+- **Home page (3.9):** the fleet is a section of the home page; `/vehicles` redirects there.
+  This also closes the Module 0 open item about the old page saying prices are not published.
+
+Open items
+
+- Hand luggage starts at one bag per passenger; set the real numbers in the admin panel.
+- No class has a picture yet. Paste an image address in the admin form to add one.
+- The quote form still lists the classes by name only; it moves to the booking widget in 5.13.

@@ -14,13 +14,6 @@ const ICONS: Record<NavIcon, React.ReactNode> = {
       <circle cx="8" cy="8.5" r="1.4" />
     </>
   ),
-  car: (
-    <>
-      <path d="M5 16V11.5L7 6.5h10l2 5V16M3.5 16h17" />
-      <circle cx="7.5" cy="17.5" r="1.8" />
-      <circle cx="16.5" cy="17.5" r="1.8" />
-    </>
-  ),
   user: (
     <>
       <circle cx="12" cy="8" r="3.6" />

@@ -27,4 +27,8 @@ export const queryKeys = {
     all: ['pricing'] as const,
     list: () => [...queryKeys.pricing.all, 'list'] as const,
   },
+  airports: {
+    all: ['airports'] as const,
+    list: () => [...queryKeys.airports.all, 'list'] as const,
+  },
 };

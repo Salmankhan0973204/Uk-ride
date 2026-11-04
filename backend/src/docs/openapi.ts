@@ -1172,15 +1172,121 @@ export const openApiDocument = {
         },
       },
     },
+    '/admin/airports': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Every airport',
+        description: 'Switched off or not, in list order.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'All airports',
+            successEnvelope({
+              type: 'object',
+              required: ['airports'],
+              properties: {
+                airports: { type: 'array', items: { $ref: '#/components/schemas/AdminAirport' } },
+              },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+      post: {
+        tags: ['Admin'],
+        summary: 'Add an airport',
+        description:
+          'The map position is looked up from the main postcode with postcodes.io. Each entry ' +
+          'of `postcodes` is tidied ("rh60pj" becomes "RH6 0PJ") and repeats are dropped.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/CreateAirportRequest' } },
+          },
+        },
+        responses: {
+          201: jsonResponse(
+            'Airport added',
+            successEnvelope({
+              type: 'object',
+              required: ['airport'],
+              properties: { airport: { $ref: '#/components/schemas/AdminAirport' } },
+            }),
+          ),
+          400: jsonResponse('A field is missing or wrong, or the main postcode does not exist', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          409: jsonResponse('Another airport already uses this code', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          503: jsonResponse('The postcode service could not be reached', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/airports/{id}': {
+      patch: {
+        tags: ['Admin'],
+        summary: 'Change an airport, or switch it off or on',
+        description:
+          'Send only the fields to change. A new main postcode moves the airport on the map. ' +
+          'There is no DELETE: `isActive: false` switches an airport off.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UpdateAirportRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Airport updated',
+            successEnvelope({
+              type: 'object',
+              required: ['airport'],
+              properties: { airport: { $ref: '#/components/schemas/AdminAirport' } },
+            }),
+          ),
+          400: jsonResponse('A field is wrong, or nothing was sent', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No airport has this id', { $ref: '#/components/schemas/ApiFailure' }),
+          409: jsonResponse('Another airport already uses this code', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
     '/places': {
       get: {
         tags: ['Places'],
         summary: 'Suggest addresses for what has been typed',
         description:
-          'Public. Up to 8 UK suggestions: postcodes first when the text is a postcode or the ' +
+          'Public. Up to 8 UK suggestions: our airports first when the text names one (by ' +
+          'name or code), then postcodes when the text is a postcode or the ' +
           'start of one (postcodes.io), then addresses, streets, stations and places ' +
           '(Photon, over OpenStreetMap), nearer central London first. If one service is ' +
-          'down the other still answers; only when both fail is it a 503.',
+          'down the other still answers; only when there is nothing to show is it a 503. ' +
+          "Each suggestion inside an airport's postcodes carries `airport`.",
         parameters: [
           {
             name: 'q',
@@ -1671,7 +1777,7 @@ export const openApiDocument = {
       },
       PlaceSuggestion: {
         type: 'object',
-        required: ['label', 'detail', 'latitude', 'longitude', 'postcode', 'kind'],
+        required: ['label', 'detail', 'latitude', 'longitude', 'postcode', 'kind', 'airport'],
         properties: {
           label: { type: 'string', example: 'Heathrow Terminal 5' },
           detail: {
@@ -1682,8 +1788,84 @@ export const openApiDocument = {
           latitude: { type: 'number', example: 51.472515 },
           longitude: { type: 'number', example: -0.4877331 },
           postcode: { type: 'string', nullable: true, example: 'TW6 2GD' },
-          kind: { type: 'string', enum: ['postcode', 'address'] },
+          kind: {
+            type: 'string',
+            enum: ['airport', 'postcode', 'address'],
+            description: 'airport: one of our own airports, at its main postcode',
+          },
+          airport: {
+            type: 'object',
+            nullable: true,
+            description: "Set when the place is inside one of our airports' postcodes",
+            properties: {
+              code: { type: 'string', example: 'LHR' },
+              name: { type: 'string', example: 'Heathrow Airport' },
+            },
+          },
         },
+      },
+      AdminAirport: {
+        type: 'object',
+        required: [
+          'id',
+          'code',
+          'name',
+          'postcode',
+          'latitude',
+          'longitude',
+          'postcodes',
+          'sortOrder',
+          'isActive',
+        ],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          code: { type: 'string', example: 'LHR' },
+          name: { type: 'string', example: 'Heathrow Airport' },
+          postcode: { type: 'string', example: 'TW6 1EW', description: 'The main postcode' },
+          latitude: { type: 'number', example: 51.469777 },
+          longitude: { type: 'number', example: -0.449559 },
+          postcodes: {
+            type: 'array',
+            items: { type: 'string' },
+            example: ['TW6'],
+            description: 'Whole postcodes, districts (TW6) or sectors (RH6 0) that also count',
+          },
+          sortOrder: { type: 'integer', example: 10 },
+          isActive: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      CreateAirportRequest: {
+        type: 'object',
+        required: ['code', 'name', 'postcode'],
+        additionalProperties: false,
+        properties: {
+          code: { type: 'string', pattern: '^[A-Za-z]{3}$', example: 'MAN' },
+          name: { type: 'string', minLength: 2, maxLength: 60, example: 'Manchester Airport' },
+          postcode: { type: 'string', example: 'M90 1QX' },
+          postcodes: {
+            type: 'array',
+            maxItems: 30,
+            items: { type: 'string' },
+            example: ['M90 1', 'M90 3'],
+          },
+          sortOrder: { type: 'integer', minimum: 0, maximum: 9999 },
+        },
+      },
+      UpdateAirportRequest: {
+        type: 'object',
+        additionalProperties: false,
+        minProperties: 1,
+        properties: {
+          code: { type: 'string', pattern: '^[A-Za-z]{3}$' },
+          name: { type: 'string', minLength: 2, maxLength: 60 },
+          postcode: { type: 'string' },
+          postcodes: { type: 'array', maxItems: 30, items: { type: 'string' } },
+          sortOrder: { type: 'integer', minimum: 0, maximum: 9999 },
+          isActive: { type: 'boolean' },
+        },
+        example: { isActive: false },
       },
       QuoteLine: {
         type: 'object',

@@ -5,8 +5,8 @@ Update this file after every coding session.
 - **Current module:** Module 5 rework - pricing and quotes (in progress, branch
   `module-05-journey-quotes`)
 - **Last completed:** Module 3 rework - fleet classes like ukride.uk (tag `module-03-v2`)
-- **Next step:** 5.9 - airport detection by postcode
-- **Steps done:** 54 of 113
+- **Next step:** 5.10 - settings, discounts and `GET /config`
+- **Steps done:** 55 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -25,7 +25,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
 | 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 8/13  | Rework  | Rework        | Rework      | Rework   |
+| 5   | Pricing and quotes           | 9/13  | Rework  | Rework        | Rework      | Rework   |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
 | 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
 | 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
@@ -140,7 +140,7 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
 - [x] 5.7 Customer quote form with the price breakdown, design pass.
 - [x] 5.8 Address search with suggestions (Photon and postcodes.io).
       _Learn: autocomplete, debouncing._
-- [ ] 5.9 Airport detection by postcode: seven airports seeded, editable in the admin app.
+- [x] 5.9 Airport detection by postcode: seven airports seeded, editable in the admin app.
 - [ ] 5.10 Settings, discounts and `GET /config`: Meet & Greet (£10), booking lead time
       (4 h), edit cut-off (4 h), unpaid expiry (30 min), driver details shown 60 min before
       pick-up, a discount % per class. _Learn: configuration as data._
@@ -3010,3 +3010,49 @@ Open items
 
 - komoot's public Photon server is for fair use only. Before going live: our own Photon in
   Docker, or a paid geocoder.
+
+#### Step 5.9 - Airport detection by postcode (done 2026-11-04)
+
+Built
+
+- `Airport` table (migration `add_airports`): IATA code (unique), name, a main postcode with
+  its map position, a list of other postcodes that count, list order and on/off.
+- Seven airports seeded: Heathrow, Gatwick, Stansted, Luton, London City, Southend and
+  Birmingham. A list entry is a whole postcode, a district (`TW6`) or a sector (`RH6 0`).
+  Only Heathrow has a district to itself; around the others the same sector also holds homes
+  (E16 2 is Silvertown, LU2 9 is Wigmore, checked with postcodes.io), so they start with
+  their terminals' own postcodes only.
+- `airportFor(postcode, airports)` in `backend/src/modules/airports/airports.match.ts`
+  compares by postcode parts, so `E1` never covers `E16 2PX`.
+- The address search (`GET /places`) lists our airports first when the text names one ("gat",
+  "LHR", "airport"), still shows them when the map services are down, drops the map's own copy
+  of the same name, and marks any suggestion inside an airport's postcodes with `airport`
+  ("Heathrow Terminal 5", TW6 2GD, is marked LHR).
+- Admin: `GET/POST /admin/airports`, `PATCH /admin/airports/:id` (no DELETE; `isActive:
+false` switches one off). The map position is looked up from the main postcode on save.
+- Admin panel: an Airports section with the table, an add form and an edit form with an
+  "On offer" box.
+
+Verified
+
+- API with a temporary admin: the list, every validation message, an unknown postcode (400 on
+  `postcode`), a taken code (409), rename, switch off, an unknown id (404), an empty change
+  (400); a switched-off airport drops out of the search.
+- In headless Chrome: the table at 1440, 768, 390 and 360 px with no sideways scrolling; the
+  empty form's three messages with focus on the first; a bad list entry; the API's "could not
+  find the postcode" placed on its field; a postcode tidied when the box is left; add, then
+  switch off, each coming back to the table with its message. The test airport and the
+  temporary admin were deleted afterwards.
+
+Learning notes
+
+- Check the data before choosing a rule: "match the postcode sector" looked right until the
+  sectors around London City and Luton turned out to be full of homes.
+- Comparing postcodes as strings is a trap; compare their parts.
+
+Open items
+
+- Some addresses on airport land have postcodes outside the list (for example a Photon pin
+  for the Gatwick North Terminal building), so they are not seen as the airport. Picking the
+  airport itself from the search always is. Admins can add postcodes.
+- The seventh airport (Birmingham) was my choice; the plan only said "seven".

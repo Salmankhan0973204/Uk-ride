@@ -181,6 +181,35 @@ model PricingRule {
   @@map("pricing_rules")
 }
 
+// An airport we serve. A journey that starts, stops or ends at one pays the
+// class's airport fee; a pick-up from one needs a flight number and may have
+// Meet & Greet.
+model Airport {
+  id        String   @id @default(uuid())
+  // The three-letter IATA code: "LHR". Shown beside the name, and searched.
+  code      String   @unique
+  name      String
+  // Where the airport is when a customer picks it from the address search:
+  // the main terminal's postcode, and that postcode's map position, looked
+  // up when an admin saves it.
+  postcode  String
+  latitude  Float
+  longitude Float
+  // The postcodes that count as this airport, besides the main one. An entry
+  // is a whole postcode ("RH6 0PJ"), a district ("TW6": every postcode in
+  // it) or a sector ("RH6 0"). Most airports share their district with homes
+  // nearby, so whole postcodes are the safe choice.
+  postcodes String[]
+  // Lower numbers are listed first.
+  sortOrder Int      @default(0) @map("sort_order")
+  // Switched off instead of deleted: old bookings keep their airport.
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("airports")
+}
+
 // What a one-time code is for. A code (and the ticket it turns into) only
 // works for the purpose it was sent for.
 enum OtpPurpose {

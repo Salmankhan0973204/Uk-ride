@@ -9,6 +9,7 @@ import { docsRouter } from './docs/docs.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 import { requestId } from './middleware/requestId.js';
+import { adminAirportsRouter } from './modules/airports/airports.admin.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { staffAuthRouter } from './modules/auth/auth.staff.routes.js';
 import { otpRouter } from './modules/otp/otp.routes.js';
@@ -70,6 +71,7 @@ api.use('/admin/auth', staffAuthRouter);
 api.use('/admin/vehicle-types', adminVehicleTypesRouter);
 api.use('/admin/vehicles', adminVehiclesRouter);
 api.use('/admin/pricing', adminPricingRouter);
+api.use('/admin/airports', adminAirportsRouter);
 // Swagger UI is a development tool; it is not exposed in production.
 if (!isProd) {
   api.use('/docs', docsRouter);

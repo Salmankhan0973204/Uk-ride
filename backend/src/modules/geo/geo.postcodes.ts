@@ -19,11 +19,24 @@ export interface Place {
  */
 const UK_POSTCODE = /^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/;
 
+/**
+ * The start of a postcode someone is still typing: a whole outward part and
+ * at least the digit of the inward part ("TW6 2", "SW1A 1A"). Shorter than
+ * that, a postcode list would be too long to be useful.
+ */
+const PARTIAL_POSTCODE = /^([A-Z]{1,2}\d[A-Z\d]?) ?(\d[A-Z]?)$/;
+
 /** "sw1a1aa", " SW1A  1AA " → "SW1A 1AA", or undefined when it is not a postcode's shape. */
 export function normalisePostcode(text: string): string | undefined {
   const compact = text.replace(/\s+/g, '').toUpperCase();
   if (!UK_POSTCODE.test(compact)) return undefined;
   return `${compact.slice(0, -3)} ${compact.slice(-3)}`;
+}
+
+/** "tw6 2" → "TW6 2", or undefined when the text is not the start of a postcode. */
+export function partialPostcode(text: string): string | undefined {
+  const match = PARTIAL_POSTCODE.exec(text.trim().toUpperCase().replace(/\s+/g, ' '));
+  return match ? `${match[1]} ${match[2]}` : undefined;
 }
 
 /** The outside services are slow sometimes; a customer should not wait longer than this. */
@@ -36,60 +49,129 @@ export const serviceDown = (what: string) =>
     `We could not reach the ${what} service. Try again in a moment.`,
   );
 
-const cache = new TtlCache<Place>();
-
-interface PostcodesIoAnswer {
-  status: number;
-  result?: {
-    postcode: string;
-    latitude: number | null;
-    longitude: number | null;
-    admin_district: string | null;
-  };
+interface PostcodeResult {
+  postcode: string;
+  latitude: number | null;
+  longitude: number | null;
+  admin_district: string | null;
 }
 
-/**
- * Finds a UK postcode with postcodes.io: free, no key, built on Ordnance
- * Survey and ONS open data. Only the postcode is sent.
- *
- * `field` names the request field, so an unknown postcode is reported on it.
- */
-export async function findPostcode(postcode: string, field: string): Promise<Place> {
-  const cached = cache.get(postcode);
-  if (cached) return cached;
+/** The answers of postcodes.io all share this shape; `result` depends on the question. */
+interface PostcodesIoAnswer<T> {
+  status: number;
+  result?: T;
+}
 
-  let answer: PostcodesIoAnswer;
+/** Asks postcodes.io. A failure to reach it, or an answer that is not JSON, is a 503. */
+async function ask<T>(path: string, init: RequestInit = {}): Promise<PostcodesIoAnswer<T>> {
   try {
-    const response = await fetch(
-      `${env.POSTCODES_API_URL}/postcodes/${encodeURIComponent(postcode)}`,
-      { signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS) },
-    );
-    answer = (await response.json()) as PostcodesIoAnswer;
+    const response = await fetch(`${env.POSTCODES_API_URL}${path}`, {
+      ...init,
+      signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS),
+    });
+    return (await response.json()) as PostcodesIoAnswer<T>;
   } catch {
-    // No connection, a timeout, or an answer that was not JSON.
     throw serviceDown('postcode');
   }
+}
 
-  if (answer.status === 404) {
-    throw AppError.validation({ [field]: [`We could not find the postcode ${postcode}`] });
-  }
-  const result = answer.result;
-  // A few real postcodes (some PO boxes, new builds) have no map position yet.
-  if (answer.status !== 200 || !result || result.latitude === null || result.longitude === null) {
-    if (answer.status === 200) {
-      throw AppError.validation({
-        [field]: [`The postcode ${postcode} has no map position. Try a nearby postcode`],
-      });
-    }
-    throw serviceDown('postcode');
-  }
-
-  const place: Place = {
+/** A postcodes.io result as a Place, or null when it has no map position. */
+function toPlace(result: PostcodeResult): Place | null {
+  if (result.latitude === null || result.longitude === null) return null;
+  return {
     postcode: result.postcode,
     latitude: result.latitude,
     longitude: result.longitude,
     district: result.admin_district ?? '',
   };
+}
+
+// A postcode that does not exist is remembered too (as null), so a wrong
+// guess typed again is not asked again.
+const cache = new TtlCache<Place | null>();
+const nearestCache = new TtlCache<Place | null>();
+
+/**
+ * Finds a UK postcode with postcodes.io: free, no key, built on Ordnance
+ * Survey and ONS open data. Only the postcode is sent.
+ *
+ * Null when the postcode does not exist. A few real postcodes (some PO
+ * boxes, new builds) have no map position yet; they come back as null too.
+ */
+export async function lookupPostcode(postcode: string): Promise<Place | null> {
+  const cached = cache.get(postcode);
+  if (cached !== undefined) return cached;
+
+  const answer = await ask<PostcodeResult>(`/postcodes/${encodeURIComponent(postcode)}`);
+  if (answer.status !== 200 && answer.status !== 404) throw serviceDown('postcode');
+
+  const place = answer.status === 200 && answer.result ? toPlace(answer.result) : null;
   cache.set(postcode, place);
+  return place;
+}
+
+/**
+ * Like lookupPostcode, but a postcode that cannot be used is the customer's
+ * mistake, reported on the request field `field`.
+ */
+export async function findPostcode(postcode: string, field: string): Promise<Place> {
+  const place = await lookupPostcode(postcode);
+  if (!place) {
+    throw AppError.validation({ [field]: [`We could not find the postcode ${postcode}`] });
+  }
+  return place;
+}
+
+/**
+ * Up to `limit` real postcodes that start with what was typed, with their
+ * map positions: "TW6 2" → TW6 2AA, TW6 2AB... Two questions to postcodes.io:
+ * the list of postcodes, then their positions in one bulk lookup.
+ */
+export async function postcodesStartingWith(partial: string, limit = 5): Promise<Place[]> {
+  const list = await ask<string[] | null>(
+    `/postcodes/${encodeURIComponent(partial)}/autocomplete?limit=${limit}`,
+  );
+  if (list.status !== 200) throw serviceDown('postcode');
+  const postcodes = list.result ?? [];
+  if (postcodes.length === 0) return [];
+
+  const bulk = await ask<{ result: PostcodeResult | null }[]>('/postcodes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ postcodes }),
+  });
+  if (bulk.status !== 200) throw serviceDown('postcode');
+
+  return (bulk.result ?? []).flatMap(({ result }) => {
+    const place = result ? toPlace(result) : null;
+    return place ? [place] : [];
+  });
+}
+
+/** How far from a map position a postcode may be and still count as its postcode. */
+const NEAREST_RADIUS_METRES = 2_000;
+
+/**
+ * The postcode nearest to a map position, within 2 km, or null when there is
+ * none: the place is at sea, abroad, or deep in open country.
+ *
+ * This is how the server learns the postcode of an address picked from the
+ * search, whatever the browser says about it: the airport check (5.9) and
+ * the "is it in the UK" check both rest on it.
+ */
+export async function nearestPostcode(latitude: number, longitude: number): Promise<Place | null> {
+  // Five decimal places is about a metre: close enough to share an answer.
+  const key = `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
+  const cached = nearestCache.get(key);
+  if (cached !== undefined) return cached;
+
+  const answer = await ask<PostcodeResult[] | null>(
+    `/postcodes?lon=${longitude}&lat=${latitude}&radius=${NEAREST_RADIUS_METRES}&limit=1`,
+  );
+  if (answer.status !== 200) throw serviceDown('postcode');
+
+  const first = answer.result?.[0];
+  const place = first ? toPlace(first) : null;
+  nearestCache.set(key, place);
   return place;
 }

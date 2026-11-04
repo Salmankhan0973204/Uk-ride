@@ -44,6 +44,12 @@ const envSchema = z.object({
     .url()
     .default('https://api.postcodes.io')
     .transform((value) => value.replace(/\/+$/, '')),
+  // Suggests addresses as the customer types: a Photon server, a free search
+  // over OpenStreetMap. The default is komoot's public one, for fair use only.
+  PLACES_API_URL: z
+    .url()
+    .default('https://photon.komoot.io')
+    .transform((value) => value.replace(/\/+$/, '')),
   // Measures road distance: an OSRM server. The default is the public demo
   // server, free but with no promise of staying up; point this at another
   // host, or our own OSRM, before going live.

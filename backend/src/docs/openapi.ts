@@ -50,6 +50,7 @@ export const openApiDocument = {
     { name: 'Auth', description: 'Accounts and sign-in' },
     { name: 'Users', description: 'Your own profile' },
     { name: 'Vehicle types', description: 'The classes of car on offer' },
+    { name: 'Places', description: 'Address search for the journey form' },
     { name: 'Quotes', description: 'The price of a journey' },
     { name: 'Admin', description: "For the operator's staff. Needs the ADMIN role" },
   ],
@@ -1171,6 +1172,46 @@ export const openApiDocument = {
         },
       },
     },
+    '/places': {
+      get: {
+        tags: ['Places'],
+        summary: 'Suggest addresses for what has been typed',
+        description:
+          'Public. Up to 8 UK suggestions: postcodes first when the text is a postcode or the ' +
+          'start of one (postcodes.io), then addresses, streets, stations and places ' +
+          '(Photon, over OpenStreetMap), nearer central London first. If one service is ' +
+          'down the other still answers; only when both fail is it a 503.',
+        parameters: [
+          {
+            name: 'q',
+            in: 'query',
+            required: true,
+            schema: { type: 'string', minLength: 2, maxLength: 100 },
+            example: 'heathrow terminal 5',
+          },
+        ],
+        responses: {
+          200: jsonResponse(
+            'Suggestions, possibly none',
+            successEnvelope({
+              type: 'object',
+              required: ['places'],
+              properties: {
+                places: { type: 'array', items: { $ref: '#/components/schemas/PlaceSuggestion' } },
+              },
+            }),
+          ),
+          400: jsonResponse('q is missing, shorter than 2 or longer than 100 characters', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          503: jsonResponse('Neither the postcode nor the address service could be reached', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
     '/quotes': {
       post: {
         tags: ['Quotes'],
@@ -1626,6 +1667,22 @@ export const openApiDocument = {
               },
             ],
           },
+        },
+      },
+      PlaceSuggestion: {
+        type: 'object',
+        required: ['label', 'detail', 'latitude', 'longitude', 'postcode', 'kind'],
+        properties: {
+          label: { type: 'string', example: 'Heathrow Terminal 5' },
+          detail: {
+            type: 'string',
+            example: 'Wallis Road, London Borough of Hillingdon, TW6 2GD',
+            description: 'The second line. Empty when there is nothing to add.',
+          },
+          latitude: { type: 'number', example: 51.472515 },
+          longitude: { type: 'number', example: -0.4877331 },
+          postcode: { type: 'string', nullable: true, example: 'TW6 2GD' },
+          kind: { type: 'string', enum: ['postcode', 'address'] },
         },
       },
       QuoteLine: {

@@ -2,10 +2,11 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 5 rework - pricing and quotes (not started)
+- **Current module:** Module 5 rework - pricing and quotes (in progress, branch
+  `module-05-journey-quotes`)
 - **Last completed:** Module 3 rework - fleet classes like ukride.uk (tag `module-03-v2`)
-- **Next step:** 5.8 - address search with suggestions
-- **Steps done:** 53 of 113
+- **Next step:** 5.9 - airport detection by postcode
+- **Steps done:** 54 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -24,7 +25,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
 | 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
+| 5   | Pricing and quotes           | 8/13  | Rework  | Rework        | Rework      | Rework   |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
 | 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
 | 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
@@ -137,7 +138,7 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
 - [x] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
 - [x] 5.6 Admin pricing screen.
 - [x] 5.7 Customer quote form with the price breakdown, design pass.
-- [ ] 5.8 Address search with suggestions (Photon and postcodes.io).
+- [x] 5.8 Address search with suggestions (Photon and postcodes.io).
       _Learn: autocomplete, debouncing._
 - [ ] 5.9 Airport detection by postcode: seven airports seeded, editable in the admin app.
 - [ ] 5.10 Settings, discounts and `GET /config`: Meet & Greet (£10), booking lead time
@@ -2959,3 +2960,53 @@ Open items
 - Hand luggage starts at one bag per passenger; set the real numbers in the admin panel.
 - No class has a picture yet. Paste an image address in the admin form to add one.
 - The quote form still lists the classes by name only; it moves to the booking widget in 5.13.
+
+### Module 5 rework - journey quotes like ukride.uk (branch `module-05-journey-quotes`)
+
+Started 2026-11-04 after the user said "start Pricing and quotes". Steps 5.8 to 5.13, one
+commit each.
+
+#### Step 5.8 - Address search with suggestions (done 2026-11-04)
+
+Built
+
+- `GET /api/v1/places?q=...`: public, up to 8 UK suggestions. Each has two lines to show
+  (`label`, `detail`), a map position, the postcode when known and a `kind` (`postcode` or
+  `address`).
+- Two sources, asked at the same time (`backend/src/modules/geo/geo.places.ts`):
+  - postcodes.io, when the text is a whole postcode (`SW1A 1AA`) or the start of one
+    (`TW6 2` lists TW6 2AA, TW6 2AB...);
+  - Photon, a free search over OpenStreetMap, inside the UK's bounding box, pulled towards
+    central London. New setting `PLACES_API_URL` (default `https://photon.komoot.io`).
+- Photon's answers are tidied: postcode-only results are left to postcodes.io, the same name
+  within 300 m is one place (a station and its bus stop), "London Borough of Hillingdon" reads
+  "Hillingdon".
+- If one service is down, the other's suggestions are still shown; nothing to show because a
+  service is down is a 503 "try again", not an empty list.
+- `nearestPostcode()` (the postcode within 2 km of a map position) is ready for the airport
+  check in 5.9 and the quote in 5.12.
+- Limit: 300 searches per 15 minutes from one address. Answers may be cached for 5 minutes.
+- The address box that uses it is built with the booking widget in 5.13.
+
+Verified (by hand against the running API)
+
+- "heathrow terminal 5", "10 downing street", "kings cross", "gatwick", "Manchester",
+  "sw1a1aa" and "TW6 2" each gave sensible suggestions; "x" is a 400 on `q`; nonsense gives an
+  empty list.
+- With Photon, postcodes.io or both pointed at a closed port: the other source's answers still
+  came back, and with nothing to show the answer was the 503 of the service that failed.
+- Photon's pull towards London was tuned by comparing answers: at `zoom=10` "kings cross" and
+  "victoria station" are the London ones, while "Manchester" and "birmingham" still find the
+  cities.
+
+Learning notes
+
+- Debounce on the client, cache on the server, rate-limit both: an address box asks a question
+  every few letters.
+- `Promise.allSettled` keeps one failing service from hiding the other's answers.
+- A geocoder's ranking is a setting to tune with real searches, not a constant to guess.
+
+Open items
+
+- komoot's public Photon server is for fair use only. Before going live: our own Photon in
+  Docker, or a paid geocoder.

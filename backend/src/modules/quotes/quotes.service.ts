@@ -3,7 +3,7 @@ import { AppError } from '../../shared/AppError.js';
 import { findPostcode } from '../geo/geo.postcodes.js';
 import { findRoadRoute } from '../geo/geo.routing.js';
 import { publicVehicleType } from '../vehicle-types/vehicle-types.select.js';
-import { calculateQuote, chargedMilesFor, isNight } from './quote.calculator.js';
+import { chargedMilesFor, isNight, priceLeg } from './quote.calculator.js';
 import type { QuoteRequest } from './quotes.schemas.js';
 
 /**
@@ -50,11 +50,11 @@ export async function quoteJourney({
 
   const quotes = types.map(({ pricingRule, ...type }) => {
     // The query only returns types that have a rule.
-    const { lines, totalPence } = calculateQuote(pricingRule!, {
-      distanceMiles,
-      pickupAt: when,
-      airport,
-    });
+    const { lines, totalPence } = priceLeg(
+      pricingRule!,
+      { distanceMiles, pickupAt: when, airport, airportPickup: false, meetGreet: false },
+      { meetGreetPence: 0 },
+    );
     return { vehicleType: type, lines, totalPence };
   });
 

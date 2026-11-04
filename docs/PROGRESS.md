@@ -5,8 +5,8 @@ Update this file after every coding session.
 - **Current module:** Module 5 rework - pricing and quotes (in progress, branch
   `module-05-journey-quotes`)
 - **Last completed:** Module 3 rework - fleet classes like ukride.uk (tag `module-03-v2`)
-- **Next step:** 5.11 - pricing engine v2
-- **Steps done:** 56 of 113
+- **Next step:** 5.12 - `POST /quotes` v2, saved with an id and an expiry
+- **Steps done:** 57 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -25,7 +25,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
 | 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 10/13 | Rework  | Rework        | Rework      | Rework   |
+| 5   | Pricing and quotes           | 11/13 | Rework  | Rework        | Rework      | Rework   |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
 | 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
 | 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
@@ -144,7 +144,7 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
 - [x] 5.10 Settings, discounts and `GET /config`: Meet & Greet (£10), booking lead time
       (4 h), edit cut-off (4 h), unpaid expiry (30 min), driver details shown 60 min before
       pick-up, a discount % per class. _Learn: configuration as data._
-- [ ] 5.11 Engine v2, unit tested: discount, Meet & Greet per leg, automatic airport fee,
+- [x] 5.11 Engine v2, unit tested: discount, Meet & Greet per leg, automatic airport fee,
       stops as route waypoints, each leg priced, passenger and luggage fit.
 - [ ] 5.12 `POST /quotes` v2, saved with an id and an expiry: every class with original
       price, discount, price, seats, luggage, distance and duration; the first class that fits
@@ -3087,3 +3087,35 @@ Learning notes
 
 - Settings as a one-row table: typed columns with defaults, created on first read with
   `upsert`, so there is never a "settings missing" state to handle.
+
+#### Step 5.11 - Pricing engine v2, unit tested (done 2026-11-04)
+
+Built (`backend/src/modules/quotes/quote.calculator.ts`, still pure)
+
+- `priceLeg(rule, leg, extras)`: the v1 lines (base fare, distance, minimum top-up, night
+  surcharge, airport fee) make the original price; then the class discount comes off as a
+  negative line, giving the fare; then Meet & Greet, never discounted. A leg's distance is the
+  whole route through its stops. The airport fee applies when the leg starts, stops or ends at
+  an airport; Meet & Greet is refused unless it starts at one.
+- Each leg reports `originalPence`, `discountPence`, `farePence`, `meetGreetPence` and
+  `totalPence`; the lines always add up to the total.
+- `priceTrip(rule, legs, extras)`: each leg priced on its own (a return can be at night when
+  the outbound is not), with the sums.
+- `fits(capacity, party)` and `recommend(classes, party)`: a seat per passenger and suitcase
+  room per suitcase; hand bags may also use spare suitcase room. The first class in list order
+  that fits is recommended.
+- The v1 `POST /quotes` now calls `priceLeg` with no discount; it is replaced in 5.12.
+
+Verified
+
+- 33 unit tests pass (`npm test -w backend`), 15 of them new: discount maths and rounding, a
+  discount on the whole original price, Meet & Greet after the discount and only on an
+  airport pick-up, two-leg trips, 500 mixed trips whose totals equal their lines, fit and
+  recommend.
+
+Learning notes
+
+- A discount is a line, not a hidden multiplier: the struck-through price, the discount and
+  the price paid are then three numbers the customer can check.
+- Decide the order of percentages and flat amounts on purpose, and write it down: 10% off
+  before or after a £10 extra gives two different prices.

@@ -1391,53 +1391,40 @@ export const openApiDocument = {
     '/quotes': {
       post: {
         tags: ['Quotes'],
-        summary: 'Price a journey',
+        summary: 'Price a journey and save the quote',
         description:
-          'Public. Prices the journey in every vehicle type that is on offer and has prices, ' +
-          'or only in `vehicleType`. Give two UK postcodes and the road distance is measured ' +
-          '(postcodes.io and OSRM), or give `distanceMiles` instead. The distance is charged ' +
-          'to the nearest tenth of a mile. ' +
-          'Amounts are whole pence, and each total is the sum of its lines. Nothing is saved.',
+          'Public. The "BOOK YOUR JOURNEY" form: a pick-up, up to 5 stops and a drop-off, each ' +
+          'as picked from GET /places; a pick-up time; optionally a return time, which adds a ' +
+          'second leg that runs the stops backwards; the party. Each leg is measured by road ' +
+          "through its stops (OSRM). Each address's postcode is found again from its position " +
+          '(postcodes.io), and with it any airport: an airport anywhere on a leg adds the ' +
+          'airport fee, and an airport pick-up makes a flight number necessary and offers Meet ' +
+          '& Greet (`meetGreetPence`, added per leg at booking). Every class on offer with ' +
+          'prices is listed cheapest first, with its original price, discount and price per ' +
+          'leg and in total, and whether the party fits; the first that fits is recommended. ' +
+          'Rules: the pick-up at least the booking lead time ahead (4 hours), the return after ' +
+          'the pick-up, the drop-off not the pick-up, at most 8 passengers, 8 suitcases and 8 ' +
+          'hand bags. The answer is saved as a quote that can be booked until `expiresAt`; ' +
+          'with no prices published yet, nothing is saved and `quoteId` is null.',
         requestBody: {
           required: true,
           content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                additionalProperties: false,
-                properties: {
-                  pickupPostcode: { type: 'string', example: 'SW1A 1AA' },
-                  dropoffPostcode: { type: 'string', example: 'TW6 1EW' },
-                  distanceMiles: {
-                    type: 'number',
-                    minimum: 0.1,
-                    maximum: 1000,
-                    description: 'Instead of the two postcodes, not with them',
-                  },
-                  pickupAt: {
-                    type: 'string',
-                    format: 'date-time',
-                    example: '2026-11-02T23:30:00Z',
-                    description: 'With a time zone. Left out: now. Not in the past.',
-                  },
-                  airport: { type: 'boolean', default: false },
-                  vehicleType: { type: 'string', example: 'executive' },
-                },
-              },
-            },
+            'application/json': { schema: { $ref: '#/components/schemas/QuoteRequest' } },
           },
         },
         responses: {
-          200: jsonResponse(
-            'Quotes, or none when no prices are published yet',
+          201: jsonResponse(
+            'Quote saved',
             successEnvelope({ $ref: '#/components/schemas/QuoteResult' }),
           ),
-          400: jsonResponse('The distance is missing, not a number, or out of range', {
-            $ref: '#/components/schemas/ApiFailure',
-          }),
-          404: jsonResponse('The vehicle type asked for is not on offer or has no prices', {
-            $ref: '#/components/schemas/ApiFailure',
-          }),
+          200: jsonResponse(
+            'No prices are published yet: the journey without options, not saved',
+            successEnvelope({ $ref: '#/components/schemas/QuoteResult' }),
+          ),
+          400: jsonResponse(
+            'A field is missing or wrong, a rule is broken, or an address is not in the UK',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
           429: { $ref: '#/components/responses/RateLimited' },
           503: jsonResponse('The postcode or routing service could not be reached', {
             $ref: '#/components/schemas/ApiFailure',
@@ -1995,6 +1982,52 @@ export const openApiDocument = {
         },
         example: { isActive: false },
       },
+      QuotePlaceRequest: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['label', 'latitude', 'longitude'],
+        properties: {
+          label: { type: 'string', maxLength: 200, example: 'Heathrow Airport' },
+          latitude: { type: 'number', example: 51.469777 },
+          longitude: { type: 'number', example: -0.449559 },
+        },
+      },
+      QuoteRequest: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['pickup', 'dropoff', 'pickupAt', 'passengers'],
+        properties: {
+          pickup: { $ref: '#/components/schemas/QuotePlaceRequest' },
+          stops: {
+            type: 'array',
+            maxItems: 5,
+            items: { $ref: '#/components/schemas/QuotePlaceRequest' },
+            description: 'In the order they are driven to',
+          },
+          dropoff: { $ref: '#/components/schemas/QuotePlaceRequest' },
+          pickupAt: {
+            type: 'string',
+            format: 'date-time',
+            example: '2026-11-20T12:30:00Z',
+            description: 'With a time zone; at least the booking lead time ahead',
+          },
+          returnAt: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Makes it a return. After pickupAt.',
+          },
+          passengers: { type: 'integer', minimum: 1, maximum: 8, example: 2 },
+          suitcases: { type: 'integer', minimum: 0, maximum: 8, default: 0, example: 2 },
+          handLuggage: { type: 'integer', minimum: 0, maximum: 8, default: 0, example: 2 },
+        },
+        example: {
+          pickup: { label: 'SW1A 1AA, Westminster', latitude: 51.501009, longitude: -0.141588 },
+          dropoff: { label: 'Heathrow Airport', latitude: 51.469777, longitude: -0.449559 },
+          pickupAt: '2026-11-20T12:30:00Z',
+          passengers: 2,
+          suitcases: 2,
+        },
+      },
       QuoteLine: {
         type: 'object',
         required: ['code', 'label', 'amountPence'],
@@ -2007,57 +2040,114 @@ export const openApiDocument = {
               'MINIMUM_FARE_TOP_UP',
               'NIGHT_SURCHARGE',
               'AIRPORT_FEE',
+              'DISCOUNT',
+              'MEET_AND_GREET',
             ],
           },
           label: { type: 'string', example: '12.4 miles at £2.10 a mile' },
-          amountPence: { type: 'integer', example: 2604 },
+          amountPence: {
+            type: 'integer',
+            example: 2604,
+            description: 'Negative for the discount',
+          },
+        },
+      },
+      QuoteAirport: {
+        type: 'object',
+        nullable: true,
+        properties: {
+          code: { type: 'string', example: 'LHR' },
+          name: { type: 'string', example: 'Heathrow Airport' },
+        },
+      },
+      QuoteLeg: {
+        type: 'object',
+        properties: {
+          direction: { type: 'string', enum: ['OUTBOUND', 'RETURN'] },
+          pickupAt: { type: 'string', format: 'date-time' },
+          places: {
+            type: 'array',
+            description: 'In driving order: pick-up, stops, drop-off',
+            items: {
+              type: 'object',
+              properties: {
+                label: { type: 'string' },
+                latitude: { type: 'number' },
+                longitude: { type: 'number' },
+                postcode: { type: 'string', example: 'TW6 1EW' },
+                district: { type: 'string', example: 'Hillingdon' },
+                airport: { $ref: '#/components/schemas/QuoteAirport' },
+              },
+            },
+          },
+          distanceMiles: { type: 'number', example: 16.21 },
+          durationMinutes: { type: 'integer', example: 34 },
+          chargedMiles: { type: 'number', example: 16.2 },
+          night: { type: 'boolean', description: 'Pick-up between 22:00 and 06:00 UK time' },
+          airport: { type: 'boolean', description: 'An airport anywhere on the leg' },
+          airportPickup: {
+            allOf: [{ $ref: '#/components/schemas/QuoteAirport' }],
+            nullable: true,
+            description: 'Set when the leg starts at an airport: flight number, Meet & Greet',
+          },
+        },
+      },
+      QuoteOption: {
+        type: 'object',
+        properties: {
+          vehicleType: { $ref: '#/components/schemas/VehicleType' },
+          fits: { type: 'boolean', description: 'The party fits this class' },
+          recommended: { type: 'boolean' },
+          discountPercent: { type: 'integer', example: 10 },
+          originalPence: { type: 'integer', example: 4252 },
+          discountPence: { type: 'integer', example: 425 },
+          pricePence: {
+            type: 'integer',
+            example: 3827,
+            description: 'Original less discount, all legs, without Meet & Greet',
+          },
+          legs: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                lines: { type: 'array', items: { $ref: '#/components/schemas/QuoteLine' } },
+                originalPence: { type: 'integer' },
+                discountPence: { type: 'integer' },
+                pricePence: { type: 'integer' },
+              },
+            },
+          },
         },
       },
       QuoteResult: {
         type: 'object',
-        required: ['distanceMiles', 'chargedMiles', 'currency', 'quotes'],
+        required: ['quoteId', 'expiresAt', 'currency', 'legs', 'party', 'options'],
         properties: {
-          distanceMiles: { type: 'number', example: 12.44 },
-          chargedMiles: { type: 'number', example: 12.4 },
-          pickupAt: { type: 'string', format: 'date-time' },
-          route: {
+          quoteId: {
+            type: 'string',
+            format: 'uuid',
             nullable: true,
-            description: 'The measured route, or null when distanceMiles was typed in',
+            description: 'null when no prices are published yet',
+          },
+          expiresAt: { type: 'string', format: 'date-time', nullable: true },
+          currency: { type: 'string', enum: ['GBP'] },
+          meetGreetPence: { type: 'integer', example: 1000 },
+          legs: { type: 'array', items: { $ref: '#/components/schemas/QuoteLeg' } },
+          party: {
             type: 'object',
             properties: {
-              pickup: {
-                type: 'object',
-                properties: {
-                  postcode: { type: 'string', example: 'SW1A 1AA' },
-                  district: { type: 'string', example: 'Westminster' },
-                },
-              },
-              dropoff: {
-                type: 'object',
-                properties: {
-                  postcode: { type: 'string', example: 'TW6 1EW' },
-                  district: { type: 'string', example: 'Hillingdon' },
-                },
-              },
-              distanceMiles: { type: 'number', example: 16.21 },
-              durationMinutes: { type: 'integer', example: 34 },
+              passengers: { type: 'integer' },
+              suitcases: { type: 'integer' },
+              handLuggage: { type: 'integer' },
             },
           },
-          night: { type: 'boolean', description: 'Pick-up between 22:00 and 06:00 UK time' },
-          airport: { type: 'boolean' },
-          currency: { type: 'string', enum: ['GBP'] },
-          quotes: {
+          options: {
             type: 'array',
-            items: {
-              type: 'object',
-              required: ['vehicleType', 'lines', 'totalPence'],
-              properties: {
-                vehicleType: { $ref: '#/components/schemas/VehicleType' },
-                lines: { type: 'array', items: { $ref: '#/components/schemas/QuoteLine' } },
-                totalPence: { type: 'integer', example: 2954 },
-              },
-            },
+            description: 'Cheapest first',
+            items: { $ref: '#/components/schemas/QuoteOption' },
           },
+          recommendedVehicleTypeId: { type: 'string', format: 'uuid', nullable: true },
         },
       },
       ApiFailure: {

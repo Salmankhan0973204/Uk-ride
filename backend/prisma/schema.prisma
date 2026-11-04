@@ -236,6 +236,27 @@ model Settings {
   @@map("settings")
 }
 
+// A priced journey, kept for a short while so that booking it (Module 6)
+// charges exactly what the customer was shown. The browser sends back only
+// the quote's id and a class, never a price.
+model Quote {
+  id             String   @id @default(uuid())
+  // The journey as the server understood it: each leg's places with their
+  // postcodes and airports, pick-up time, distance and duration; the party.
+  journey        Json
+  // Every class on offer at that moment, with its price per leg and its lines.
+  options        Json
+  // The Meet & Greet price at that moment, added per leg when chosen.
+  meetGreetPence Int      @map("meet_greet_pence")
+  // After this, booking needs a new quote.
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // The clean-up job deletes by expiry.
+  @@index([expiresAt])
+  @@map("quotes")
+}
+
 // What a one-time code is for. A code (and the ticket it turns into) only
 // works for the purpose it was sent for.
 enum OtpPurpose {

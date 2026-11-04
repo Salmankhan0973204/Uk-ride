@@ -5,8 +5,8 @@ Update this file after every coding session.
 - **Current module:** Module 5 rework - pricing and quotes (in progress, branch
   `module-05-journey-quotes`)
 - **Last completed:** Module 3 rework - fleet classes like ukride.uk (tag `module-03-v2`)
-- **Next step:** 5.12 - `POST /quotes` v2, saved with an id and an expiry
-- **Steps done:** 57 of 113
+- **Next step:** 5.13 - the "BOOK YOUR JOURNEY" widget and `/booking`
+- **Steps done:** 58 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -25,7 +25,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
 | 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 11/13 | Rework  | Rework        | Rework      | Rework   |
+| 5   | Pricing and quotes           | 12/13 | Done    | Rework        | Done        | Rework   |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
 | 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
 | 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
@@ -146,7 +146,7 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
       pick-up, a discount % per class. _Learn: configuration as data._
 - [x] 5.11 Engine v2, unit tested: discount, Meet & Greet per leg, automatic airport fee,
       stops as route waypoints, each leg priced, passenger and luggage fit.
-- [ ] 5.12 `POST /quotes` v2, saved with an id and an expiry: every class with original
+- [x] 5.12 `POST /quotes` v2, saved with an id and an expiry: every class with original
       price, discount, price, seats, luggage, distance and duration; the first class that fits
       is recommended; the booking rules (4 h ahead, pick-up not the drop-off, return after
       pick-up, at most 5 stops, 8 passengers and 8 bags).
@@ -3119,3 +3119,54 @@ Learning notes
   the price paid are then three numbers the customer can check.
 - Decide the order of percentages and flat amounts on purpose, and write it down: 10% off
   before or after a £10 extra gives two different prices.
+
+#### Step 5.12 - `POST /quotes` v2, saved with an id and an expiry (done 2026-11-04)
+
+Built
+
+- New body: `pickup`, up to 5 `stops`, `dropoff` (each `{ label, latitude, longitude }` from
+  `GET /places`), `pickupAt`, an optional `returnAt`, `passengers`, `suitcases`,
+  `handLuggage`. The v1 postcode and typed-distance bodies are gone.
+- Rules: pick-up at least the lead time ahead (4 h, from settings), return after the pick-up,
+  drop-off not within 100 m of the pick-up, at most 5 stops, 8 passengers, 8 suitcases and
+  8 hand bags. Each address's postcode is found again from its position; one with no UK
+  postcode within 2 km is a 400 on its field. All such addresses are reported at once.
+- Each leg is one OSRM route through its stops (`findRoadRoute` now takes a list of points);
+  the return runs them backwards and is measured on its own, since one-way streets differ.
+- Airports from the postcodes: one anywhere on a leg adds the airport fee; an airport pick-up
+  is reported as `airportPickup` (flight number needed, Meet & Greet offered).
+- Every class on offer with prices, cheapest first, with original price, discount and price,
+  per leg and in total, the breakdown lines, and `fits`. The first that fits is recommended,
+  so it is the cheapest that fits. Prices are without Meet & Greet; `meetGreetPence` says what
+  it adds to a leg, so ticking it on the booking page needs no new quote.
+- The answer is saved in a new `quotes` table (migration `add_quotes`) for
+  `quoteValidMinutes` (30), answered 201 with `quoteId` and `expiresAt`. With no prices
+  published, nothing is saved: 200 with `quoteId: null`. The clean-up job deletes expired
+  quotes.
+- The old `/quote` page sends the v1 body, so it stops working with this step; 5.13 replaces
+  it with the booking widget.
+
+Verified (by hand against the running API, with test prices removed afterwards)
+
+- Westminster to Heathrow by day: 16.21 miles; Saloon £42.52 less 10% = £38.27, matching the
+  sum by hand (£3.50 + 16.2 × £2.10 + £5.00 airport fee).
+- A return from Heathrow Terminal 5 at 22:30: the return leg runs T5 to Westminster, is a
+  night pick-up at LHR with `airportPickup`, and is measured separately (19.92 against 18.48
+  miles out).
+- Two stops: one route of 23.86 miles through King's Cross and Camden.
+- Six passengers: Saloon and Executive `fits: false`, the 8 Seater recommended. Two
+  passengers: the Saloon, not the 8 Seater that heads the fleet list.
+- The saved row expires 30 minutes after it was made.
+- 400s: 1 hour ahead, return before pick-up, the same place, 6 stops, 9 people and 9 bags, a
+  point at sea with a stop in Paris (both reported), missing fields, the old v1 body.
+
+Learning notes
+
+- "Recommend the first that fits" depends on the order: the fleet's display order and the
+  booking page's order are two different things.
+- Save the quote, not the price the browser shows: booking will read the price from the row,
+  so a changed page can never change what is charged.
+
+Open items
+
+- The return must be after the pick-up, not after the outbound journey has had time to end.

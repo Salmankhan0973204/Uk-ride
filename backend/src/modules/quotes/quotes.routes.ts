@@ -6,6 +6,5 @@ import { quoteRequestSchema } from './quotes.schemas.js';
 
 export const quotesRouter = Router();
 
-// POST, although nothing is created: the question has a body, and a quote is
-// worked out fresh each time rather than fetched.
+// POST: each question creates a quote, saved for a short while so it can be booked.
 quotesRouter.post('/', quoteLimiter, validate(quoteRequestSchema), quote);

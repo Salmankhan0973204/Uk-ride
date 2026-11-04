@@ -7,10 +7,11 @@ import { quoteJourney } from './quotes.service.js';
 export const quote: RequestHandler = async (req, res) => {
   const result = await quoteJourney(req.body as QuoteRequest);
 
-  // Prices can change at any time, so no copy is kept.
+  // A quote is one customer's, and prices can change: no copy is kept anywhere.
   res.set('Cache-Control', 'no-store');
   sendSuccess(res, {
-    message: result.quotes.length > 0 ? 'Quotes' : 'No prices are published yet',
+    status: result.quoteId ? 201 : 200,
+    message: result.quoteId ? 'Quote saved' : 'No prices are published yet',
     data: result,
   });
 };

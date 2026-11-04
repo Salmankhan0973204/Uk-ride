@@ -1172,6 +1172,76 @@ export const openApiDocument = {
         },
       },
     },
+    '/config': {
+      get: {
+        tags: ['Quotes'],
+        summary: 'Booking rules the customer site needs',
+        description:
+          'Public. The Meet & Greet price, how far ahead to book, the edit cut-off, how long an ' +
+          'unpaid booking and a quote last, when driver details are shown, and the size limits ' +
+          'of a journey. The server checks every rule again; this is for showing them.',
+        responses: {
+          200: jsonResponse(
+            'Configuration',
+            successEnvelope({ $ref: '#/components/schemas/Config' }),
+          ),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/settings': {
+      get: {
+        tags: ['Admin'],
+        summary: 'The booking rules',
+        description: 'Created with the defaults the first time it is read.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'Settings',
+            successEnvelope({
+              type: 'object',
+              required: ['settings'],
+              properties: { settings: { $ref: '#/components/schemas/Settings' } },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+      put: {
+        tags: ['Admin'],
+        summary: 'Replace the booking rules',
+        description: 'Every field is required. Meet & Greet is whole pence; the rest are minutes.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/SettingsRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Settings saved',
+            successEnvelope({
+              type: 'object',
+              required: ['settings'],
+              properties: { settings: { $ref: '#/components/schemas/Settings' } },
+            }),
+          ),
+          400: jsonResponse('A value is missing, not whole, or out of range', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
     '/admin/airports': {
       get: {
         tags: ['Admin'],
@@ -1740,6 +1810,7 @@ export const openApiDocument = {
           'minimumFarePence',
           'nightSurchargePercent',
           'airportFeePence',
+          'discountPercent',
         ],
         additionalProperties: false,
         properties: {
@@ -1754,7 +1825,64 @@ export const openApiDocument = {
             description: 'Added for a pick-up from 22:00 to 06:00 UK time',
           },
           airportFeePence: { type: 'integer', minimum: 0, maximum: 10000, example: 500 },
+          discountPercent: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 90,
+            example: 10,
+            description: 'Taken off the whole fare; the original price is shown struck through',
+          },
         },
+      },
+      SettingsRequest: {
+        type: 'object',
+        additionalProperties: false,
+        required: [
+          'meetGreetPence',
+          'bookingLeadMinutes',
+          'editCutoffMinutes',
+          'unpaidExpiryMinutes',
+          'driverDetailsMinutes',
+          'quoteValidMinutes',
+        ],
+        properties: {
+          meetGreetPence: { type: 'integer', minimum: 0, maximum: 10000, example: 1000 },
+          bookingLeadMinutes: { type: 'integer', minimum: 0, maximum: 10080, example: 240 },
+          editCutoffMinutes: { type: 'integer', minimum: 0, maximum: 10080, example: 240 },
+          unpaidExpiryMinutes: { type: 'integer', minimum: 5, maximum: 1440, example: 30 },
+          driverDetailsMinutes: { type: 'integer', minimum: 0, maximum: 1440, example: 60 },
+          quoteValidMinutes: { type: 'integer', minimum: 5, maximum: 240, example: 30 },
+        },
+      },
+      Settings: {
+        allOf: [
+          { $ref: '#/components/schemas/SettingsRequest' },
+          {
+            type: 'object',
+            properties: { updatedAt: { type: 'string', format: 'date-time' } },
+          },
+        ],
+      },
+      Config: {
+        allOf: [
+          { $ref: '#/components/schemas/SettingsRequest' },
+          {
+            type: 'object',
+            required: ['currency', 'limits'],
+            properties: {
+              currency: { type: 'string', enum: ['GBP'] },
+              limits: {
+                type: 'object',
+                properties: {
+                  maxStops: { type: 'integer', example: 5 },
+                  maxPassengers: { type: 'integer', example: 8 },
+                  maxSuitcases: { type: 'integer', example: 8 },
+                  maxHandLuggage: { type: 'integer', example: 8 },
+                },
+              },
+            },
+          },
+        ],
       },
       VehicleTypePricing: {
         type: 'object',

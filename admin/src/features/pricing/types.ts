@@ -6,6 +6,8 @@ export interface PricingRule {
   /** 25 means 25%. */
   nightSurchargePercent: number;
   airportFeePence: number;
+  /** Taken off the whole fare. 10 means 10% off. */
+  discountPercent: number;
   updatedAt: string;
 }
 

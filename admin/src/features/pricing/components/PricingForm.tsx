@@ -20,6 +20,7 @@ interface Values {
   minimumFare: string;
   nightSurchargePercent: string;
   airportFee: string;
+  discountPercent: string;
 }
 type FieldName = keyof Values;
 type Errors = Partial<Record<FieldName, string>>;
@@ -30,6 +31,7 @@ const FIELD_ORDER: FieldName[] = [
   'minimumFare',
   'nightSurchargePercent',
   'airportFee',
+  'discountPercent',
 ];
 
 /** The API's names for the same fields, to place its messages. */
@@ -39,6 +41,7 @@ const API_FIELD: Record<string, FieldName> = {
   minimumFarePence: 'minimumFare',
   nightSurchargePercent: 'nightSurchargePercent',
   airportFeePence: 'airportFee',
+  discountPercent: 'discountPercent',
 };
 
 /** The highest amount each field takes, in pence: the API's limits. */
@@ -51,10 +54,12 @@ const MAX_PENCE: Partial<Record<FieldName, number>> = {
 
 function checkField(name: FieldName, value: string): string | undefined {
   const text = value.trim();
-  if (name === 'nightSurchargePercent') {
+  if (name === 'nightSurchargePercent' || name === 'discountPercent') {
+    // The API's limits: a night surcharge up to 100%, a discount up to 90%.
+    const max = name === 'discountPercent' ? 90 : 100;
     if (!text) return 'Enter a percentage. Use 0 for none.';
     if (!/^\d{1,3}$/.test(text)) return 'Enter a whole number, like 25.';
-    if (Number(text) > 100) return 'Use 100 or less.';
+    if (Number(text) > max) return `Use ${max} or less.`;
     return;
   }
   if (!text) return 'Enter an amount. Use 0 for none.';
@@ -71,6 +76,7 @@ function toInput(values: Values): PricingRuleInput {
     minimumFarePence: parsePounds(values.minimumFare)!,
     nightSurchargePercent: Number(values.nightSurchargePercent.trim()),
     airportFeePence: parsePounds(values.airportFee)!,
+    discountPercent: Number(values.discountPercent.trim()),
   };
 }
 
@@ -154,6 +160,7 @@ function Form({ type }: { type: VehicleTypePricing }) {
     minimumFare: rule ? penceToPounds(rule.minimumFarePence) : '',
     nightSurchargePercent: rule ? String(rule.nightSurchargePercent) : '0',
     airportFee: rule ? penceToPounds(rule.airportFeePence) : '0.00',
+    discountPercent: rule ? String(rule.discountPercent) : '0',
   }));
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string>();
@@ -277,6 +284,33 @@ function Form({ type }: { type: VehicleTypePricing }) {
               </div>
             </Field>
             {money('airportFee', 'Airport fee', 'Added to or from an airport.')}
+          </div>
+
+          {/* Half width, like the boxes above it. */}
+          <div className="grid sm:grid-cols-2 sm:gap-4">
+            <Field
+              id={id('discountPercent')}
+              label="Discount"
+              hint="Taken off the whole fare. Customers see the full price struck through. 0 for none."
+              error={errors.discountPercent}
+            >
+              <div className="relative">
+                <input
+                  {...input(
+                    'discountPercent',
+                    'Taken off the whole fare. Customers see the full price struck through. 0 for none.',
+                  )}
+                  inputMode="numeric"
+                  className="control tabular pr-10!"
+                />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-ink-muted"
+                >
+                  %
+                </span>
+              </div>
+            </Field>
           </div>
 
           <div className="grid gap-3 pt-2 sm:flex sm:items-center">

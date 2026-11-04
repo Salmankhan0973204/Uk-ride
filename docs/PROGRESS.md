@@ -5,8 +5,8 @@ Update this file after every coding session.
 - **Current module:** Module 5 rework - pricing and quotes (in progress, branch
   `module-05-journey-quotes`)
 - **Last completed:** Module 3 rework - fleet classes like ukride.uk (tag `module-03-v2`)
-- **Next step:** 5.10 - settings, discounts and `GET /config`
-- **Steps done:** 55 of 113
+- **Next step:** 5.11 - pricing engine v2
+- **Steps done:** 56 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -25,7 +25,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
 | 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 9/13  | Rework  | Rework        | Rework      | Rework   |
+| 5   | Pricing and quotes           | 10/13 | Rework  | Rework        | Rework      | Rework   |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
 | 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
 | 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
@@ -141,7 +141,7 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
 - [x] 5.8 Address search with suggestions (Photon and postcodes.io).
       _Learn: autocomplete, debouncing._
 - [x] 5.9 Airport detection by postcode: seven airports seeded, editable in the admin app.
-- [ ] 5.10 Settings, discounts and `GET /config`: Meet & Greet (£10), booking lead time
+- [x] 5.10 Settings, discounts and `GET /config`: Meet & Greet (£10), booking lead time
       (4 h), edit cut-off (4 h), unpaid expiry (30 min), driver details shown 60 min before
       pick-up, a discount % per class. _Learn: configuration as data._
 - [ ] 5.11 Engine v2, unit tested: discount, Meet & Greet per leg, automatic airport fee,
@@ -3056,3 +3056,34 @@ Open items
   for the Gatwick North Terminal building), so they are not seen as the airport. Picking the
   airport itself from the search always is. Admins can add postcodes.
 - The seventh airport (Birmingham) was my choice; the plan only said "seven".
+
+#### Step 5.10 - Settings, discounts and `GET /config` (done 2026-11-04)
+
+Built
+
+- `Settings` table with one row (migration `settings_and_discounts`), created with its
+  defaults the first time it is read: Meet & Greet £10, booking lead time 4 h, edit cut-off
+  4 h, unpaid expiry 30 min, driver details 60 min before pick-up, and how long a saved quote
+  holds its price (30 min, needed by 5.12).
+- `GET /config` (public, cached for a minute): those values plus the fixed journey limits
+  (5 stops, 8 passengers, 8 suitcases, 8 hand bags, in `quotes/journey.limits.ts`).
+- `GET` and `PUT /admin/settings` for admins. The settings screen itself is step 11.6.
+- `discountPercent` on each class's pricing rule (0 to 90), required by
+  `PUT /admin/pricing/:id`; the admin pricing form has a Discount box and the table a
+  Discount column. Nothing uses it in a price yet: that is the engine in 5.11.
+
+Verified
+
+- `/config` answered the defaults; a changed Meet & Greet price showed in `/config` at once
+  and was put back.
+- `PUT /admin/settings` refused decimals, negatives, missing values and unknown fields with
+  a message per field.
+- Pricing: no discount is a 400 "Discount is required", 95% is "at most 90%", 10% saves.
+  In Chrome: the form refuses 95 with "Use 90 or less", saves 10, the table shows the
+  Discount column and folds "10% off." into the row at 390 px with no sideways scrolling.
+  The test price was deleted afterwards, so there are still no prices in the database.
+
+Learning notes
+
+- Settings as a one-row table: typed columns with defaults, created on first read with
+  `upsert`, so there is never a "settings missing" state to handle.

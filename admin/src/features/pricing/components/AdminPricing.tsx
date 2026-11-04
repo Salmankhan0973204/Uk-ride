@@ -32,8 +32,8 @@ export function AdminPricing() {
             Pricing
           </h1>
           <p className="max-w-[60ch] text-base leading-relaxed text-ink-muted">
-            The prices of each vehicle type. Night is 10pm to 6am, UK time. A type without prices
-            cannot be quoted or booked.
+            The prices of each vehicle type. Night is 10pm to 6am, UK time. A discount is taken off
+            the whole fare. A type without prices cannot be quoted or booked.
           </p>
         </div>
 
@@ -95,6 +95,9 @@ export function AdminPricing() {
                 <th scope="col" className="px-3 py-3 text-right font-medium max-lg:hidden">
                   Airport
                 </th>
+                <th scope="col" className="px-3 py-3 text-right font-medium max-lg:hidden">
+                  Discount
+                </th>
                 <th scope="col" className="py-3 pl-3 text-right font-medium">
                   <span className="sr-only">Actions</span>
                 </th>
@@ -135,6 +138,7 @@ function Row({ type }: { type: VehicleTypePricing }) {
               </span>
               At least {formatPence(rule.minimumFarePence)}. Night +{rule.nightSurchargePercent}%.
               Airport +{formatPence(rule.airportFeePence)}.
+              {rule.discountPercent > 0 ? ` ${rule.discountPercent}% off.` : ''}
             </p>
           ) : null}
         </div>
@@ -144,6 +148,7 @@ function Row({ type }: { type: VehicleTypePricing }) {
       <td className={`${cell} max-lg:hidden`}>{rule ? formatPence(rule.minimumFarePence) : '-'}</td>
       <td className={`${cell} max-lg:hidden`}>{rule ? `${rule.nightSurchargePercent}%` : '-'}</td>
       <td className={`${cell} max-lg:hidden`}>{rule ? formatPence(rule.airportFeePence) : '-'}</td>
+      <td className={`${cell} max-lg:hidden`}>{rule ? `${rule.discountPercent}%` : '-'}</td>
       <td className="py-3 pl-3 text-right">
         <Link
           href={`/pricing/${type.id}`}

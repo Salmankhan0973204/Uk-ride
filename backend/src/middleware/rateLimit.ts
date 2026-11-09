@@ -107,6 +107,16 @@ export const quoteLimiter = rateLimiter({
   message: `Too many quotes asked for. ${TRY_LATER}`,
 });
 
+/**
+ * Address suggestions are asked for as the customer types, so the allowance
+ * is large. It still stops one address using us as a free geocoding service.
+ */
+export const placesLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 300,
+  message: `Too many address searches. ${TRY_LATER}`,
+});
+
 /** Asking for codes: one address may not flood many phones. Each phone has its own limit too. */
 export const otpSendLimiter = rateLimiter({
   windowMinutes: 15,

@@ -8,6 +8,7 @@ export const pricingRuleSelect = {
   minimumFarePence: true,
   nightSurchargePercent: true,
   airportFeePence: true,
+  discountPercent: true,
   updatedAt: true,
 } as const;
 

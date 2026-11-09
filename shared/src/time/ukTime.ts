@@ -39,6 +39,31 @@ export function ukLocalToDate(value: string): Date | undefined {
   return new Date(asUtc - ukOffsetMinutes(new Date(guess)) * 60_000);
 }
 
+/**
+ * The day on the UK clock at that moment, as a date box writes it:
+ * "2026-11-04". Just after midnight in London this is already tomorrow for a
+ * computer in New York's evening, which is the point.
+ */
+export function ukDate(moment = new Date()) {
+  // The en-CA format is year-month-day, the order a date box uses.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: UK,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(moment);
+}
+
+/** "14:32", on the UK clock. */
+export function formatUkClock(iso: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: UK,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(iso));
+}
+
 /** "Mon 2 Nov, 23:30", on the UK clock. */
 export function formatUkTime(iso: string) {
   return new Intl.DateTimeFormat('en-GB', {

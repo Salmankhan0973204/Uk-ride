@@ -38,8 +38,17 @@ export const pricingRuleSchema = z.strictObject(
       .min(0, 'Night surcharge cannot be negative')
       .max(100, 'Night surcharge must be at most 100%'),
     airportFeePence: pence('Airport fee', 10_000),
+    discountPercent: z
+      .number({
+        error: (issue) =>
+          issue.input === undefined ? 'Discount is required' : 'Discount must be a number',
+      })
+      .int('Discount must be a whole percentage, like 10')
+      .min(0, 'Discount cannot be negative')
+      // A larger discount is almost certainly a typing mistake for a price.
+      .max(90, 'Discount must be at most 90%'),
   },
-  'Send baseFarePence, perMilePence, minimumFarePence, nightSurchargePercent and airportFeePence',
+  'Send baseFarePence, perMilePence, minimumFarePence, nightSurchargePercent, airportFeePence and discountPercent',
 );
 
 export type PricingRuleInput = z.infer<typeof pricingRuleSchema>;

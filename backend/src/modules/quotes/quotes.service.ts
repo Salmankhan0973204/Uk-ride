@@ -1,98 +1,239 @@
 import { prisma } from '../../config/db.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { AppError } from '../../shared/AppError.js';
-import { findPostcode } from '../geo/geo.postcodes.js';
+import { airportFor } from '../airports/airports.match.js';
+import { listServedAirports } from '../airports/airports.service.js';
+import type { ServedAirport } from '../airports/airports.service.js';
+import { metresBetween } from '../geo/geo.places.js';
+import { nearestPostcode } from '../geo/geo.postcodes.js';
 import { findRoadRoute } from '../geo/geo.routing.js';
+import { getSettings } from '../settings/settings.service.js';
 import { publicVehicleType } from '../vehicle-types/vehicle-types.select.js';
-import { calculateQuote, chargedMilesFor, isNight } from './quote.calculator.js';
-import type { QuoteRequest } from './quotes.schemas.js';
+import { chargedMilesFor, fits, isNight, priceTrip, recommend } from './quote.calculator.js';
+import type { Leg } from './quote.calculator.js';
+import type { QuotePlace, QuoteRequest } from './quotes.schemas.js';
+
+/** Two addresses closer than this are one place: a journey from a door to itself. */
+const SAME_PLACE_METRES = 100;
+/** The shortest leg worth pricing; the engine charges in tenths of a mile. */
+const SHORTEST_MILES = 0.1;
+
+type Direction = 'OUTBOUND' | 'RETURN';
+
+/** An address after the server has looked at it: its postcode, and its airport if any. */
+interface LocatedPlace {
+  label: string;
+  latitude: number;
+  longitude: number;
+  postcode: string;
+  district: string;
+  airport: { code: string; name: string } | null;
+}
+
+/** "240" → "4 hours", "90" → "90 minutes". */
+function inWords(minutes: number) {
+  if (minutes % 60 !== 0) return `${minutes} minutes`;
+  const hours = minutes / 60;
+  return hours === 1 ? '1 hour' : `${hours} hours`;
+}
 
 /**
- * Prices a journey in every vehicle type that is on offer and has prices,
- * or in the one asked for.
- *
- * This is the thin outer layer: it reads the rules from the database and
- * hands each one to the pure calculation. All the arithmetic is in
- * quote.calculator.ts.
- *
- * Nothing is saved. A quote is an answer, not a promise: the booking in
- * Module 6 will work the price out again from the rules of that moment.
+ * Finds the postcode of every address at the same time, and with it the
+ * airport. An address with no UK postcode within 2 km cannot be served;
+ * every such address is reported at once, on its own field.
  */
-export async function quoteJourney({
-  pickupPostcode,
-  dropoffPostcode,
-  distanceMiles: typedMiles,
-  pickupAt,
-  airport,
-  vehicleType,
-}: QuoteRequest) {
-  // The clock is read here, in the outer layer, never inside the calculation.
-  const when = pickupAt ?? new Date();
+async function locate(
+  places: { field: string; name: string; place: QuotePlace }[],
+  airports: readonly ServedAirport[],
+) {
+  const found = await Promise.all(
+    places.map(({ place }) => nearestPostcode(place.latitude, place.longitude)),
+  );
 
-  // With postcodes, the road distance is measured; otherwise the typed one is
-  // used. The schema has made sure exactly one of the two was sent.
-  const route =
-    pickupPostcode && dropoffPostcode ? await measure(pickupPostcode, dropoffPostcode) : null;
-  const distanceMiles = route ? route.distanceMiles : typedMiles!;
+  const problems: Record<string, string[]> = {};
+  const located = places.map(({ field, name, place }, index): LocatedPlace | undefined => {
+    const postcode = found[index];
+    if (!postcode) {
+      (problems[field] ??= []).push(
+        `${name}: we could not find this address in the UK. Choose another`,
+      );
+      return undefined;
+    }
+    const airport = airportFor(postcode.postcode, airports);
+    return {
+      label: place.label,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      postcode: postcode.postcode,
+      district: postcode.district,
+      airport: airport ? { code: airport.code, name: airport.name } : null,
+    };
+  });
+
+  if (Object.keys(problems).length > 0) throw AppError.validation(problems);
+  return located as LocatedPlace[];
+}
+
+/**
+ * Prices a journey in every class on offer that has prices, and saves the
+ * answer as a quote that can be booked until it expires.
+ *
+ * The outer layer: it checks the rules that need the clock, the settings or
+ * the map, measures each leg by road, and hands the numbers to the pure
+ * engine in quote.calculator.ts, where all the arithmetic is.
+ */
+export async function quoteJourney(request: QuoteRequest) {
+  // The clock is read here, in the outer layer, never inside the engine.
+  const now = Date.now();
+  const settings = await getSettings();
+
+  if (request.pickupAt.getTime() < now + settings.bookingLeadMinutes * 60_000) {
+    throw AppError.validation({
+      pickupAt: [`Book at least ${inWords(settings.bookingLeadMinutes)} ahead`],
+    });
+  }
+  if (metresBetween(request.pickup, request.dropoff) < SAME_PLACE_METRES) {
+    throw AppError.validation({ dropoff: ['The drop-off is the same place as the pick-up'] });
+  }
+
+  const airports = await listServedAirports();
+  const [pickup, ...rest] = await locate(
+    [
+      { field: 'pickup', name: 'Pick-up', place: request.pickup },
+      ...request.stops.map((place, index) => ({
+        field: 'stops',
+        name: `Stop ${index + 1}`,
+        place,
+      })),
+      { field: 'dropoff', name: 'Drop-off', place: request.dropoff },
+    ],
+    airports,
+  );
+  const dropoff = rest.pop()!;
+  const outboundPlaces = [pickup!, ...rest, dropoff];
+
+  // The return runs the stops backwards, from the drop-off to the pick-up.
+  const plan: { direction: Direction; pickupAt: Date; places: LocatedPlace[] }[] = [
+    { direction: 'OUTBOUND', pickupAt: request.pickupAt, places: outboundPlaces },
+  ];
+  if (request.returnAt) {
+    plan.push({
+      direction: 'RETURN',
+      pickupAt: request.returnAt,
+      places: [...outboundPlaces].reverse(),
+    });
+  }
+
+  // One-way streets make the two directions differ, so each is measured.
+  const routes = await Promise.all(plan.map((leg) => findRoadRoute(leg.places)));
+  if (routes.some((route) => route.distanceMiles < SHORTEST_MILES)) {
+    throw AppError.validation({
+      dropoff: ['These places are too close together to price a journey'],
+    });
+  }
+
+  const legs = plan.map((leg, index) => {
+    const route = routes[index]!;
+    const first = leg.places[0]!;
+    return {
+      direction: leg.direction,
+      pickupAt: leg.pickupAt.toISOString(),
+      places: leg.places,
+      distanceMiles: route.distanceMiles,
+      durationMinutes: route.durationMinutes,
+      chargedMiles: chargedMilesFor(route.distanceMiles),
+      night: isNight(leg.pickupAt),
+      // Any airport on the leg: the airport fee.
+      airport: leg.places.some((place) => place.airport !== null),
+      // Picked up at an airport: a flight number is needed, and Meet & Greet is offered.
+      airportPickup: first.airport,
+    };
+  });
+
+  // Meet & Greet is chosen on the booking page, so the prices here are
+  // without it; `meetGreetPence` says what it adds to a leg.
+  const engineLegs: Leg[] = legs.map((leg) => ({
+    distanceMiles: leg.distanceMiles,
+    pickupAt: new Date(leg.pickupAt),
+    airport: leg.airport,
+    airportPickup: leg.airportPickup !== null,
+    meetGreet: false,
+  }));
 
   const types = await prisma.vehicleType.findMany({
-    where: {
-      isActive: true,
-      pricingRule: { isNot: null },
-      ...(vehicleType ? { slug: vehicleType } : {}),
-    },
+    where: { isActive: true, pricingRule: { isNot: null } },
     orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     select: { ...publicVehicleType, pricingRule: true },
   });
 
-  if (vehicleType && types.length === 0) {
-    throw AppError.notFound('This vehicle type is not on offer, or has no prices yet');
-  }
+  const party = {
+    passengers: request.passengers,
+    suitcases: request.suitcases,
+    handLuggage: request.handLuggage,
+  };
 
-  const quotes = types.map(({ pricingRule, ...type }) => {
-    // The query only returns types that have a rule.
-    const { lines, totalPence } = calculateQuote(pricingRule!, {
-      distanceMiles,
-      pickupAt: when,
-      airport,
-    });
-    return { vehicleType: type, lines, totalPence };
+  // The fleet's list order starts with the 8 Seater, which is no answer for
+  // two people. The booking page lists the classes cheapest first instead
+  // (the list order breaks a tie), so "the first class that fits" is the
+  // cheapest class that fits.
+  const priced = types
+    .map(({ pricingRule, ...vehicleType }) => ({
+      vehicleType,
+      // The query only returns types that have a rule.
+      rule: pricingRule!,
+      trip: priceTrip(pricingRule!, engineLegs, { meetGreetPence: settings.meetGreetPence }),
+    }))
+    .sort((a, b) => a.trip.farePence - b.trip.farePence);
+  const recommended = recommend(
+    priced.map((option) => option.vehicleType),
+    party,
+  );
+
+  const options = priced.map(({ vehicleType, rule, trip }) => {
+    return {
+      vehicleType,
+      fits: fits(vehicleType, party),
+      recommended: vehicleType.id === recommended?.id,
+      discountPercent: rule.discountPercent,
+      originalPence: trip.originalPence,
+      discountPence: trip.discountPence,
+      pricePence: trip.farePence,
+      legs: trip.legs.map((leg) => ({
+        lines: leg.lines,
+        originalPence: leg.originalPence,
+        discountPence: leg.discountPence,
+        pricePence: leg.farePence,
+      })),
+    };
   });
 
-  return {
-    distanceMiles,
-    // The same for every type: it depends only on the distance.
-    chargedMiles: chargedMilesFor(distanceMiles),
-    pickupAt: when.toISOString(),
-    route,
-    night: isNight(when),
-    airport,
+  const journey = { legs, party };
+  const answer = {
     currency: 'GBP' as const,
-    quotes,
+    meetGreetPence: settings.meetGreetPence,
+    ...journey,
+    options,
+    recommendedVehicleTypeId: recommended?.id ?? null,
   };
+
+  // Nothing to book: no class has prices yet. The journey is still shown.
+  if (options.length === 0) return { quoteId: null, expiresAt: null, ...answer };
+
+  const saved = await prisma.quote.create({
+    data: {
+      journey: journey as unknown as Prisma.InputJsonValue,
+      options: options as unknown as Prisma.InputJsonValue,
+      meetGreetPence: settings.meetGreetPence,
+      expiresAt: new Date(now + settings.quoteValidMinutes * 60_000),
+    },
+    select: { id: true, expiresAt: true },
+  });
+
+  return { quoteId: saved.id, expiresAt: saved.expiresAt.toISOString(), ...answer };
 }
 
-/**
- * Finds both postcodes, at the same time, then the road route between them.
- * A route shorter than the smallest distance charged (0.1 miles) is refused:
- * two postcodes on the same street are not a journey to price.
- */
-async function measure(pickupPostcode: string, dropoffPostcode: string) {
-  const [pickup, dropoff] = await Promise.all([
-    findPostcode(pickupPostcode, 'pickupPostcode'),
-    findPostcode(dropoffPostcode, 'dropoffPostcode'),
-  ]);
-  const { distanceMiles, durationMinutes } = await findRoadRoute(pickup, dropoff);
-
-  if (distanceMiles < 0.1) {
-    throw AppError.validation({
-      dropoffPostcode: ['These postcodes are too close together to price a journey'],
-    });
-  }
-
-  return {
-    pickup: { postcode: pickup.postcode, district: pickup.district },
-    dropoff: { postcode: dropoff.postcode, district: dropoff.district },
-    distanceMiles,
-    durationMinutes,
-  };
+/** Removes quotes that have run out. Run by the clean-up job. */
+export async function deleteExpiredQuotes(now = new Date()) {
+  const { count } = await prisma.quote.deleteMany({ where: { expiresAt: { lt: now } } });
+  return count;
 }

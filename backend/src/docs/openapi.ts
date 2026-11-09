@@ -50,6 +50,7 @@ export const openApiDocument = {
     { name: 'Auth', description: 'Accounts and sign-in' },
     { name: 'Users', description: 'Your own profile' },
     { name: 'Vehicle types', description: 'The classes of car on offer' },
+    { name: 'Places', description: 'Address search for the journey form' },
     { name: 'Quotes', description: 'The price of a journey' },
     { name: 'Admin', description: "For the operator's staff. Needs the ADMIN role" },
   ],
@@ -1171,56 +1172,259 @@ export const openApiDocument = {
         },
       },
     },
-    '/quotes': {
-      post: {
+    '/config': {
+      get: {
         tags: ['Quotes'],
-        summary: 'Price a journey',
+        summary: 'Booking rules the customer site needs',
         description:
-          'Public. Prices the journey in every vehicle type that is on offer and has prices, ' +
-          'or only in `vehicleType`. Give two UK postcodes and the road distance is measured ' +
-          '(postcodes.io and OSRM), or give `distanceMiles` instead. The distance is charged ' +
-          'to the nearest tenth of a mile. ' +
-          'Amounts are whole pence, and each total is the sum of its lines. Nothing is saved.',
+          'Public. The Meet & Greet price, how far ahead to book, the edit cut-off, how long an ' +
+          'unpaid booking and a quote last, when driver details are shown, and the size limits ' +
+          'of a journey. The server checks every rule again; this is for showing them.',
+        responses: {
+          200: jsonResponse(
+            'Configuration',
+            successEnvelope({ $ref: '#/components/schemas/Config' }),
+          ),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/settings': {
+      get: {
+        tags: ['Admin'],
+        summary: 'The booking rules',
+        description: 'Created with the defaults the first time it is read.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'Settings',
+            successEnvelope({
+              type: 'object',
+              required: ['settings'],
+              properties: { settings: { $ref: '#/components/schemas/Settings' } },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+      put: {
+        tags: ['Admin'],
+        summary: 'Replace the booking rules',
+        description: 'Every field is required. Meet & Greet is whole pence; the rest are minutes.',
+        security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                additionalProperties: false,
-                properties: {
-                  pickupPostcode: { type: 'string', example: 'SW1A 1AA' },
-                  dropoffPostcode: { type: 'string', example: 'TW6 1EW' },
-                  distanceMiles: {
-                    type: 'number',
-                    minimum: 0.1,
-                    maximum: 1000,
-                    description: 'Instead of the two postcodes, not with them',
-                  },
-                  pickupAt: {
-                    type: 'string',
-                    format: 'date-time',
-                    example: '2026-11-02T23:30:00Z',
-                    description: 'With a time zone. Left out: now. Not in the past.',
-                  },
-                  airport: { type: 'boolean', default: false },
-                  vehicleType: { type: 'string', example: 'executive' },
-                },
-              },
-            },
+            'application/json': { schema: { $ref: '#/components/schemas/SettingsRequest' } },
           },
         },
         responses: {
           200: jsonResponse(
-            'Quotes, or none when no prices are published yet',
+            'Settings saved',
+            successEnvelope({
+              type: 'object',
+              required: ['settings'],
+              properties: { settings: { $ref: '#/components/schemas/Settings' } },
+            }),
+          ),
+          400: jsonResponse('A value is missing, not whole, or out of range', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/airports': {
+      get: {
+        tags: ['Admin'],
+        summary: 'Every airport',
+        description: 'Switched off or not, in list order.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: jsonResponse(
+            'All airports',
+            successEnvelope({
+              type: 'object',
+              required: ['airports'],
+              properties: {
+                airports: { type: 'array', items: { $ref: '#/components/schemas/AdminAirport' } },
+              },
+            }),
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+      post: {
+        tags: ['Admin'],
+        summary: 'Add an airport',
+        description:
+          'The map position is looked up from the main postcode with postcodes.io. Each entry ' +
+          'of `postcodes` is tidied ("rh60pj" becomes "RH6 0PJ") and repeats are dropped.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/CreateAirportRequest' } },
+          },
+        },
+        responses: {
+          201: jsonResponse(
+            'Airport added',
+            successEnvelope({
+              type: 'object',
+              required: ['airport'],
+              properties: { airport: { $ref: '#/components/schemas/AdminAirport' } },
+            }),
+          ),
+          400: jsonResponse('A field is missing or wrong, or the main postcode does not exist', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          409: jsonResponse('Another airport already uses this code', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          503: jsonResponse('The postcode service could not be reached', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/admin/airports/{id}': {
+      patch: {
+        tags: ['Admin'],
+        summary: 'Change an airport, or switch it off or on',
+        description:
+          'Send only the fields to change. A new main postcode moves the airport on the map. ' +
+          'There is no DELETE: `isActive: false` switches an airport off.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UpdateAirportRequest' } },
+          },
+        },
+        responses: {
+          200: jsonResponse(
+            'Airport updated',
+            successEnvelope({
+              type: 'object',
+              required: ['airport'],
+              properties: { airport: { $ref: '#/components/schemas/AdminAirport' } },
+            }),
+          ),
+          400: jsonResponse('A field is wrong, or nothing was sent', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          403: jsonResponse('Signed in, but not an admin', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          404: jsonResponse('No airport has this id', { $ref: '#/components/schemas/ApiFailure' }),
+          409: jsonResponse('Another airport already uses this code', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/places': {
+      get: {
+        tags: ['Places'],
+        summary: 'Suggest addresses for what has been typed',
+        description:
+          'Public. Up to 8 UK suggestions: our airports first when the text names one (by ' +
+          'name or code), then postcodes when the text is a postcode or the ' +
+          'start of one (postcodes.io), then addresses, streets, stations and places ' +
+          '(Photon, over OpenStreetMap), nearer central London first. If one service is ' +
+          'down the other still answers; only when there is nothing to show is it a 503. ' +
+          "Each suggestion inside an airport's postcodes carries `airport`.",
+        parameters: [
+          {
+            name: 'q',
+            in: 'query',
+            required: true,
+            schema: { type: 'string', minLength: 2, maxLength: 100 },
+            example: 'heathrow terminal 5',
+          },
+        ],
+        responses: {
+          200: jsonResponse(
+            'Suggestions, possibly none',
+            successEnvelope({
+              type: 'object',
+              required: ['places'],
+              properties: {
+                places: { type: 'array', items: { $ref: '#/components/schemas/PlaceSuggestion' } },
+              },
+            }),
+          ),
+          400: jsonResponse('q is missing, shorter than 2 or longer than 100 characters', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          429: { $ref: '#/components/responses/RateLimited' },
+          503: jsonResponse('Neither the postcode nor the address service could be reached', {
+            $ref: '#/components/schemas/ApiFailure',
+          }),
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
+    '/quotes': {
+      post: {
+        tags: ['Quotes'],
+        summary: 'Price a journey and save the quote',
+        description:
+          'Public. The "BOOK YOUR JOURNEY" form: a pick-up, up to 5 stops and a drop-off, each ' +
+          'as picked from GET /places; a pick-up time; optionally a return time, which adds a ' +
+          'second leg that runs the stops backwards; the party. Each leg is measured by road ' +
+          "through its stops (OSRM). Each address's postcode is found again from its position " +
+          '(postcodes.io), and with it any airport: an airport anywhere on a leg adds the ' +
+          'airport fee, and an airport pick-up makes a flight number necessary and offers Meet ' +
+          '& Greet (`meetGreetPence`, added per leg at booking). Every class on offer with ' +
+          'prices is listed cheapest first, with its original price, discount and price per ' +
+          'leg and in total, and whether the party fits; the first that fits is recommended. ' +
+          'Rules: the pick-up at least the booking lead time ahead (4 hours), the return after ' +
+          'the pick-up, the drop-off not the pick-up, at most 8 passengers, 8 suitcases and 8 ' +
+          'hand bags. The answer is saved as a quote that can be booked until `expiresAt`; ' +
+          'with no prices published yet, nothing is saved and `quoteId` is null.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/QuoteRequest' } },
+          },
+        },
+        responses: {
+          201: jsonResponse(
+            'Quote saved',
             successEnvelope({ $ref: '#/components/schemas/QuoteResult' }),
           ),
-          400: jsonResponse('The distance is missing, not a number, or out of range', {
-            $ref: '#/components/schemas/ApiFailure',
-          }),
-          404: jsonResponse('The vehicle type asked for is not on offer or has no prices', {
-            $ref: '#/components/schemas/ApiFailure',
-          }),
+          200: jsonResponse(
+            'No prices are published yet: the journey without options, not saved',
+            successEnvelope({ $ref: '#/components/schemas/QuoteResult' }),
+          ),
+          400: jsonResponse(
+            'A field is missing or wrong, a rule is broken, or an address is not in the UK',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
           429: { $ref: '#/components/responses/RateLimited' },
           503: jsonResponse('The postcode or routing service could not be reached', {
             $ref: '#/components/schemas/ApiFailure',
@@ -1593,6 +1797,7 @@ export const openApiDocument = {
           'minimumFarePence',
           'nightSurchargePercent',
           'airportFeePence',
+          'discountPercent',
         ],
         additionalProperties: false,
         properties: {
@@ -1607,7 +1812,64 @@ export const openApiDocument = {
             description: 'Added for a pick-up from 22:00 to 06:00 UK time',
           },
           airportFeePence: { type: 'integer', minimum: 0, maximum: 10000, example: 500 },
+          discountPercent: {
+            type: 'integer',
+            minimum: 0,
+            maximum: 90,
+            example: 10,
+            description: 'Taken off the whole fare; the original price is shown struck through',
+          },
         },
+      },
+      SettingsRequest: {
+        type: 'object',
+        additionalProperties: false,
+        required: [
+          'meetGreetPence',
+          'bookingLeadMinutes',
+          'editCutoffMinutes',
+          'unpaidExpiryMinutes',
+          'driverDetailsMinutes',
+          'quoteValidMinutes',
+        ],
+        properties: {
+          meetGreetPence: { type: 'integer', minimum: 0, maximum: 10000, example: 1000 },
+          bookingLeadMinutes: { type: 'integer', minimum: 0, maximum: 10080, example: 240 },
+          editCutoffMinutes: { type: 'integer', minimum: 0, maximum: 10080, example: 240 },
+          unpaidExpiryMinutes: { type: 'integer', minimum: 5, maximum: 1440, example: 30 },
+          driverDetailsMinutes: { type: 'integer', minimum: 0, maximum: 1440, example: 60 },
+          quoteValidMinutes: { type: 'integer', minimum: 5, maximum: 240, example: 30 },
+        },
+      },
+      Settings: {
+        allOf: [
+          { $ref: '#/components/schemas/SettingsRequest' },
+          {
+            type: 'object',
+            properties: { updatedAt: { type: 'string', format: 'date-time' } },
+          },
+        ],
+      },
+      Config: {
+        allOf: [
+          { $ref: '#/components/schemas/SettingsRequest' },
+          {
+            type: 'object',
+            required: ['currency', 'limits'],
+            properties: {
+              currency: { type: 'string', enum: ['GBP'] },
+              limits: {
+                type: 'object',
+                properties: {
+                  maxStops: { type: 'integer', example: 5 },
+                  maxPassengers: { type: 'integer', example: 8 },
+                  maxSuitcases: { type: 'integer', example: 8 },
+                  maxHandLuggage: { type: 'integer', example: 8 },
+                },
+              },
+            },
+          },
+        ],
       },
       VehicleTypePricing: {
         type: 'object',
@@ -1628,6 +1890,144 @@ export const openApiDocument = {
           },
         },
       },
+      PlaceSuggestion: {
+        type: 'object',
+        required: ['label', 'detail', 'latitude', 'longitude', 'postcode', 'kind', 'airport'],
+        properties: {
+          label: { type: 'string', example: 'Heathrow Terminal 5' },
+          detail: {
+            type: 'string',
+            example: 'Wallis Road, London Borough of Hillingdon, TW6 2GD',
+            description: 'The second line. Empty when there is nothing to add.',
+          },
+          latitude: { type: 'number', example: 51.472515 },
+          longitude: { type: 'number', example: -0.4877331 },
+          postcode: { type: 'string', nullable: true, example: 'TW6 2GD' },
+          kind: {
+            type: 'string',
+            enum: ['airport', 'postcode', 'address'],
+            description: 'airport: one of our own airports, at its main postcode',
+          },
+          airport: {
+            type: 'object',
+            nullable: true,
+            description: "Set when the place is inside one of our airports' postcodes",
+            properties: {
+              code: { type: 'string', example: 'LHR' },
+              name: { type: 'string', example: 'Heathrow Airport' },
+            },
+          },
+        },
+      },
+      AdminAirport: {
+        type: 'object',
+        required: [
+          'id',
+          'code',
+          'name',
+          'postcode',
+          'latitude',
+          'longitude',
+          'postcodes',
+          'sortOrder',
+          'isActive',
+        ],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          code: { type: 'string', example: 'LHR' },
+          name: { type: 'string', example: 'Heathrow Airport' },
+          postcode: { type: 'string', example: 'TW6 1EW', description: 'The main postcode' },
+          latitude: { type: 'number', example: 51.469777 },
+          longitude: { type: 'number', example: -0.449559 },
+          postcodes: {
+            type: 'array',
+            items: { type: 'string' },
+            example: ['TW6'],
+            description: 'Whole postcodes, districts (TW6) or sectors (RH6 0) that also count',
+          },
+          sortOrder: { type: 'integer', example: 10 },
+          isActive: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      CreateAirportRequest: {
+        type: 'object',
+        required: ['code', 'name', 'postcode'],
+        additionalProperties: false,
+        properties: {
+          code: { type: 'string', pattern: '^[A-Za-z]{3}$', example: 'MAN' },
+          name: { type: 'string', minLength: 2, maxLength: 60, example: 'Manchester Airport' },
+          postcode: { type: 'string', example: 'M90 1QX' },
+          postcodes: {
+            type: 'array',
+            maxItems: 30,
+            items: { type: 'string' },
+            example: ['M90 1', 'M90 3'],
+          },
+          sortOrder: { type: 'integer', minimum: 0, maximum: 9999 },
+        },
+      },
+      UpdateAirportRequest: {
+        type: 'object',
+        additionalProperties: false,
+        minProperties: 1,
+        properties: {
+          code: { type: 'string', pattern: '^[A-Za-z]{3}$' },
+          name: { type: 'string', minLength: 2, maxLength: 60 },
+          postcode: { type: 'string' },
+          postcodes: { type: 'array', maxItems: 30, items: { type: 'string' } },
+          sortOrder: { type: 'integer', minimum: 0, maximum: 9999 },
+          isActive: { type: 'boolean' },
+        },
+        example: { isActive: false },
+      },
+      QuotePlaceRequest: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['label', 'latitude', 'longitude'],
+        properties: {
+          label: { type: 'string', maxLength: 200, example: 'Heathrow Airport' },
+          latitude: { type: 'number', example: 51.469777 },
+          longitude: { type: 'number', example: -0.449559 },
+        },
+      },
+      QuoteRequest: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['pickup', 'dropoff', 'pickupAt', 'passengers'],
+        properties: {
+          pickup: { $ref: '#/components/schemas/QuotePlaceRequest' },
+          stops: {
+            type: 'array',
+            maxItems: 5,
+            items: { $ref: '#/components/schemas/QuotePlaceRequest' },
+            description: 'In the order they are driven to',
+          },
+          dropoff: { $ref: '#/components/schemas/QuotePlaceRequest' },
+          pickupAt: {
+            type: 'string',
+            format: 'date-time',
+            example: '2026-11-20T12:30:00Z',
+            description: 'With a time zone; at least the booking lead time ahead',
+          },
+          returnAt: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Makes it a return. After pickupAt.',
+          },
+          passengers: { type: 'integer', minimum: 1, maximum: 8, example: 2 },
+          suitcases: { type: 'integer', minimum: 0, maximum: 8, default: 0, example: 2 },
+          handLuggage: { type: 'integer', minimum: 0, maximum: 8, default: 0, example: 2 },
+        },
+        example: {
+          pickup: { label: 'SW1A 1AA, Westminster', latitude: 51.501009, longitude: -0.141588 },
+          dropoff: { label: 'Heathrow Airport', latitude: 51.469777, longitude: -0.449559 },
+          pickupAt: '2026-11-20T12:30:00Z',
+          passengers: 2,
+          suitcases: 2,
+        },
+      },
       QuoteLine: {
         type: 'object',
         required: ['code', 'label', 'amountPence'],
@@ -1640,57 +2040,114 @@ export const openApiDocument = {
               'MINIMUM_FARE_TOP_UP',
               'NIGHT_SURCHARGE',
               'AIRPORT_FEE',
+              'DISCOUNT',
+              'MEET_AND_GREET',
             ],
           },
           label: { type: 'string', example: '12.4 miles at £2.10 a mile' },
-          amountPence: { type: 'integer', example: 2604 },
+          amountPence: {
+            type: 'integer',
+            example: 2604,
+            description: 'Negative for the discount',
+          },
+        },
+      },
+      QuoteAirport: {
+        type: 'object',
+        nullable: true,
+        properties: {
+          code: { type: 'string', example: 'LHR' },
+          name: { type: 'string', example: 'Heathrow Airport' },
+        },
+      },
+      QuoteLeg: {
+        type: 'object',
+        properties: {
+          direction: { type: 'string', enum: ['OUTBOUND', 'RETURN'] },
+          pickupAt: { type: 'string', format: 'date-time' },
+          places: {
+            type: 'array',
+            description: 'In driving order: pick-up, stops, drop-off',
+            items: {
+              type: 'object',
+              properties: {
+                label: { type: 'string' },
+                latitude: { type: 'number' },
+                longitude: { type: 'number' },
+                postcode: { type: 'string', example: 'TW6 1EW' },
+                district: { type: 'string', example: 'Hillingdon' },
+                airport: { $ref: '#/components/schemas/QuoteAirport' },
+              },
+            },
+          },
+          distanceMiles: { type: 'number', example: 16.21 },
+          durationMinutes: { type: 'integer', example: 34 },
+          chargedMiles: { type: 'number', example: 16.2 },
+          night: { type: 'boolean', description: 'Pick-up between 22:00 and 06:00 UK time' },
+          airport: { type: 'boolean', description: 'An airport anywhere on the leg' },
+          airportPickup: {
+            allOf: [{ $ref: '#/components/schemas/QuoteAirport' }],
+            nullable: true,
+            description: 'Set when the leg starts at an airport: flight number, Meet & Greet',
+          },
+        },
+      },
+      QuoteOption: {
+        type: 'object',
+        properties: {
+          vehicleType: { $ref: '#/components/schemas/VehicleType' },
+          fits: { type: 'boolean', description: 'The party fits this class' },
+          recommended: { type: 'boolean' },
+          discountPercent: { type: 'integer', example: 10 },
+          originalPence: { type: 'integer', example: 4252 },
+          discountPence: { type: 'integer', example: 425 },
+          pricePence: {
+            type: 'integer',
+            example: 3827,
+            description: 'Original less discount, all legs, without Meet & Greet',
+          },
+          legs: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                lines: { type: 'array', items: { $ref: '#/components/schemas/QuoteLine' } },
+                originalPence: { type: 'integer' },
+                discountPence: { type: 'integer' },
+                pricePence: { type: 'integer' },
+              },
+            },
+          },
         },
       },
       QuoteResult: {
         type: 'object',
-        required: ['distanceMiles', 'chargedMiles', 'currency', 'quotes'],
+        required: ['quoteId', 'expiresAt', 'currency', 'legs', 'party', 'options'],
         properties: {
-          distanceMiles: { type: 'number', example: 12.44 },
-          chargedMiles: { type: 'number', example: 12.4 },
-          pickupAt: { type: 'string', format: 'date-time' },
-          route: {
+          quoteId: {
+            type: 'string',
+            format: 'uuid',
             nullable: true,
-            description: 'The measured route, or null when distanceMiles was typed in',
+            description: 'null when no prices are published yet',
+          },
+          expiresAt: { type: 'string', format: 'date-time', nullable: true },
+          currency: { type: 'string', enum: ['GBP'] },
+          meetGreetPence: { type: 'integer', example: 1000 },
+          legs: { type: 'array', items: { $ref: '#/components/schemas/QuoteLeg' } },
+          party: {
             type: 'object',
             properties: {
-              pickup: {
-                type: 'object',
-                properties: {
-                  postcode: { type: 'string', example: 'SW1A 1AA' },
-                  district: { type: 'string', example: 'Westminster' },
-                },
-              },
-              dropoff: {
-                type: 'object',
-                properties: {
-                  postcode: { type: 'string', example: 'TW6 1EW' },
-                  district: { type: 'string', example: 'Hillingdon' },
-                },
-              },
-              distanceMiles: { type: 'number', example: 16.21 },
-              durationMinutes: { type: 'integer', example: 34 },
+              passengers: { type: 'integer' },
+              suitcases: { type: 'integer' },
+              handLuggage: { type: 'integer' },
             },
           },
-          night: { type: 'boolean', description: 'Pick-up between 22:00 and 06:00 UK time' },
-          airport: { type: 'boolean' },
-          currency: { type: 'string', enum: ['GBP'] },
-          quotes: {
+          options: {
             type: 'array',
-            items: {
-              type: 'object',
-              required: ['vehicleType', 'lines', 'totalPence'],
-              properties: {
-                vehicleType: { $ref: '#/components/schemas/VehicleType' },
-                lines: { type: 'array', items: { $ref: '#/components/schemas/QuoteLine' } },
-                totalPence: { type: 'integer', example: 2954 },
-              },
-            },
+            description: 'Cheapest first',
+            items: { $ref: '#/components/schemas/QuoteOption' },
           },
+          recommendedVehicleTypeId: { type: 'string', format: 'uuid', nullable: true },
         },
       },
       ApiFailure: {

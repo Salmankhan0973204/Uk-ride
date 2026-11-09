@@ -15,6 +15,7 @@ const SECTIONS = [
   { href: '/vehicles', label: 'Vehicles' },
   { href: '/vehicle-types', label: 'Vehicle types' },
   { href: '/pricing', label: 'Pricing' },
+  { href: '/airports', label: 'Airports' },
   { href: '/system-status', label: 'System status' },
 ];
 

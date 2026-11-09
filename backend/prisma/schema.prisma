@@ -175,10 +175,86 @@ model PricingRule {
   nightSurchargePercent Int         @default(0) @map("night_surcharge_percent")
   // A flat amount for a journey to or from an airport, added after any night surcharge.
   airportFeePence       Int         @default(0) @map("airport_fee_pence")
+  // Taken off the whole fare, as on ukride.uk, where each class shows its
+  // original price struck through. 10 means 10% off. 0 means no discount.
+  discountPercent       Int         @default(0) @map("discount_percent")
   createdAt             DateTime    @default(now()) @map("created_at")
   updatedAt             DateTime    @updatedAt @map("updated_at")
 
   @@map("pricing_rules")
+}
+
+// An airport we serve. A journey that starts, stops or ends at one pays the
+// class's airport fee; a pick-up from one needs a flight number and may have
+// Meet & Greet.
+model Airport {
+  id        String   @id @default(uuid())
+  // The three-letter IATA code: "LHR". Shown beside the name, and searched.
+  code      String   @unique
+  name      String
+  // Where the airport is when a customer picks it from the address search:
+  // the main terminal's postcode, and that postcode's map position, looked
+  // up when an admin saves it.
+  postcode  String
+  latitude  Float
+  longitude Float
+  // The postcodes that count as this airport, besides the main one. An entry
+  // is a whole postcode ("RH6 0PJ"), a district ("TW6": every postcode in
+  // it) or a sector ("RH6 0"). Most airports share their district with homes
+  // nearby, so whole postcodes are the safe choice.
+  postcodes String[]
+  // Lower numbers are listed first.
+  sortOrder Int      @default(0) @map("sort_order")
+  // Switched off instead of deleted: old bookings keep their airport.
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("airports")
+}
+
+// The operator's booking rules, kept as data so an admin can change them
+// without a new release. There is only ever one row, id 1; it is created with
+// these defaults the first time it is read.
+model Settings {
+  id                   Int      @id @default(1)
+  // The price of Meet & Greet on an airport pick-up: a driver waiting in
+  // arrivals with a name board. Whole pence.
+  meetGreetPence       Int      @default(1000) @map("meet_greet_pence")
+  // How far ahead a pick-up must be booked.
+  bookingLeadMinutes   Int      @default(240) @map("booking_lead_minutes")
+  // A paid journey can be edited until this long before its pick-up.
+  editCutoffMinutes    Int      @default(240) @map("edit_cutoff_minutes")
+  // An unpaid booking is let go after this long.
+  unpaidExpiryMinutes  Int      @default(30) @map("unpaid_expiry_minutes")
+  // The driver's name, car and phone are shown this long before pick-up.
+  driverDetailsMinutes Int      @default(60) @map("driver_details_minutes")
+  // How long a saved quote can be booked at its price.
+  quoteValidMinutes    Int      @default(30) @map("quote_valid_minutes")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// A priced journey, kept for a short while so that booking it (Module 6)
+// charges exactly what the customer was shown. The browser sends back only
+// the quote's id and a class, never a price.
+model Quote {
+  id             String   @id @default(uuid())
+  // The journey as the server understood it: each leg's places with their
+  // postcodes and airports, pick-up time, distance and duration; the party.
+  journey        Json
+  // Every class on offer at that moment, with its price per leg and its lines.
+  options        Json
+  // The Meet & Greet price at that moment, added per leg when chosen.
+  meetGreetPence Int      @map("meet_greet_pence")
+  // After this, booking needs a new quote.
+  expiresAt      DateTime @map("expires_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // The clean-up job deletes by expiry.
+  @@index([expiresAt])
+  @@map("quotes")
 }
 
 // What a one-time code is for. A code (and the ticket it turns into) only

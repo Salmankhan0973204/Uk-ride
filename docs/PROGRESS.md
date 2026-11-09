@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 5 rework - pricing and quotes (not started)
-- **Last completed:** Module 3 rework - fleet classes like ukride.uk (tag `module-03-v2`)
-- **Next step:** 5.8 - address search with suggestions
-- **Steps done:** 53 of 113
+- **Current module:** Module 6 - booking (not started)
+- **Last completed:** Module 5 rework - journey quotes like ukride.uk (tag `module-05-v2`)
+- **Next step:** 6.1 - the `Booking` model
+- **Steps done:** 59 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -24,7 +24,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
 | 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 7/13  | Rework  | Rework        | Rework      | Rework   |
+| 5   | Pricing and quotes           | 13/13 | Done    | Done          | Done        | Complete |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
 | 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
 | 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
@@ -137,19 +137,19 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
 - [x] 5.5 Night and airport surcharges. _Learn: combining rules, price breakdown._
 - [x] 5.6 Admin pricing screen.
 - [x] 5.7 Customer quote form with the price breakdown, design pass.
-- [ ] 5.8 Address search with suggestions (Photon and postcodes.io).
+- [x] 5.8 Address search with suggestions (Photon and postcodes.io).
       _Learn: autocomplete, debouncing._
-- [ ] 5.9 Airport detection by postcode: seven airports seeded, editable in the admin app.
-- [ ] 5.10 Settings, discounts and `GET /config`: Meet & Greet (£10), booking lead time
+- [x] 5.9 Airport detection by postcode: seven airports seeded, editable in the admin app.
+- [x] 5.10 Settings, discounts and `GET /config`: Meet & Greet (£10), booking lead time
       (4 h), edit cut-off (4 h), unpaid expiry (30 min), driver details shown 60 min before
       pick-up, a discount % per class. _Learn: configuration as data._
-- [ ] 5.11 Engine v2, unit tested: discount, Meet & Greet per leg, automatic airport fee,
+- [x] 5.11 Engine v2, unit tested: discount, Meet & Greet per leg, automatic airport fee,
       stops as route waypoints, each leg priced, passenger and luggage fit.
-- [ ] 5.12 `POST /quotes` v2, saved with an id and an expiry: every class with original
+- [x] 5.12 `POST /quotes` v2, saved with an id and an expiry: every class with original
       price, discount, price, seats, luggage, distance and duration; the first class that fits
       is recommended; the booking rules (4 h ahead, pick-up not the drop-off, return after
       pick-up, at most 5 stops, 8 passengers and 8 bags).
-- [ ] 5.13 The "BOOK YOUR JOURNEY" widget on the home page, opening `/booking`; `/quote` is
+- [x] 5.13 The "BOOK YOUR JOURNEY" widget on the home page, opening `/booking`; `/quote` is
       retired.
 
 ### Module 6 - Booking
@@ -2959,3 +2959,290 @@ Open items
 - Hand luggage starts at one bag per passenger; set the real numbers in the admin panel.
 - No class has a picture yet. Paste an image address in the admin form to add one.
 - The quote form still lists the classes by name only; it moves to the booking widget in 5.13.
+
+### Module 5 rework - journey quotes like ukride.uk (branch `module-05-journey-quotes`)
+
+Started 2026-11-04 after the user said "start Pricing and quotes". Steps 5.8 to 5.13, one
+commit each.
+
+#### Step 5.8 - Address search with suggestions (done 2026-11-04)
+
+Built
+
+- `GET /api/v1/places?q=...`: public, up to 8 UK suggestions. Each has two lines to show
+  (`label`, `detail`), a map position, the postcode when known and a `kind` (`postcode` or
+  `address`).
+- Two sources, asked at the same time (`backend/src/modules/geo/geo.places.ts`):
+  - postcodes.io, when the text is a whole postcode (`SW1A 1AA`) or the start of one
+    (`TW6 2` lists TW6 2AA, TW6 2AB...);
+  - Photon, a free search over OpenStreetMap, inside the UK's bounding box, pulled towards
+    central London. New setting `PLACES_API_URL` (default `https://photon.komoot.io`).
+- Photon's answers are tidied: postcode-only results are left to postcodes.io, the same name
+  within 300 m is one place (a station and its bus stop), "London Borough of Hillingdon" reads
+  "Hillingdon".
+- If one service is down, the other's suggestions are still shown; nothing to show because a
+  service is down is a 503 "try again", not an empty list.
+- `nearestPostcode()` (the postcode within 2 km of a map position) is ready for the airport
+  check in 5.9 and the quote in 5.12.
+- Limit: 300 searches per 15 minutes from one address. Answers may be cached for 5 minutes.
+- The address box that uses it is built with the booking widget in 5.13.
+
+Verified (by hand against the running API)
+
+- "heathrow terminal 5", "10 downing street", "kings cross", "gatwick", "Manchester",
+  "sw1a1aa" and "TW6 2" each gave sensible suggestions; "x" is a 400 on `q`; nonsense gives an
+  empty list.
+- With Photon, postcodes.io or both pointed at a closed port: the other source's answers still
+  came back, and with nothing to show the answer was the 503 of the service that failed.
+- Photon's pull towards London was tuned by comparing answers: at `zoom=10` "kings cross" and
+  "victoria station" are the London ones, while "Manchester" and "birmingham" still find the
+  cities.
+
+Learning notes
+
+- Debounce on the client, cache on the server, rate-limit both: an address box asks a question
+  every few letters.
+- `Promise.allSettled` keeps one failing service from hiding the other's answers.
+- A geocoder's ranking is a setting to tune with real searches, not a constant to guess.
+
+Open items
+
+- komoot's public Photon server is for fair use only. Before going live: our own Photon in
+  Docker, or a paid geocoder.
+
+#### Step 5.9 - Airport detection by postcode (done 2026-11-04)
+
+Built
+
+- `Airport` table (migration `add_airports`): IATA code (unique), name, a main postcode with
+  its map position, a list of other postcodes that count, list order and on/off.
+- Seven airports seeded: Heathrow, Gatwick, Stansted, Luton, London City, Southend and
+  Birmingham. A list entry is a whole postcode, a district (`TW6`) or a sector (`RH6 0`).
+  Only Heathrow has a district to itself; around the others the same sector also holds homes
+  (E16 2 is Silvertown, LU2 9 is Wigmore, checked with postcodes.io), so they start with
+  their terminals' own postcodes only.
+- `airportFor(postcode, airports)` in `backend/src/modules/airports/airports.match.ts`
+  compares by postcode parts, so `E1` never covers `E16 2PX`.
+- The address search (`GET /places`) lists our airports first when the text names one ("gat",
+  "LHR", "airport"), still shows them when the map services are down, drops the map's own copy
+  of the same name, and marks any suggestion inside an airport's postcodes with `airport`
+  ("Heathrow Terminal 5", TW6 2GD, is marked LHR).
+- Admin: `GET/POST /admin/airports`, `PATCH /admin/airports/:id` (no DELETE; `isActive:
+false` switches one off). The map position is looked up from the main postcode on save.
+- Admin panel: an Airports section with the table, an add form and an edit form with an
+  "On offer" box.
+
+Verified
+
+- API with a temporary admin: the list, every validation message, an unknown postcode (400 on
+  `postcode`), a taken code (409), rename, switch off, an unknown id (404), an empty change
+  (400); a switched-off airport drops out of the search.
+- In headless Chrome: the table at 1440, 768, 390 and 360 px with no sideways scrolling; the
+  empty form's three messages with focus on the first; a bad list entry; the API's "could not
+  find the postcode" placed on its field; a postcode tidied when the box is left; add, then
+  switch off, each coming back to the table with its message. The test airport and the
+  temporary admin were deleted afterwards.
+
+Learning notes
+
+- Check the data before choosing a rule: "match the postcode sector" looked right until the
+  sectors around London City and Luton turned out to be full of homes.
+- Comparing postcodes as strings is a trap; compare their parts.
+
+Open items
+
+- Some addresses on airport land have postcodes outside the list (for example a Photon pin
+  for the Gatwick North Terminal building), so they are not seen as the airport. Picking the
+  airport itself from the search always is. Admins can add postcodes.
+- The seventh airport (Birmingham) was my choice; the plan only said "seven".
+
+#### Step 5.10 - Settings, discounts and `GET /config` (done 2026-11-04)
+
+Built
+
+- `Settings` table with one row (migration `settings_and_discounts`), created with its
+  defaults the first time it is read: Meet & Greet £10, booking lead time 4 h, edit cut-off
+  4 h, unpaid expiry 30 min, driver details 60 min before pick-up, and how long a saved quote
+  holds its price (30 min, needed by 5.12).
+- `GET /config` (public, cached for a minute): those values plus the fixed journey limits
+  (5 stops, 8 passengers, 8 suitcases, 8 hand bags, in `quotes/journey.limits.ts`).
+- `GET` and `PUT /admin/settings` for admins. The settings screen itself is step 11.6.
+- `discountPercent` on each class's pricing rule (0 to 90), required by
+  `PUT /admin/pricing/:id`; the admin pricing form has a Discount box and the table a
+  Discount column. Nothing uses it in a price yet: that is the engine in 5.11.
+
+Verified
+
+- `/config` answered the defaults; a changed Meet & Greet price showed in `/config` at once
+  and was put back.
+- `PUT /admin/settings` refused decimals, negatives, missing values and unknown fields with
+  a message per field.
+- Pricing: no discount is a 400 "Discount is required", 95% is "at most 90%", 10% saves.
+  In Chrome: the form refuses 95 with "Use 90 or less", saves 10, the table shows the
+  Discount column and folds "10% off." into the row at 390 px with no sideways scrolling.
+  The test price was deleted afterwards, so there are still no prices in the database.
+
+Learning notes
+
+- Settings as a one-row table: typed columns with defaults, created on first read with
+  `upsert`, so there is never a "settings missing" state to handle.
+
+#### Step 5.11 - Pricing engine v2, unit tested (done 2026-11-04)
+
+Built (`backend/src/modules/quotes/quote.calculator.ts`, still pure)
+
+- `priceLeg(rule, leg, extras)`: the v1 lines (base fare, distance, minimum top-up, night
+  surcharge, airport fee) make the original price; then the class discount comes off as a
+  negative line, giving the fare; then Meet & Greet, never discounted. A leg's distance is the
+  whole route through its stops. The airport fee applies when the leg starts, stops or ends at
+  an airport; Meet & Greet is refused unless it starts at one.
+- Each leg reports `originalPence`, `discountPence`, `farePence`, `meetGreetPence` and
+  `totalPence`; the lines always add up to the total.
+- `priceTrip(rule, legs, extras)`: each leg priced on its own (a return can be at night when
+  the outbound is not), with the sums.
+- `fits(capacity, party)` and `recommend(classes, party)`: a seat per passenger and suitcase
+  room per suitcase; hand bags may also use spare suitcase room. The first class in list order
+  that fits is recommended.
+- The v1 `POST /quotes` now calls `priceLeg` with no discount; it is replaced in 5.12.
+
+Verified
+
+- 33 unit tests pass (`npm test -w backend`), 15 of them new: discount maths and rounding, a
+  discount on the whole original price, Meet & Greet after the discount and only on an
+  airport pick-up, two-leg trips, 500 mixed trips whose totals equal their lines, fit and
+  recommend.
+
+Learning notes
+
+- A discount is a line, not a hidden multiplier: the struck-through price, the discount and
+  the price paid are then three numbers the customer can check.
+- Decide the order of percentages and flat amounts on purpose, and write it down: 10% off
+  before or after a £10 extra gives two different prices.
+
+#### Step 5.12 - `POST /quotes` v2, saved with an id and an expiry (done 2026-11-04)
+
+Built
+
+- New body: `pickup`, up to 5 `stops`, `dropoff` (each `{ label, latitude, longitude }` from
+  `GET /places`), `pickupAt`, an optional `returnAt`, `passengers`, `suitcases`,
+  `handLuggage`. The v1 postcode and typed-distance bodies are gone.
+- Rules: pick-up at least the lead time ahead (4 h, from settings), return after the pick-up,
+  drop-off not within 100 m of the pick-up, at most 5 stops, 8 passengers, 8 suitcases and
+  8 hand bags. Each address's postcode is found again from its position; one with no UK
+  postcode within 2 km is a 400 on its field. All such addresses are reported at once.
+- Each leg is one OSRM route through its stops (`findRoadRoute` now takes a list of points);
+  the return runs them backwards and is measured on its own, since one-way streets differ.
+- Airports from the postcodes: one anywhere on a leg adds the airport fee; an airport pick-up
+  is reported as `airportPickup` (flight number needed, Meet & Greet offered).
+- Every class on offer with prices, cheapest first, with original price, discount and price,
+  per leg and in total, the breakdown lines, and `fits`. The first that fits is recommended,
+  so it is the cheapest that fits. Prices are without Meet & Greet; `meetGreetPence` says what
+  it adds to a leg, so ticking it on the booking page needs no new quote.
+- The answer is saved in a new `quotes` table (migration `add_quotes`) for
+  `quoteValidMinutes` (30), answered 201 with `quoteId` and `expiresAt`. With no prices
+  published, nothing is saved: 200 with `quoteId: null`. The clean-up job deletes expired
+  quotes.
+- The old `/quote` page sends the v1 body, so it stops working with this step; 5.13 replaces
+  it with the booking widget.
+
+Verified (by hand against the running API, with test prices removed afterwards)
+
+- Westminster to Heathrow by day: 16.21 miles; Saloon £42.52 less 10% = £38.27, matching the
+  sum by hand (£3.50 + 16.2 × £2.10 + £5.00 airport fee).
+- A return from Heathrow Terminal 5 at 22:30: the return leg runs T5 to Westminster, is a
+  night pick-up at LHR with `airportPickup`, and is measured separately (19.92 against 18.48
+  miles out).
+- Two stops: one route of 23.86 miles through King's Cross and Camden.
+- Six passengers: Saloon and Executive `fits: false`, the 8 Seater recommended. Two
+  passengers: the Saloon, not the 8 Seater that heads the fleet list.
+- The saved row expires 30 minutes after it was made.
+- 400s: 1 hour ahead, return before pick-up, the same place, 6 stops, 9 people and 9 bags, a
+  point at sea with a stop in Paris (both reported), missing fields, the old v1 body.
+
+Learning notes
+
+- "Recommend the first that fits" depends on the order: the fleet's display order and the
+  booking page's order are two different things.
+- Save the quote, not the price the browser shows: booking will read the price from the row,
+  so a changed page can never change what is charged.
+
+Open items
+
+- The return must be after the pick-up, not after the outbound journey has had time to end.
+
+#### Step 5.13 - The "BOOK YOUR JOURNEY" widget and `/booking` (done 2026-11-09)
+
+Built (`customer/src/features/booking/`)
+
+- The home page hero now holds the "Book your journey" form beside the headline (under it on a
+  phone): pick-up, up to 5 stops (add and remove), drop-off, date and time (UK time), a No /
+  Yes return with its own date and time, and steppers for passengers, suitcases and hand bags.
+- `AddressSearch`: an editable combobox over `GET /places`, searching 250 ms after typing
+  stops, from the third letter; airports show a plane and their code; Up, Down, Enter and
+  Escape work; only a picked suggestion counts.
+- The form checks the same rules as the API (picked addresses, lead time from `GET /config`
+  with the earliest pick-up in words, return after pick-up, not the same place), then "Get
+  quote" opens `/booking` with the whole journey in the address, so a reload, the back button
+  and a shared link keep it.
+- `/booking`: the same form, filled in, beside "Choose your car": each leg with its time,
+  places in order, airport codes, distance and a night badge; for an airport pick-up, the
+  flight-number note and a Meet & Greet checkbox; the cars cheapest first as choice rows, the
+  recommended one marked, the struck-through original price and "10% off", cars too small
+  for the party disabled; the total for the chosen car with Meet & Greet, and the breakdown
+  leg by leg; "held until 14:53"; a notice and "Get a new quote" once it runs out.
+- Any change to the form replaces the prices with "You changed your journey"; changing it back
+  shows the same quote again without a new request. The API's messages land on the fields.
+- `/quote` and its feature are deleted; `/quote` redirects to `/booking`; the nav item
+  "Prices" became "Book Now" with a car icon.
+- DESIGN.md gained "Address search", "Stepper" and "Journey widget and car choice"; README and
+  PRODUCT.md list the new pages and endpoints.
+
+Verified (headless Chrome against the running API, test prices removed afterwards)
+
+- Empty form: three messages, focus on the pick-up. Typed but not picked: "Choose the pick-up
+  from the list of suggestions". Escape closes the list. 00:01 today: "Book at least 4 hours
+  ahead. The earliest pick-up is ...". A return before the pick-up is refused.
+- Heathrow picked by keyboard (Down, Enter), Downing Street and a stop by pointer, a return at
+  22:45, 3 passengers, 2 suitcases, 1 hand bag: `/booking` showed both legs (the return with
+  its stop in reverse and a night badge), Meet & Greet on the Heathrow pick-up only, four cars
+  cheapest first with the Saloon recommended at £262.97 (was £292.19, 10% off). Meet & Greet
+  added £10.00; another car changed the total; the breakdown added up to it.
+- One more passenger hid the prices; Get quote brought a new quote with `pax=4`; a reload kept
+  the journey; the back button went to the previous one; `/quote` redirected; a garbled
+  address showed the empty form.
+- No sideways scrolling at 390 and 360 px; on a phone the prices come before the form and each
+  price sits under its car's name. No console warnings or errors.
+- Typecheck, lint and production builds pass for all three apps; 33 unit tests pass.
+
+Learning notes
+
+- Put state that should survive a reload in the address, not in storage.
+- A combobox keeps focus in the input and points at the active option with
+  `aria-activedescendant`; the list is a suggestion, the picked place is the value.
+- "Changed" is a comparison, not a flag: the form's journey against the one in the address.
+
+Open items
+
+- Booking itself (details, guest code, payment) is Module 6; the page says "Online booking
+  opens soon".
+- Picked places from the address bar have no airport tag until the quote answers.
+
+### Module 5 rework summary (complete 2026-11-09, tag `module-05-v2`)
+
+Quotes now work like ukride.uk, from the home page widget to a saved quote:
+
+- **Addresses (5.8):** suggestions from postcodes.io and Photon, airports first.
+- **Airports (5.9):** seven airports recognised by postcode; an Airports admin section.
+- **Settings (5.10):** booking rules as data, `GET /config`, a discount per class.
+- **Engine (5.11):** discount, Meet & Greet, two-leg trips, fit; 33 unit tests.
+- **Quotes (5.12):** stops, return legs, every class priced cheapest first, saved for 30 min.
+- **Widget (5.13):** "Book your journey" on the home page and `/booking`; `/quote` retired.
+
+Open items
+
+- No prices are set in the database; customers see "Prices have not been published yet" until
+  an admin sets them under Pricing.
+- The tests on GitHub are older still: the one listing every API path does not know the new
+  ones. Locally only the quote engine's tests exist, and they are committed.
+- Airport detection relies on the postcode lists; see 5.9.
+- komoot's Photon and the OSRM demo server are free public services; replace before going live.

@@ -10,12 +10,20 @@
  * is the sum of the lines, so the breakdown a customer sees always adds up to
  * the price they pay.
  *
- * The rules are applied in this order, and the order changes the price:
+ * A trip is one leg, or two with a return. Each leg is priced on its own, in
+ * this order, and the order changes the price:
  *
- *   1. base fare + distance
+ *   1. base fare + distance (the whole route, through any stops)
  *   2. topped up to the minimum fare
- *   3. night surcharge: a percentage of 1 and 2
- *   4. airport fee: a flat amount, not increased by the night surcharge
+ *   3. night surcharge: a percentage of 1 and 2, by the leg's pick-up time
+ *   4. airport fee: a flat amount when the leg starts, stops or ends at an
+ *      airport, not increased by the night surcharge
+ *      = the original price, which ukride.uk shows struck through
+ *   5. the class discount: a percentage of the original price, taken off
+ *      = the fare
+ *   6. Meet & Greet, when chosen on an airport pick-up: a flat amount, never
+ *      discounted
+ *      = the leg's total
  */
 
 /** The parts of a pricing rule the calculation needs. */
@@ -26,37 +34,74 @@ export interface PriceRule {
   /** 25 means 25%. 0 means no night surcharge. */
   nightSurchargePercent: number;
   airportFeePence: number;
+  /** 10 means 10% off. 0 means no discount. */
+  discountPercent: number;
 }
 
-export interface Trip {
-  /** Miles, counted to the nearest tenth: 12.44 is charged as 12.4. */
+export interface Leg {
+  /** By road, through every stop. Counted to the nearest tenth: 12.44 is charged as 12.4. */
   distanceMiles: number;
   /** When the passenger is picked up. Decides the night surcharge. */
   pickupAt: Date;
-  /** To or from an airport. */
+  /** The leg starts, stops or ends at an airport: the airport fee applies. */
   airport: boolean;
+  /** The leg starts at an airport: the only place Meet & Greet is offered. */
+  airportPickup: boolean;
+  /** Meet & Greet was chosen for this leg. */
+  meetGreet: boolean;
+}
+
+/** Prices that come from the operator's settings, not from the class. */
+export interface Extras {
+  meetGreetPence: number;
 }
 
 export type QuoteLineCode =
-  'BASE_FARE' | 'DISTANCE' | 'MINIMUM_FARE_TOP_UP' | 'NIGHT_SURCHARGE' | 'AIRPORT_FEE';
+  | 'BASE_FARE'
+  | 'DISTANCE'
+  | 'MINIMUM_FARE_TOP_UP'
+  | 'NIGHT_SURCHARGE'
+  | 'AIRPORT_FEE'
+  | 'DISCOUNT'
+  | 'MEET_AND_GREET';
 
-/** One line of the breakdown. */
+/** One line of the breakdown. A discount is a negative amount. */
 export interface QuoteLine {
   code: QuoteLineCode;
   label: string;
   amountPence: number;
 }
 
-export interface Quote {
+/** The price of one leg. Every amount is whole pence. */
+export interface LegPrice {
   /** The distance actually charged, after rounding to a tenth of a mile. */
   chargedMiles: number;
   /** Whether the pick-up falls in the night hours. */
   night: boolean;
   lines: QuoteLine[];
+  /** Lines 1 to 4: before the discount. */
+  originalPence: number;
+  /** What the discount takes off, as a positive number. */
+  discountPence: number;
+  /** The original price less the discount. */
+  farePence: number;
+  /** 0 unless Meet & Greet was chosen. */
+  meetGreetPence: number;
+  /** The fare plus Meet & Greet: the sum of the lines. */
   totalPence: number;
 }
 
-/** The longest journey the calculation accepts. */
+/** The price of a whole trip: each leg, and the sums of their amounts. */
+export interface TripPrice {
+  legs: LegPrice[];
+  originalPence: number;
+  discountPence: number;
+  farePence: number;
+  meetGreetPence: number;
+  totalPence: number;
+}
+
+/** The longest leg the calculation accepts. */
 export const MAX_MILES = 1000;
 
 /**
@@ -94,22 +139,30 @@ export function isNight(moment: Date) {
   return hour >= NIGHT_STARTS_AT || hour < NIGHT_ENDS_AT;
 }
 
-export function calculateQuote(rule: PriceRule, trip: Trip): Quote {
+const sum = (lines: QuoteLine[]) => lines.reduce((total, line) => total + line.amountPence, 0);
+
+export function priceLeg(rule: PriceRule, leg: Leg, extras: Extras): LegPrice {
   // The API checks these first. Reaching here with bad input is a bug, so it
   // fails loudly rather than producing a price.
-  if (!Number.isFinite(trip.distanceMiles) || trip.distanceMiles <= 0) {
+  if (!Number.isFinite(leg.distanceMiles) || leg.distanceMiles <= 0) {
     throw new RangeError('distanceMiles must be a number above 0');
   }
-  if (trip.distanceMiles > MAX_MILES) {
+  if (leg.distanceMiles > MAX_MILES) {
     throw new RangeError(`distanceMiles must be at most ${MAX_MILES}`);
   }
-  if (Number.isNaN(trip.pickupAt.getTime())) {
+  if (Number.isNaN(leg.pickupAt.getTime())) {
     throw new RangeError('pickupAt must be a valid date');
+  }
+  if (leg.meetGreet && !leg.airportPickup) {
+    throw new RangeError('Meet & Greet is only for a pick-up at an airport');
+  }
+  if (rule.discountPercent < 0 || rule.discountPercent > 100) {
+    throw new RangeError('discountPercent must be from 0 to 100');
   }
 
   // Count in tenths of a mile, as whole numbers, so no fractions of a penny
   // pile up: 12.4 miles is 124 tenths.
-  const chargedMiles = chargedMilesFor(trip.distanceMiles);
+  const chargedMiles = chargedMilesFor(leg.distanceMiles);
   const tenths = Math.round(chargedMiles * 10);
   // 124 tenths at 210p a mile is 124 × 210 / 10 = 2604p. Rounded to the
   // nearest penny, once.
@@ -136,7 +189,7 @@ export function calculateQuote(rule: PriceRule, trip: Trip): Quote {
   }
 
   // 3. The night surcharge is a share of the fare so far, rounded once.
-  const night = isNight(trip.pickupAt);
+  const night = isNight(leg.pickupAt);
   if (night && rule.nightSurchargePercent > 0) {
     lines.push({
       code: 'NIGHT_SURCHARGE',
@@ -146,16 +199,93 @@ export function calculateQuote(rule: PriceRule, trip: Trip): Quote {
   }
 
   // 4. The airport fee covers parking and access charges, which do not go
-  // up at night, so it comes last and is not part of the percentage.
-  if (trip.airport && rule.airportFeePence > 0) {
+  // up at night, so it is not part of the percentage.
+  if (leg.airport && rule.airportFeePence > 0) {
     lines.push({
       code: 'AIRPORT_FEE',
       label: 'Airport pick-up or drop-off',
       amountPence: rule.airportFeePence,
     });
   }
+  const originalPence = sum(lines);
 
-  return { chargedMiles, night, lines, totalPence: sum(lines) };
+  // 5. The discount is a share of the whole original price, rounded once, so
+  // "10% off" is exactly what the struck-through price suggests.
+  const discountPence = Math.round((originalPence * rule.discountPercent) / 100);
+  if (discountPence > 0) {
+    lines.push({
+      code: 'DISCOUNT',
+      label: `Discount: ${rule.discountPercent}% off`,
+      amountPence: -discountPence,
+    });
+  }
+  const farePence = originalPence - discountPence;
+
+  // 6. Meet & Greet is a service with its own price, not part of the fare.
+  const meetGreetPence = leg.meetGreet ? extras.meetGreetPence : 0;
+  if (meetGreetPence > 0) {
+    lines.push({
+      code: 'MEET_AND_GREET',
+      label: 'Meet & Greet in arrivals',
+      amountPence: meetGreetPence,
+    });
+  }
+
+  return {
+    chargedMiles,
+    night,
+    lines,
+    originalPence,
+    discountPence,
+    farePence,
+    meetGreetPence,
+    totalPence: sum(lines),
+  };
 }
 
-const sum = (lines: QuoteLine[]) => lines.reduce((total, line) => total + line.amountPence, 0);
+/**
+ * Prices every leg of a trip in one class. A return is two legs, each with
+ * its own pick-up time, so one can be at night and the other not.
+ */
+export function priceTrip(rule: PriceRule, legs: Leg[], extras: Extras): TripPrice {
+  if (legs.length === 0) throw new RangeError('A trip has at least one leg');
+
+  const priced = legs.map((leg) => priceLeg(rule, leg, extras));
+  const total = (pick: (leg: LegPrice) => number) =>
+    priced.reduce((sum, leg) => sum + pick(leg), 0);
+
+  return {
+    legs: priced,
+    originalPence: total((leg) => leg.originalPence),
+    discountPence: total((leg) => leg.discountPence),
+    farePence: total((leg) => leg.farePence),
+    meetGreetPence: total((leg) => leg.meetGreetPence),
+    totalPence: total((leg) => leg.totalPence),
+  };
+}
+
+/** How many people and bags a class takes, or a party brings. */
+export interface Load {
+  passengers: number;
+  suitcases: number;
+  handLuggage: number;
+}
+
+/**
+ * Whether a party fits a class. Every passenger needs a seat and every
+ * suitcase needs suitcase room. A hand bag is smaller, so it may also go in
+ * suitcase room the party does not use: a class for 3 suitcases and 3 hand
+ * bags takes 1 suitcase and 5 hand bags.
+ */
+export function fits(capacity: Load, party: Load) {
+  return (
+    party.passengers <= capacity.passengers &&
+    party.suitcases <= capacity.suitcases &&
+    party.suitcases + party.handLuggage <= capacity.suitcases + capacity.handLuggage
+  );
+}
+
+/** The first class, in list order, that the party fits; undefined when none does. */
+export function recommend<T extends Load>(classes: readonly T[], party: Load): T | undefined {
+  return classes.find((capacity) => fits(capacity, party));
+}

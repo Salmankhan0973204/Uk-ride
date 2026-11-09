@@ -9,11 +9,14 @@ import { docsRouter } from './docs/docs.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { notFound } from './middleware/notFound.js';
 import { requestId } from './middleware/requestId.js';
+import { adminAirportsRouter } from './modules/airports/airports.admin.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { staffAuthRouter } from './modules/auth/auth.staff.routes.js';
 import { otpRouter } from './modules/otp/otp.routes.js';
+import { placesRouter } from './modules/places/places.routes.js';
 import { adminPricingRouter } from './modules/pricing/pricing.routes.js';
 import { quotesRouter } from './modules/quotes/quotes.routes.js';
+import { adminSettingsRouter, configRouter } from './modules/settings/settings.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
 import { usersRouter } from './modules/users/users.routes.js';
 import { adminVehicleTypesRouter } from './modules/vehicle-types/vehicle-types.admin.routes.js';
@@ -62,12 +65,16 @@ api.use('/auth/otp', otpRouter);
 api.use('/auth', authRouter);
 api.use('/users', usersRouter);
 api.use('/vehicle-types', vehicleTypesRouter);
+api.use('/config', configRouter);
+api.use('/places', placesRouter);
 api.use('/quotes', quotesRouter);
 // Everything under /admin is for the operator's staff.
 api.use('/admin/auth', staffAuthRouter);
 api.use('/admin/vehicle-types', adminVehicleTypesRouter);
 api.use('/admin/vehicles', adminVehiclesRouter);
 api.use('/admin/pricing', adminPricingRouter);
+api.use('/admin/airports', adminAirportsRouter);
+api.use('/admin/settings', adminSettingsRouter);
 // Swagger UI is a development tool; it is not exposed in production.
 if (!isProd) {
   api.use('/docs', docsRouter);

@@ -380,6 +380,15 @@ Amounts are shown as pounds with two decimals ("£35.63"), in tabular figures, n
 ### Price breakdown
 Under each price, a disclosure link "How this price is worked out" with a chevron that turns over when open. Open, it lists each line of the price on the left in Muted Ink with its amount on the right, then a 1px line and a semibold Total. The lines always add up to the total shown above.
 
+### Address search (customer site)
+An input with the dropdown's list under it: the "editable combobox" pattern. From the third letter, suggestions come 250ms after typing pauses; while they load, a small spinner sits inside the right end of the box. Each suggestion is a 44px row: a Muted Ink pin (a plane for airports), the first line in medium weight, the second in Muted Ink at small size, and an airport's code as a pill at the right. Up and Down move, Enter picks, Escape closes, a tap picks. Only a picked suggestion counts: then the box shows a Focus Lavender tick, and an airport's name appears as the hint. Typing again lets the place go. "No matches" and "could not search" are sentences in the list, not options.
+
+### Stepper
+A count chosen with two compact square glass buttons (44px, 12px corners) around the number in semibold tabular figures, under a label. The button that would go past the limit fades to 40%. Used for passengers, suitcases and hand bags.
+
+### Journey widget and car choice (customer site)
+"Book your journey" is a glass panel beside the home headline from 1024px (a 26rem column), under it on smaller screens: pick-up, stops (each with a square ghost × to remove it, and "Add a stop" until there are five), drop-off, date and time side by side, a No / Yes radio pair for the return, the three steppers, and "Get quote" as the page's one accent button. On /booking the same form, filled in, sits on the left from 1024px and below the prices on a phone. Any change to it replaces the prices with "You changed your journey. Press Get quote to see its prices." The cars are choice rows, cheapest first, the recommended one marked with a success pill; a car the party does not fit is shown at 40% and cannot be chosen. A discount shows the original price struck through in Muted Ink with "10% off" above the price. An airport pick-up gets a plain glass box (Glass fill and border, no status colour) with the Meet & Greet checkbox.
+
 ### Code entry
 One box for a 6-digit code, not six: it takes a paste, the phone's one-time-code suggestion and a screen reader without focus juggling. The digits are 24px tabular figures, centred, with wide letter-spacing; anything that is not a digit is dropped as it is typed. The sixth digit sends the code; the primary button is there too. A refused code empties the box, keeps focus in it and shows the API's message under it ("That code is not right. 4 tries left.") until the person types again. Under the button, "No code? You can ask for a new one in 0:42" counts down from the wait the API gave, then becomes a "Send a new code" text link. Multi-step forms say "Step 2 of 2" in Muted Ink above the heading.
 

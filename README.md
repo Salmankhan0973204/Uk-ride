@@ -165,14 +165,14 @@ http://localhost:3000/login and see your profile at http://localhost:3000/profil
 email codes arrive in Mailpit at http://localhost:8025 (a "text message" is an email to
 `<number>@sms.ukride.local`); a forgotten password is reset at
 http://localhost:3000/forgot-password. The fleet is on the home page at
-http://localhost:3000/#fleet and prices between two postcodes are at
-http://localhost:3000/quote.
+http://localhost:3000/#fleet, beside the "Book your journey" form; Get quote opens
+http://localhost:3000/booking with the price of every car.
 
 The admin panel has its own staff sign-in. Make your account an admin once with
 `npm run db:set-role -w backend -- you@example.com ADMIN`, then sign in at
 http://localhost:3001/login. It has the fleet, the vehicle types, the prices and the system
-status. No prices are set out of the box: set them under Pricing, then try the customer quote
-page. The two apps keep separate sign-ins, so signing out of one leaves the other signed in.
+status, and the airports. No prices are set out of the box: set them under Pricing, then try the
+booking form on the customer home page. The two apps keep separate sign-ins, so signing out of one leaves the other signed in.
 
 ## Scripts
 
@@ -269,7 +269,9 @@ Base URL: `http://localhost:4000/api/v1`
 | POST   | `/users/me/password`            | Change your password; signs out other devices             |
 | GET    | `/vehicle-types`                | The catalogue of vehicle types (public)                   |
 | GET    | `/vehicle-types/:slug`          | One vehicle type, for example `executive` (public)        |
-| POST   | `/quotes`                       | The price of a journey between two postcodes (public)     |
+| GET    | `/config`                       | Booking rules: Meet & Greet price, lead time, limits      |
+| GET    | `/places?q=`                    | Address suggestions: airports, postcodes, places (public) |
+| POST   | `/quotes`                       | Price a journey in every car and save the quote (public)  |
 | POST   | `/admin/auth/login`             | Staff sign-in for the admin panel (ADMIN or DISPATCHER)   |
 | POST   | `/admin/auth/refresh`           | New staff access token from the staff cookie              |
 | POST   | `/admin/auth/logout`            | Staff sign-out; the customer sign-in is not touched       |
@@ -285,6 +287,11 @@ Base URL: `http://localhost:4000/api/v1`
 | PATCH  | `/admin/vehicles/:id/status`    | Active, in maintenance or retired (admin)                 |
 | GET    | `/admin/pricing`                | Prices of every vehicle type, in pence (admin)            |
 | PUT    | `/admin/pricing/:vehicleTypeId` | Set the prices of one vehicle type (admin)                |
+| GET    | `/admin/airports`               | Every airport and the postcodes that count as it (admin)  |
+| POST   | `/admin/airports`               | Add an airport (admin)                                    |
+| PATCH  | `/admin/airports/:id`           | Change an airport, or switch it off or on (admin)         |
+| GET    | `/admin/settings`               | The booking rules (admin)                                 |
+| PUT    | `/admin/settings`               | Replace the booking rules (admin)                         |
 
 Swagger UI at `/docs` lists every endpoint and lets you call it from the browser. The raw
 OpenAPI document is at `/docs/openapi.json`. Both are switched off when `NODE_ENV` is

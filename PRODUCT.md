@@ -62,8 +62,9 @@ Drivers have no app among the three yet; the admin panel acts for them.
   `/login`, `/verify-email`, `/forgot-password` and `/reset-password` screens (Module 1); the
   `/profile` page with `/profile/mobile` and `/profile/password` (Module 2); the fleet
   section of the home page and the admin screens under `/admin/vehicle-types` (Module 3); the
-  fleet screens under `/admin/vehicles` (Module 4); the `/quote` page and the admin pricing
-  screens under `/admin/pricing` (Module 5).
+  fleet screens under `/admin/vehicles` (Module 4); the "Book your journey" form on the home
+  page, the `/booking` page with every car's price, and the admin pricing and airport screens
+  (Module 5).
 - Planned, in order (docs/PROGRESS.md): the three-app split, then auth, profile, fleet and
   quote rework to the ukride.uk flow, then booking, wallet, card payment, journeys, edit and
   cancel, admin operations, reviews, notifications, a driver API, reports.

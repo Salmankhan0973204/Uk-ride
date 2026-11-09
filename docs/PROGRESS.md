@@ -2,11 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 5 rework - pricing and quotes (in progress, branch
-  `module-05-journey-quotes`)
-- **Last completed:** Module 3 rework - fleet classes like ukride.uk (tag `module-03-v2`)
-- **Next step:** 5.13 - the "BOOK YOUR JOURNEY" widget and `/booking`
-- **Steps done:** 58 of 113
+- **Current module:** Module 6 - booking (not started)
+- **Last completed:** Module 5 rework - journey quotes like ukride.uk (tag `module-05-v2`)
+- **Next step:** 6.1 - the `Booking` model
+- **Steps done:** 59 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -25,7 +24,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
 | 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
 | 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 12/13 | Done    | Rework        | Done        | Rework   |
+| 5   | Pricing and quotes           | 13/13 | Done    | Done          | Done        | Complete |
 | 6   | Booking                      | 0/6   | -       | -             | -           | -        |
 | 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
 | 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
@@ -150,7 +149,7 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
       price, discount, price, seats, luggage, distance and duration; the first class that fits
       is recommended; the booking rules (4 h ahead, pick-up not the drop-off, return after
       pick-up, at most 5 stops, 8 passengers and 8 bags).
-- [ ] 5.13 The "BOOK YOUR JOURNEY" widget on the home page, opening `/booking`; `/quote` is
+- [x] 5.13 The "BOOK YOUR JOURNEY" widget on the home page, opening `/booking`; `/quote` is
       retired.
 
 ### Module 6 - Booking
@@ -3170,3 +3169,80 @@ Learning notes
 Open items
 
 - The return must be after the pick-up, not after the outbound journey has had time to end.
+
+#### Step 5.13 - The "BOOK YOUR JOURNEY" widget and `/booking` (done 2026-11-09)
+
+Built (`customer/src/features/booking/`)
+
+- The home page hero now holds the "Book your journey" form beside the headline (under it on a
+  phone): pick-up, up to 5 stops (add and remove), drop-off, date and time (UK time), a No /
+  Yes return with its own date and time, and steppers for passengers, suitcases and hand bags.
+- `AddressSearch`: an editable combobox over `GET /places`, searching 250 ms after typing
+  stops, from the third letter; airports show a plane and their code; Up, Down, Enter and
+  Escape work; only a picked suggestion counts.
+- The form checks the same rules as the API (picked addresses, lead time from `GET /config`
+  with the earliest pick-up in words, return after pick-up, not the same place), then "Get
+  quote" opens `/booking` with the whole journey in the address, so a reload, the back button
+  and a shared link keep it.
+- `/booking`: the same form, filled in, beside "Choose your car": each leg with its time,
+  places in order, airport codes, distance and a night badge; for an airport pick-up, the
+  flight-number note and a Meet & Greet checkbox; the cars cheapest first as choice rows, the
+  recommended one marked, the struck-through original price and "10% off", cars too small
+  for the party disabled; the total for the chosen car with Meet & Greet, and the breakdown
+  leg by leg; "held until 14:53"; a notice and "Get a new quote" once it runs out.
+- Any change to the form replaces the prices with "You changed your journey"; changing it back
+  shows the same quote again without a new request. The API's messages land on the fields.
+- `/quote` and its feature are deleted; `/quote` redirects to `/booking`; the nav item
+  "Prices" became "Book Now" with a car icon.
+- DESIGN.md gained "Address search", "Stepper" and "Journey widget and car choice"; README and
+  PRODUCT.md list the new pages and endpoints.
+
+Verified (headless Chrome against the running API, test prices removed afterwards)
+
+- Empty form: three messages, focus on the pick-up. Typed but not picked: "Choose the pick-up
+  from the list of suggestions". Escape closes the list. 00:01 today: "Book at least 4 hours
+  ahead. The earliest pick-up is ...". A return before the pick-up is refused.
+- Heathrow picked by keyboard (Down, Enter), Downing Street and a stop by pointer, a return at
+  22:45, 3 passengers, 2 suitcases, 1 hand bag: `/booking` showed both legs (the return with
+  its stop in reverse and a night badge), Meet & Greet on the Heathrow pick-up only, four cars
+  cheapest first with the Saloon recommended at £262.97 (was £292.19, 10% off). Meet & Greet
+  added £10.00; another car changed the total; the breakdown added up to it.
+- One more passenger hid the prices; Get quote brought a new quote with `pax=4`; a reload kept
+  the journey; the back button went to the previous one; `/quote` redirected; a garbled
+  address showed the empty form.
+- No sideways scrolling at 390 and 360 px; on a phone the prices come before the form and each
+  price sits under its car's name. No console warnings or errors.
+- Typecheck, lint and production builds pass for all three apps; 33 unit tests pass.
+
+Learning notes
+
+- Put state that should survive a reload in the address, not in storage.
+- A combobox keeps focus in the input and points at the active option with
+  `aria-activedescendant`; the list is a suggestion, the picked place is the value.
+- "Changed" is a comparison, not a flag: the form's journey against the one in the address.
+
+Open items
+
+- Booking itself (details, guest code, payment) is Module 6; the page says "Online booking
+  opens soon".
+- Picked places from the address bar have no airport tag until the quote answers.
+
+### Module 5 rework summary (complete 2026-11-09, tag `module-05-v2`)
+
+Quotes now work like ukride.uk, from the home page widget to a saved quote:
+
+- **Addresses (5.8):** suggestions from postcodes.io and Photon, airports first.
+- **Airports (5.9):** seven airports recognised by postcode; an Airports admin section.
+- **Settings (5.10):** booking rules as data, `GET /config`, a discount per class.
+- **Engine (5.11):** discount, Meet & Greet, two-leg trips, fit; 33 unit tests.
+- **Quotes (5.12):** stops, return legs, every class priced cheapest first, saved for 30 min.
+- **Widget (5.13):** "Book your journey" on the home page and `/booking`; `/quote` retired.
+
+Open items
+
+- No prices are set in the database; customers see "Prices have not been published yet" until
+  an admin sets them under Pricing.
+- The tests on GitHub are older still: the one listing every API path does not know the new
+  ones. Locally only the quote engine's tests exist, and they are committed.
+- Airport detection relies on the postcode lists; see 5.9.
+- komoot's Photon and the OSRM demo server are free public services; replace before going live.

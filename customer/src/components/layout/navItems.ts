@@ -4,11 +4,10 @@
  *
  * Only pages that exist are listed. The plan (DESIGN.md, "Mobile tab bar")
  * is Home, Book Now, Journeys, Wallet, Profile:
- *   - "Prices" (/quote) becomes "Book Now" (/booking) in step 5.13
  *   - the fleet is a section of the home page (3.9), so it has no item
  *   - Journeys and Wallet join with their modules (9 and 7)
  */
-export type NavIcon = 'home' | 'tag' | 'user';
+export type NavIcon = 'home' | 'car' | 'user';
 
 export interface NavItem {
   href: string;
@@ -20,7 +19,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { href: '/', label: 'Home', icon: 'home', inHeader: true },
-  { href: '/quote', label: 'Prices', icon: 'tag', inHeader: true },
+  { href: '/booking', label: 'Book Now', icon: 'car', inHeader: true },
   { href: '/profile', label: 'Profile', icon: 'user', inHeader: false },
 ];
 

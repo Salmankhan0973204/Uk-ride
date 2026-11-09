@@ -8,10 +8,11 @@ import type { NavIcon } from './navItems';
 /** Line icons drawn in the current text colour. Words always sit under them. */
 const ICONS: Record<NavIcon, React.ReactNode> = {
   home: <path d="M4 11l8-7 8 7M6 9.5V20h12V9.5" />,
-  tag: (
+  car: (
     <>
-      <path d="M3.5 12.5V4h8.5l8.5 8.5-8.5 8.5z" />
-      <circle cx="8" cy="8.5" r="1.4" />
+      <path d="M5 16V11.5L7 6.5h10l2 5V16M3.5 16h17" />
+      <circle cx="7.5" cy="17.5" r="1.8" />
+      <circle cx="16.5" cy="17.5" r="1.8" />
     </>
   ),
   user: (

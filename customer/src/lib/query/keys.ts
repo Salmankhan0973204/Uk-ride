@@ -11,7 +11,11 @@ export const queryKeys = {
     all: ['vehicleTypes'] as const,
     list: () => [...queryKeys.vehicleTypes.all, 'list'] as const,
   },
-  quotes: {
-    all: ['quotes'] as const,
+  booking: {
+    all: ['booking'] as const,
+    config: () => [...queryKeys.booking.all, 'config'] as const,
+    places: (text: string) => [...queryKeys.booking.all, 'places', text] as const,
+    // One entry per journey: the address of /booking.
+    quote: (journey: string) => [...queryKeys.booking.all, 'quote', journey] as const,
   },
 };

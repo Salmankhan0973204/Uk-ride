@@ -4,8 +4,8 @@ Update this file after every coding session.
 
 - **Current module:** Module 6 - booking (in progress, branch `module-06-booking`)
 - **Last completed:** Module 5 rework - journey quotes like ukride.uk (tag `module-05-v2`)
-- **Next step:** 6.2 - `POST /bookings` from a saved quote
-- **Steps done:** 60 of 113
+- **Next step:** 6.3 - guest flow
+- **Steps done:** 61 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -25,7 +25,7 @@ Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (no
 | 3   | Fleet classes                | 9/9   | Done        | Done          | Done        | Complete    |
 | 4   | Fleet vehicles               | 6/6   | Done        | n/a           | Done        | Complete    |
 | 5   | Pricing and quotes           | 13/13 | Done        | Done          | Done        | Complete    |
-| 6   | Booking                      | 1/6   | In progress | -             | -           | In progress |
+| 6   | Booking                      | 2/6   | In progress | -             | -           | In progress |
 | 7   | Wallet                       | 0/5   | -           | -             | -           | -           |
 | 8   | Card payment (Stripe)        | 0/6   | -           | -             | n/a         | -           |
 | 9   | Journeys                     | 0/5   | -           | -             | n/a         | -           |
@@ -157,7 +157,7 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
 - [x] 6.1 `Booking` model: a reference such as UKR-7F3K9Q, a trip linking outbound and return
       legs, a status and a separate payment status, flight number and Meet & Greet per leg, a
       price snapshot, an expiry and an event history. _Learn: enums, generated codes._
-- [ ] 6.2 `POST /bookings` from a saved quote: 1 or 2 pending legs (the return runs the stops
+- [x] 6.2 `POST /bookings` from a saved quote: 1 or 2 pending legs (the return runs the stops
       in reverse); 409 "price changed" if the price moved. _Learn: never trust a client price._
 - [ ] 6.3 Guest flow: a code to the phone, then a passwordless account; an existing full
       account must sign in. _Learn: account ownership._
@@ -3317,3 +3317,93 @@ Open items
 
 - The JSON columns (`places`, `vehicleTypeSnapshot`, `lines`) may only gain optional fields
   from now on: bookings live for years, and old rows must stay readable.
+
+#### Step 6.2 - `POST /bookings` from a saved quote (done 2026-11-11)
+
+Built
+
+- **`POST /bookings`** (signed in) books a saved quote at the prices it saved. The body names
+  the quote, the car, what was chosen for each leg (`outboundFlightNumber`,
+  `outboundMeetGreet`, `returnFlightNumber`, `returnMeetGreet`), notes for the driver, and
+  `expectedTotalPence`, the total the page showed, which is compared and never charged. It
+  makes one trip and one or two bookings (the return runs the places backwards), each PENDING
+  and UNPAID with its own reference, a CREATED event, and a hold: `unpaidExpiryMinutes` (30)
+  after booking, or sooner when the pick-up comes within the booking lead time. The answer is
+  the trip with its journeys, outbound first, each with its party and price, and the total.
+- **Never trust a client price.** The price comes from the quote row alone. `quote.saved.ts`
+  reads the row back through a Zod schema, so a row in the wrong shape counts as run out,
+  never as a wrong booking. The new pure `priceChoice()` adds the one line the quote left
+  open, Meet & Greet at the quote's price, and refuses a saved price whose lines do not add
+  up. Rules, discounts, the Meet & Greet price and the map are not read again.
+- **A stale quote is a 409 with `details.reason`:** `QUOTE_EXPIRED` (run out, unknown, or the
+  pick-up now inside the lead time), `QUOTE_USED` (booked already by someone else, or a
+  changed request), `PRICE_CHANGED` (the total sent is not the saved price;
+  `details.totalPence` is) and `CLASS_UNAVAILABLE` (switched off, no prices, or too small
+  now). The page answers each with a new quote. That is how "409 price changed if the price
+  moved" is met: a quote is the contract while it holds, and once it has run out the page
+  re-quotes and shows the new price before the customer books again.
+- **Choice checks, all at once** (400 on the field): a car not in the quote or too small; a
+  flight number missing on an airport pick-up, or given elsewhere; Meet & Greet away from an
+  airport pick-up; return fields on a one-way journey. Flight numbers are tidied ("ba 118"
+  becomes "BA118").
+- **The same request twice** (a lost answer, a double click) gets the same trip back with
+  200 "Already booked", but only when the customer, car, choices, notes and total all match
+  and the trip is still held. The unique quote id makes two trips from one quote impossible;
+  a reference drawn twice makes the transaction run again with new ones.
+- **The quote's hold is now capped** at the pick-up minus the lead time (`bookableUntil`), so
+  "held until" on the page is the real booking deadline.
+- **Contact details on the trip** (migration `add_trip_contact_details`): the lead
+  passenger's name, email and mobile are copied from the profile when booking, so the
+  driver's name board, the driver card and receipts show who the journey was booked for,
+  whatever happens to the account later. My call, from the design review: the plan only said
+  the details "come from the profile".
+- Fixed on the way: a leg over 1000 miles is a 400 on `dropoff` ("This journey is too long to
+  book online") instead of a 500 from the engine.
+- A rate limit of 20 bookings per 15 minutes from one address. OpenAPI: a Bookings tag,
+  `/bookings`, and the `BookingRequest`, `Trip` and `BookedJourney` schemas. README lists the
+  endpoint.
+- Seven unit tests for `priceChoice` in the engine's existing test file (40 pass).
+
+Verified (against the running API, with temporary prices and accounts deleted afterwards)
+
+- Downing Street to Heathrow, back a week later at 22:30, 2 passengers, 2 suitcases, 1 hand
+  bag. The Saloon booked with "ba 118" and Meet & Greet on the return gave 201 with two
+  references (UKR-GFGDFH, UKR-SPWRYS), outbound first, the return's places backwards, `BA118`
+  and Meet & Greet on the return only, its lines ending in MEET_AND_GREET, every booking's
+  lines adding up to its total, the trip total equal to the total sent (£104.12), a 30-minute
+  hold, PENDING and UNPAID, the contact details from the profile, and no internal ids. In the
+  database: 2 bookings, each with one CREATED event by the customer.
+- The same body again: 200 "Already booked", the same trip, no new rows. The same quote with
+  another car, and another customer with the same body: 409 QUOTE_USED.
+- A total off by 1p: 409 PRICE_CHANGED with the right total.
+- 400s, every field at once: a missing return flight number with outbound Meet & Greet and an
+  outbound flight number; a car not in the quote; a Saloon for 6 passengers; return fields on
+  a one-way quote; an unknown key; "flight 7".
+- 409 QUOTE_EXPIRED for a random quote id, a quote expired by SQL, and after the lead time
+  was raised past the pick-up.
+- A pick-up 4 h 10 min ahead: the quote and the booking were both held 10 minutes, not 30.
+- The Saloon's discount raised to 50% after quoting: still booked at the quoted £42.80. The
+  Saloon switched off: 409 CLASS_UNAVAILABLE.
+- No token and a staff token: 401. Swagger shows `/bookings` and `Trip`.
+- Typecheck, lint, Prettier and 40 unit tests pass.
+
+Learning notes
+
+- Never trust a client price: the request carries the total the customer saw only so the
+  server can refuse to book anything else. The price itself is read from what the server
+  saved.
+- A 409 with a reason is an instruction to the client ("get a new quote"); a 400 is a
+  correction to the form. Kept apart, the page knows what to do without reading messages.
+- Idempotency needs a definition of "the same request". A lost answer should be answered
+  again; a changed request should not, or the customer is shown a booking they did not ask
+  for.
+- What a booking shows later must be copied at booking time (the price lines, the class, the
+  contact details); what only ever switches off can be linked.
+
+Open items
+
+- The design review raised points for later steps: the sign-in `next` address must be parsed
+  as a URL, not pattern-matched (6.4); the expiry job's update must carry its conditions in
+  one statement, without `limit` (6.5); passwordless accounts need a `hasPassword` flag so the
+  profile can hide "Change password" (6.3); a guest's unverified email locks the real owner
+  out of signing up (6.3, a decision for the user).

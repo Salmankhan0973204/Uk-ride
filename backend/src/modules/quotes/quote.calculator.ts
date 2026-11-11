@@ -56,14 +56,18 @@ export interface Extras {
   meetGreetPence: number;
 }
 
-export type QuoteLineCode =
-  | 'BASE_FARE'
-  | 'DISTANCE'
-  | 'MINIMUM_FARE_TOP_UP'
-  | 'NIGHT_SURCHARGE'
-  | 'AIRPORT_FEE'
-  | 'DISCOUNT'
-  | 'MEET_AND_GREET';
+/** The kinds of line a breakdown can have, in the order they are added. */
+export const QUOTE_LINE_CODES = [
+  'BASE_FARE',
+  'DISTANCE',
+  'MINIMUM_FARE_TOP_UP',
+  'NIGHT_SURCHARGE',
+  'AIRPORT_FEE',
+  'DISCOUNT',
+  'MEET_AND_GREET',
+] as const;
+
+export type QuoteLineCode = (typeof QUOTE_LINE_CODES)[number];
 
 /** One line of the breakdown. A discount is a negative amount. */
 export interface QuoteLine {
@@ -140,6 +144,11 @@ export function isNight(moment: Date) {
 }
 
 const sum = (lines: QuoteLine[]) => lines.reduce((total, line) => total + line.amountPence, 0);
+
+/** The Meet & Greet line: the one line a booking adds to a saved quote. */
+export function meetGreetLine(amountPence: number): QuoteLine {
+  return { code: 'MEET_AND_GREET', label: 'Meet & Greet in arrivals', amountPence };
+}
 
 export function priceLeg(rule: PriceRule, leg: Leg, extras: Extras): LegPrice {
   // The API checks these first. Reaching here with bad input is a bug, so it
@@ -223,13 +232,7 @@ export function priceLeg(rule: PriceRule, leg: Leg, extras: Extras): LegPrice {
 
   // 6. Meet & Greet is a service with its own price, not part of the fare.
   const meetGreetPence = leg.meetGreet ? extras.meetGreetPence : 0;
-  if (meetGreetPence > 0) {
-    lines.push({
-      code: 'MEET_AND_GREET',
-      label: 'Meet & Greet in arrivals',
-      amountPence: meetGreetPence,
-    });
-  }
+  if (meetGreetPence > 0) lines.push(meetGreetLine(meetGreetPence));
 
   return {
     chargedMiles,
@@ -288,4 +291,66 @@ export function fits(capacity: Load, party: Load) {
 /** The first class, in list order, that the party fits; undefined when none does. */
 export function recommend<T extends Load>(classes: readonly T[], party: Load): T | undefined {
   return classes.find((capacity) => fits(capacity, party));
+}
+
+/** The price of one leg as a quote saved it: lines 1 to 5, before Meet & Greet. */
+export interface SavedLegPrice {
+  lines: QuoteLine[];
+  originalPence: number;
+  discountPence: number;
+  /** The original price less the discount: what the quote shows for the leg. */
+  pricePence: number;
+}
+
+/** What the customer chose for one leg when booking. */
+export interface LegChoice {
+  /** The leg starts at an airport, the only place Meet & Greet is offered. */
+  airportPickup: boolean;
+  meetGreet: boolean;
+}
+
+/** A booked leg's price: the saved figures, plus Meet & Greet where chosen. */
+export type BookedLegPrice = Omit<LegPrice, 'chargedMiles' | 'night'>;
+
+/**
+ * The price of a booked class, from a saved quote. Nothing is worked out
+ * again: the quote is the contract, and this only adds the one line the
+ * quote left open, Meet & Greet, at the price the quote saved for it.
+ *
+ * A saved price whose lines do not add up is a bug somewhere: it fails loudly
+ * and is never booked.
+ */
+export function priceChoice(
+  saved: SavedLegPrice[],
+  choices: LegChoice[],
+  meetGreetPence: number,
+): { legs: BookedLegPrice[]; totalPence: number } {
+  if (saved.length === 0) throw new RangeError('A trip has at least one leg');
+  if (saved.length !== choices.length) throw new RangeError('One choice per leg');
+
+  const legs = saved.map((leg, index): BookedLegPrice => {
+    const choice = choices[index]!;
+    if (choice.meetGreet && !choice.airportPickup) {
+      throw new RangeError('Meet & Greet is only for a pick-up at an airport');
+    }
+    const added = choice.meetGreet ? meetGreetPence : 0;
+    const lines = added > 0 ? [...leg.lines, meetGreetLine(added)] : [...leg.lines];
+    const price: BookedLegPrice = {
+      lines,
+      originalPence: leg.originalPence,
+      discountPence: leg.discountPence,
+      farePence: leg.pricePence,
+      meetGreetPence: added,
+      totalPence: leg.pricePence + added,
+    };
+    if (
+      sum(lines) !== price.totalPence ||
+      price.farePence !== price.originalPence - price.discountPence
+    ) {
+      throw new RangeError('The saved price does not add up');
+    }
+    return price;
+  });
+
+  return { legs, totalPence: legs.reduce((total, leg) => total + leg.totalPence, 0) };
 }

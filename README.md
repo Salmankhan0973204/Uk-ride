@@ -295,6 +295,7 @@ Base URL: `http://localhost:4000/api/v1`
 | GET    | `/config`                       | Booking rules: Meet & Greet price, lead time, limits      |
 | GET    | `/places?q=`                    | Address suggestions: airports, postcodes, places (public) |
 | POST   | `/quotes`                       | Price a journey in every car and save the quote (public)  |
+| POST   | `/bookings`                     | Book a saved quote: 1 or 2 journeys, unpaid (signed in)   |
 | POST   | `/admin/auth/login`             | Staff sign-in for the admin panel (ADMIN or DISPATCHER)   |
 | POST   | `/admin/auth/refresh`           | New staff access token from the staff cookie              |
 | POST   | `/admin/auth/logout`            | Staff sign-out; the customer sign-in is not touched       |

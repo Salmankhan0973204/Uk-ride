@@ -9,8 +9,16 @@ import { nearestPostcode } from '../geo/geo.postcodes.js';
 import { findRoadRoute } from '../geo/geo.routing.js';
 import { getSettings } from '../settings/settings.service.js';
 import { publicVehicleType } from '../vehicle-types/vehicle-types.select.js';
-import { chargedMilesFor, fits, isNight, priceTrip, recommend } from './quote.calculator.js';
+import {
+  MAX_MILES,
+  chargedMilesFor,
+  fits,
+  isNight,
+  priceTrip,
+  recommend,
+} from './quote.calculator.js';
 import type { Leg } from './quote.calculator.js';
+import { readSavedQuote } from './quote.saved.js';
 import type { QuotePlace, QuoteRequest } from './quotes.schemas.js';
 
 /** Two addresses closer than this are one place: a journey from a door to itself. */
@@ -131,6 +139,10 @@ export async function quoteJourney(request: QuoteRequest) {
       dropoff: ['These places are too close together to price a journey'],
     });
   }
+  // The engine refuses a leg this long; said here, on the field, not as a 500.
+  if (routes.some((route) => route.distanceMiles > MAX_MILES)) {
+    throw AppError.validation({ dropoff: ['This journey is too long to book online'] });
+  }
 
   const legs = plan.map((leg, index) => {
     const route = routes[index]!;
@@ -224,12 +236,48 @@ export async function quoteJourney(request: QuoteRequest) {
       journey: journey as unknown as Prisma.InputJsonValue,
       options: options as unknown as Prisma.InputJsonValue,
       meetGreetPence: settings.meetGreetPence,
-      expiresAt: new Date(now + settings.quoteValidMinutes * 60_000),
+      // The hold, cut short when the pick-up comes within the booking lead
+      // time: "held until" on the page is then the real booking deadline.
+      expiresAt: bookableUntil(
+        new Date(now + settings.quoteValidMinutes * 60_000),
+        request.pickupAt,
+        settings.bookingLeadMinutes,
+      ),
     },
     select: { id: true, expiresAt: true },
   });
 
   return { quoteId: saved.id, expiresAt: saved.expiresAt.toISOString(), ...answer };
+}
+
+/**
+ * The last moment something with this first pick-up can still be booked,
+ * given a limit of its own (a quote's hold, an unpaid booking's grace): the
+ * earlier of that limit and the moment the pick-up comes within the booking
+ * lead time. Nothing may be booked, or paid for, with less notice than the
+ * operator asks for.
+ */
+export function bookableUntil(limit: Date, firstPickupAt: Date, leadMinutes: number) {
+  return new Date(Math.min(limit.getTime(), firstPickupAt.getTime() - leadMinutes * 60_000));
+}
+
+/**
+ * A saved quote that can still be booked: it exists, reads back in the shape
+ * it was written, and neither its hold nor the booking lead time (as it is
+ * now, not as it was) has run out. Expired rows stay in the table until the
+ * clean-up job's next sweep, so the time is always checked here.
+ */
+export async function findBookableQuote(quoteId: string, now: Date, leadMinutes: number) {
+  const row = await prisma.quote.findUnique({ where: { id: quoteId } });
+  if (!row) return undefined;
+
+  const quote = readSavedQuote(row);
+  if (!quote) return undefined;
+
+  const outbound = quote.journey.legs[0]!;
+  if (now >= bookableUntil(quote.expiresAt, outbound.pickupAt, leadMinutes)) return undefined;
+
+  return quote;
 }
 
 /** Removes quotes that have run out. Run by the clean-up job. */

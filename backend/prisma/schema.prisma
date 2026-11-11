@@ -242,8 +242,9 @@ model Settings {
 }
 
 // A priced journey, kept for a short while so that booking it (Module 6)
-// charges exactly what the customer was shown. The browser sends back only
-// the quote's id and a class, never a price.
+// charges exactly what the customer was shown. The browser sends back the
+// quote's id, a class and its choices; the total it shows is compared with
+// the saved price, never charged.
 model Quote {
   id             String   @id @default(uuid())
   // The journey as the server understood it: each leg's places with their
@@ -336,12 +337,20 @@ enum BookingActor {
 // The combined total is the sum of its bookings and is never stored, so it
 // cannot disagree with them.
 model Trip {
-  id        String   @id @default(uuid())
+  id               String   @id @default(uuid())
   // The quote it was booked from. Unique: a quote is booked once, so a double
   // click or a second tab cannot book it twice. A plain column, not a
   // relation: the clean-up deletes expired quotes, and trips stay.
-  quoteId   String   @unique @map("quote_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  quoteId          String   @unique @map("quote_id")
+  // Who the journeys were booked for, as given when booking: the lead
+  // passenger's name, for the driver's name board, and how to reach them.
+  // Copied from the profile, or typed by a guest, so a later change to the
+  // account never rewrites a booking.
+  contactFirstName String   @map("contact_first_name")
+  contactLastName  String   @map("contact_last_name")
+  contactEmail     String   @map("contact_email")
+  contactMobile    String   @map("contact_mobile")
+  createdAt        DateTime @default(now()) @map("created_at")
 
   bookings Booking[]
 

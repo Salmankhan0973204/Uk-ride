@@ -3,12 +3,14 @@ import {
   fits,
   formatPence,
   isNight,
+  meetGreetLine,
+  priceChoice,
   priceLeg,
   priceTrip,
   recommend,
   ukHour,
 } from './quote.calculator.js';
-import type { Leg, LegPrice, PriceRule } from './quote.calculator.js';
+import type { Leg, LegPrice, PriceRule, SavedLegPrice } from './quote.calculator.js';
 
 // Example prices for the tests: £3.50 to start, £2.10 a mile, £12.00 at least.
 // No surcharges and no discount here; the tests below switch them on.
@@ -399,5 +401,75 @@ describe('formatPence', () => {
     expect(formatPence(1250)).toBe('£12.50');
     expect(formatPence(5)).toBe('£0.05');
     expect(formatPence(0)).toBe('£0.00');
+  });
+});
+
+describe('priceChoice', () => {
+  // Two legs as a quote saved them: 10% off a £47.35 original, so £42.61 a leg.
+  const saved = (): SavedLegPrice => ({
+    lines: [
+      { code: 'BASE_FARE', label: 'Base fare', amountPence: 350 },
+      { code: 'DISTANCE', label: '18.5 miles at £2.10 a mile', amountPence: 3885 },
+      { code: 'AIRPORT_FEE', label: 'Airport pick-up or drop-off', amountPence: 500 },
+      { code: 'DISCOUNT', label: 'Discount: 10% off', amountPence: -474 },
+    ],
+    originalPence: 4735,
+    discountPence: 474,
+    pricePence: 4261,
+  });
+  const out = { airportPickup: false, meetGreet: false };
+  const back = { airportPickup: true, meetGreet: true };
+
+  it('charges exactly the saved price when nothing is added', () => {
+    const { legs, totalPence } = priceChoice([saved()], [out], 1000);
+    expect(totalPence).toBe(4261);
+    expect(legs[0]).toMatchObject({
+      originalPence: 4735,
+      discountPence: 474,
+      farePence: 4261,
+      meetGreetPence: 0,
+      totalPence: 4261,
+    });
+    expect(legs[0]!.lines).toEqual(saved().lines);
+  });
+
+  it('adds Meet & Greet at the quoted price, as the last line, on the leg that chose it', () => {
+    const { legs, totalPence } = priceChoice([saved(), saved()], [out, back], 1000);
+    expect(legs[0]!.meetGreetPence).toBe(0);
+    expect(legs[1]!.meetGreetPence).toBe(1000);
+    expect(legs[1]!.totalPence).toBe(5261);
+    expect(legs[1]!.lines.at(-1)).toEqual(meetGreetLine(1000));
+    expect(totalPence).toBe(4261 + 5261);
+  });
+
+  it('adds no line when Meet & Greet costs nothing', () => {
+    const { legs } = priceChoice([saved()], [back], 0);
+    expect(legs[0]!.lines).toHaveLength(4);
+    expect(legs[0]!.totalPence).toBe(4261);
+  });
+
+  it('refuses Meet & Greet on a leg that does not start at an airport', () => {
+    expect(() => priceChoice([saved()], [{ airportPickup: false, meetGreet: true }], 1000)).toThrow(
+      RangeError,
+    );
+  });
+
+  it('refuses a choice count that does not match the legs, and no legs at all', () => {
+    expect(() => priceChoice([saved()], [out, out], 1000)).toThrow(RangeError);
+    expect(() => priceChoice([], [], 1000)).toThrow(RangeError);
+  });
+
+  it('refuses a saved price whose lines do not add up', () => {
+    const broken = saved();
+    broken.pricePence = 4262;
+    expect(() => priceChoice([broken], [out], 1000)).toThrow('does not add up');
+    const wrongFare = { ...saved(), originalPence: 4736 };
+    expect(() => priceChoice([wrongFare], [out], 1000)).toThrow('does not add up');
+  });
+
+  it('leaves the saved lines untouched', () => {
+    const leg = saved();
+    priceChoice([leg], [back], 1000);
+    expect(leg.lines).toHaveLength(4);
   });
 });

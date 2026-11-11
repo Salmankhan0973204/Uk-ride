@@ -108,6 +108,16 @@ export const quoteLimiter = rateLimiter({
 });
 
 /**
+ * Booking writes a trip and, for a guest, may create an account. A person
+ * books a few journeys, not dozens.
+ */
+export const bookingLimiter = rateLimiter({
+  windowMinutes: 15,
+  limit: 20,
+  message: `Too many bookings from this address. ${TRY_LATER}`,
+});
+
+/**
  * Address suggestions are asked for as the customer types, so the allowance
  * is large. It still stops one address using us as a free geocoding service.
  */

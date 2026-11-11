@@ -52,6 +52,7 @@ export const openApiDocument = {
     { name: 'Vehicle types', description: 'The classes of car on offer' },
     { name: 'Places', description: 'Address search for the journey form' },
     { name: 'Quotes', description: 'The price of a journey' },
+    { name: 'Bookings', description: 'Booking a saved quote' },
     { name: 'Admin', description: "For the operator's staff. Needs the ADMIN role" },
   ],
   paths: {
@@ -1433,6 +1434,62 @@ export const openApiDocument = {
         },
       },
     },
+    '/bookings': {
+      post: {
+        tags: ['Bookings'],
+        summary: 'Book a saved quote',
+        security: [{ bearerAuth: [] }],
+        description:
+          'Signed in. Books the quote at the prices it saved: one journey, or two for a return ' +
+          '(the return runs the stops backwards), each PENDING and UNPAID with its own reference ' +
+          'like UKR-7F3K9Q. The body names the quote and the car, what was chosen for each leg ' +
+          '(a flight number is required for a pick-up at an airport, where Meet & Greet may be ' +
+          "added at the quote's price), notes for the driver, and the total the page showed, " +
+          'which is compared and never charged. The journeys are held until `expiresAt`: the ' +
+          'unpaid expiry (30 minutes), or sooner when the pick-up comes within the booking lead ' +
+          'time. Unpaid, they expire; payment follows in Modules 7 and 8. The same customer ' +
+          'sending the same quote again while it is held gets the same trip back.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/BookingRequest' } },
+          },
+        },
+        responses: {
+          201: jsonResponse(
+            'Booked',
+            successEnvelope({
+              type: 'object',
+              properties: { trip: { $ref: '#/components/schemas/Trip' } },
+            }),
+          ),
+          200: jsonResponse(
+            'Already booked by you from this quote: the same trip again',
+            successEnvelope({
+              type: 'object',
+              properties: { trip: { $ref: '#/components/schemas/Trip' } },
+            }),
+          ),
+          400: jsonResponse(
+            'A field is missing or wrong: a car not in the quote or too small, a flight number ' +
+              'missing or not needed, Meet & Greet away from an airport pick-up, a return field ' +
+              'on a one-way journey',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
+          401: jsonResponse('Not signed in', { $ref: '#/components/schemas/ApiFailure' }),
+          409: jsonResponse(
+            'The quote cannot be booked as sent; `details.reason` says why. QUOTE_EXPIRED: run ' +
+              'out, unknown, or the pick-up is now inside the booking lead time. QUOTE_USED: ' +
+              'booked already, by someone else or no longer held. PRICE_CHANGED: the total sent ' +
+              'is not the saved price (`details.totalPence` is). CLASS_UNAVAILABLE: the car was ' +
+              'switched off, lost its prices or no longer fits the party. Get a new quote.',
+            { $ref: '#/components/schemas/ApiFailure' },
+          ),
+          429: { $ref: '#/components/responses/RateLimited' },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+    },
   },
   components: {
     securitySchemes: {
@@ -2060,6 +2117,17 @@ export const openApiDocument = {
           name: { type: 'string', example: 'Heathrow Airport' },
         },
       },
+      QuotePlace: {
+        type: 'object',
+        properties: {
+          label: { type: 'string' },
+          latitude: { type: 'number' },
+          longitude: { type: 'number' },
+          postcode: { type: 'string', example: 'TW6 1EW' },
+          district: { type: 'string', example: 'Hillingdon' },
+          airport: { $ref: '#/components/schemas/QuoteAirport' },
+        },
+      },
       QuoteLeg: {
         type: 'object',
         properties: {
@@ -2068,17 +2136,7 @@ export const openApiDocument = {
           places: {
             type: 'array',
             description: 'In driving order: pick-up, stops, drop-off',
-            items: {
-              type: 'object',
-              properties: {
-                label: { type: 'string' },
-                latitude: { type: 'number' },
-                longitude: { type: 'number' },
-                postcode: { type: 'string', example: 'TW6 1EW' },
-                district: { type: 'string', example: 'Hillingdon' },
-                airport: { $ref: '#/components/schemas/QuoteAirport' },
-              },
-            },
+            items: { $ref: '#/components/schemas/QuotePlace' },
           },
           distanceMiles: { type: 'number', example: 16.21 },
           durationMinutes: { type: 'integer', example: 34 },
@@ -2148,6 +2206,144 @@ export const openApiDocument = {
             items: { $ref: '#/components/schemas/QuoteOption' },
           },
           recommendedVehicleTypeId: { type: 'string', format: 'uuid', nullable: true },
+        },
+      },
+      BookingRequest: {
+        type: 'object',
+        required: ['quoteId', 'vehicleTypeId', 'expectedTotalPence'],
+        properties: {
+          quoteId: { type: 'string', format: 'uuid', description: 'From POST /quotes' },
+          vehicleTypeId: {
+            type: 'string',
+            format: 'uuid',
+            description: "One of the quote's options",
+          },
+          expectedTotalPence: {
+            type: 'integer',
+            example: 4261,
+            description:
+              "The total shown on the page: the car's price plus Meet & Greet where chosen. " +
+              'Compared with the saved price, never charged',
+          },
+          outboundFlightNumber: {
+            type: 'string',
+            example: 'BA117',
+            description:
+              'Required when the journey starts at an airport, refused otherwise. Spaces and ' +
+              'hyphens are ignored',
+          },
+          outboundMeetGreet: {
+            type: 'boolean',
+            default: false,
+            description: 'Only on a pick-up at an airport',
+          },
+          returnFlightNumber: {
+            type: 'string',
+            example: 'BA118',
+            description: 'The journey back, when there is one',
+          },
+          returnMeetGreet: { type: 'boolean', default: false },
+          notes: {
+            type: 'string',
+            maxLength: 500,
+            example: 'A child seat, please',
+            description: 'For the driver',
+          },
+        },
+      },
+      BookedJourney: {
+        type: 'object',
+        properties: {
+          reference: { type: 'string', example: 'UKR-7F3K9Q' },
+          direction: { type: 'string', enum: ['OUTBOUND', 'RETURN'] },
+          status: {
+            type: 'string',
+            enum: [
+              'PENDING',
+              'CONFIRMED',
+              'ACCEPTED',
+              'ON_ROUTE',
+              'ARRIVED',
+              'ON_BOARD',
+              'COMPLETED',
+              'NO_SHOW',
+              'CANCELLED',
+              'EXPIRED',
+            ],
+            description: 'A new booking is PENDING',
+          },
+          paymentStatus: { type: 'string', enum: ['UNPAID', 'PAID'] },
+          expiresAt: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Still unpaid after this, the journey is let go',
+          },
+          pickupAt: { type: 'string', format: 'date-time' },
+          places: {
+            type: 'array',
+            description: 'In driving order, as quoted',
+            items: { $ref: '#/components/schemas/QuotePlace' },
+          },
+          distanceMiles: { type: 'number', example: 16.21 },
+          durationMinutes: { type: 'integer', example: 34 },
+          flightNumber: { type: 'string', nullable: true, example: 'BA117' },
+          meetGreet: { type: 'boolean' },
+          notes: { type: 'string', nullable: true },
+          vehicleType: { $ref: '#/components/schemas/VehicleType' },
+          party: {
+            type: 'object',
+            properties: {
+              passengers: { type: 'integer' },
+              suitcases: { type: 'integer' },
+              handLuggage: { type: 'integer' },
+            },
+          },
+          price: {
+            type: 'object',
+            description: 'As quoted, plus Meet & Greet where chosen. The lines add up to the total',
+            properties: {
+              lines: { type: 'array', items: { $ref: '#/components/schemas/QuoteLine' } },
+              discountPercent: { type: 'integer', example: 10 },
+              originalPence: { type: 'integer', example: 4735 },
+              discountPence: { type: 'integer', example: 474 },
+              farePence: { type: 'integer', example: 4261 },
+              meetGreetPence: { type: 'integer', example: 0 },
+              totalPence: { type: 'integer', example: 4261 },
+            },
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Trip: {
+        type: 'object',
+        description: 'One press of Book: the journeys booked together from one quote',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          createdAt: { type: 'string', format: 'date-time' },
+          contact: {
+            type: 'object',
+            description:
+              'Who the journeys are for, as given when booking: the lead passenger, for the ' +
+              "driver's name board, and how to reach them",
+            properties: {
+              firstName: { type: 'string', example: 'Sara' },
+              lastName: { type: 'string', example: 'Khan' },
+              email: { type: 'string', format: 'email', example: 'sara@example.com' },
+              mobile: { type: 'string', example: '+447400123456' },
+            },
+          },
+          currency: { type: 'string', enum: ['GBP'] },
+          totalPence: {
+            type: 'integer',
+            example: 10806,
+            description: 'Every journey of the trip',
+          },
+          expiresAt: { type: 'string', format: 'date-time' },
+          bookings: {
+            type: 'array',
+            description: 'Outbound first',
+            items: { $ref: '#/components/schemas/BookedJourney' },
+          },
         },
       },
       ApiFailure: {

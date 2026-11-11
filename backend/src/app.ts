@@ -12,6 +12,7 @@ import { requestId } from './middleware/requestId.js';
 import { adminAirportsRouter } from './modules/airports/airports.admin.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { staffAuthRouter } from './modules/auth/auth.staff.routes.js';
+import { bookingsRouter } from './modules/bookings/bookings.routes.js';
 import { otpRouter } from './modules/otp/otp.routes.js';
 import { placesRouter } from './modules/places/places.routes.js';
 import { adminPricingRouter } from './modules/pricing/pricing.routes.js';
@@ -68,6 +69,7 @@ api.use('/vehicle-types', vehicleTypesRouter);
 api.use('/config', configRouter);
 api.use('/places', placesRouter);
 api.use('/quotes', quotesRouter);
+api.use('/bookings', bookingsRouter);
 // Everything under /admin is for the operator's staff.
 api.use('/admin/auth', staffAuthRouter);
 api.use('/admin/vehicle-types', adminVehicleTypesRouter);

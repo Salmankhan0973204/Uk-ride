@@ -2,10 +2,10 @@
 
 Update this file after every coding session.
 
-- **Current module:** Module 6 - booking (not started)
+- **Current module:** Module 6 - booking (in progress, branch `module-06-booking`)
 - **Last completed:** Module 5 rework - journey quotes like ukride.uk (tag `module-05-v2`)
-- **Next step:** 6.1 - the `Booking` model
-- **Steps done:** 59 of 113
+- **Next step:** 6.2 - `POST /bookings` from a saved quote
+- **Steps done:** 60 of 113
 - **Roadmap:** re-planned on 2026-10-16 to follow the ukride.uk customer flow in three apps
   (backend, customer website, admin panel). See "v2 re-plan" at the end of this file.
 
@@ -17,26 +17,26 @@ Do not start two modules at the same time.
 Stage values: `Done`, `Rework` (v1 done, new steps open), `In progress`, `-` (not started),
 `n/a`.
 
-| #   | Module                       | Steps | Backend | Customer site | Admin panel | Status   |
-| --- | ---------------------------- | ----- | ------- | ------------- | ----------- | -------- |
-| 0   | Foundation: three apps       | 10/10 | Done    | Done          | Done        | Complete |
-| 1   | Auth like ukride.uk          | 13/13 | Done    | Done          | n/a         | Complete |
-| 2   | Profile                      | 8/8   | Done    | Done          | n/a         | Complete |
-| 3   | Fleet classes                | 9/9   | Done    | Done          | Done        | Complete |
-| 4   | Fleet vehicles               | 6/6   | Done    | n/a           | Done        | Complete |
-| 5   | Pricing and quotes           | 13/13 | Done    | Done          | Done        | Complete |
-| 6   | Booking                      | 0/6   | -       | -             | -           | -        |
-| 7   | Wallet                       | 0/5   | -       | -             | -           | -        |
-| 8   | Card payment (Stripe)        | 0/6   | -       | -             | n/a         | -        |
-| 9   | Journeys                     | 0/5   | -       | -             | n/a         | -        |
-| 10  | Edit and cancel              | 0/5   | -       | -             | -           | -        |
-| 11  | Admin operations             | 0/6   | -       | -             | -           | -        |
-| 12  | Reviews                      | 0/4   | -       | -             | -           | -        |
-| 13  | Notifications                | 0/3   | -       | n/a           | n/a         | -        |
-| 14  | Driver API and live status   | 0/3   | -       | -             | n/a         | -        |
-| 15  | Admin dashboard and reports  | 0/3   | -       | n/a           | -           | -        |
-| 16  | Hardening and tests          | 0/4   | -       | -             | -           | -        |
-| 17  | Docker, CI/CD and deployment | 0/4   | -       | -             | -           | -        |
+| #   | Module                       | Steps | Backend     | Customer site | Admin panel | Status      |
+| --- | ---------------------------- | ----- | ----------- | ------------- | ----------- | ----------- |
+| 0   | Foundation: three apps       | 10/10 | Done        | Done          | Done        | Complete    |
+| 1   | Auth like ukride.uk          | 13/13 | Done        | Done          | n/a         | Complete    |
+| 2   | Profile                      | 8/8   | Done        | Done          | n/a         | Complete    |
+| 3   | Fleet classes                | 9/9   | Done        | Done          | Done        | Complete    |
+| 4   | Fleet vehicles               | 6/6   | Done        | n/a           | Done        | Complete    |
+| 5   | Pricing and quotes           | 13/13 | Done        | Done          | Done        | Complete    |
+| 6   | Booking                      | 1/6   | In progress | -             | -           | In progress |
+| 7   | Wallet                       | 0/5   | -           | -             | -           | -           |
+| 8   | Card payment (Stripe)        | 0/6   | -           | -             | n/a         | -           |
+| 9   | Journeys                     | 0/5   | -           | -             | n/a         | -           |
+| 10  | Edit and cancel              | 0/5   | -           | -             | -           | -           |
+| 11  | Admin operations             | 0/6   | -           | -             | -           | -           |
+| 12  | Reviews                      | 0/4   | -           | -             | -           | -           |
+| 13  | Notifications                | 0/3   | -           | n/a           | n/a         | -           |
+| 14  | Driver API and live status   | 0/3   | -           | -             | n/a         | -           |
+| 15  | Admin dashboard and reports  | 0/3   | -           | n/a           | -           | -           |
+| 16  | Hardening and tests          | 0/4   | -           | -             | -           | -           |
+| 17  | Docker, CI/CD and deployment | 0/4   | -           | -             | -           | -           |
 
 ## Steps
 
@@ -154,7 +154,7 @@ No new steps: the screens move to the admin app in 0.8, and cars are linked to d
 
 ### Module 6 - Booking
 
-- [ ] 6.1 `Booking` model: a reference such as UKR-7F3K9Q, a trip linking outbound and return
+- [x] 6.1 `Booking` model: a reference such as UKR-7F3K9Q, a trip linking outbound and return
       legs, a status and a separate payment status, flight number and Meet & Greet per leg, a
       price snapshot, an expiry and an event history. _Learn: enums, generated codes._
 - [ ] 6.2 `POST /bookings` from a saved quote: 1 or 2 pending legs (the return runs the stops
@@ -3246,3 +3246,74 @@ Open items
   ones. Locally only the quote engine's tests exist, and they are committed.
 - Airport detection relies on the postcode lists; see 5.9.
 - komoot's Photon and the OSRM demo server are free public services; replace before going live.
+
+### Module 6 - booking like ukride.uk (branch `module-06-booking`)
+
+Started 2026-11-11 after the user said "start booking". Steps 6.1 to 6.6, one commit each. The
+module was designed as a whole first: three independent designs (security first, simplest
+correct, ukride.uk fidelity) were merged into one spec and checked against the code, so each
+step builds towards the same tables and endpoints. The expiry job (6.5) is built before the
+page (6.4), because backend steps come first; the step numbers stay as they are.
+
+#### Step 6.1 - Booking model (done 2026-11-11)
+
+Built
+
+- **Three tables** (migration `add_bookings`):
+  - `trips`: one press of Book, with the quote it was booked from. The quote id is unique, so
+    a quote is booked once: a double click or a second tab cannot book it twice. It is a plain
+    column, not a relation, because the clean-up job deletes expired quotes and trips stay.
+  - `bookings`: one per journey, so a return is two bookings in one trip (one OUTBOUND and at
+    most one RETURN, kept so by a unique index). Each has its own reference, status and
+    payment status; the journey as quoted (pick-up time, the places in driving order with
+    their postcodes and airports, distance, duration); the flight number and Meet & Greet;
+    notes for the driver; the class booked, with a copy of what the customer saw of it; the
+    party; the price snapshot (the breakdown lines, and original, discount, fare, Meet & Greet
+    and total in whole pence); and the moment an unpaid booking is let go.
+  - `booking_events`: the history. One row per thing that happened, with who did it (the
+    customer, staff, the driver or the system), the statuses just afterwards and plain facts.
+    Rows are only ever added.
+- **Five enums:** `BookingStatus` names the whole life now (PENDING, CONFIRMED, the ride
+  statuses ACCEPTED, ON_ROUTE, ARRIVED, ON_BOARD, COMPLETED and NO_SHOW, then CANCELLED and
+  EXPIRED); Module 6 sets only PENDING and EXPIRED. `BookingPaymentStatus` is UNPAID or PAID
+  (refunds come with Module 10). `LegDirection`, `BookingEventType` (CREATED and EXPIRED; each
+  later step adds the kinds it writes) and `BookingActor`.
+- **Deleting is refused where history would go:** a user or a class with bookings, a trip with
+  bookings. A booking's events go with the booking.
+- **Indexes for the reads to come:** a customer's journeys by pick-up time (Module 9), the
+  expiry job's scan by status and expiry (6.5), and every foreign key.
+- `booking.reference.ts`: references like `UKR-7F3K9Q`. Six characters from the digits 2 to 9
+  and the consonants except L, so nothing reads as 0, O, 1, I or L and no word can form:
+  481,890,304 references, drawn with `randomInt` from node:crypto. The unique index catches
+  the rare clash, and 6.2 tries again with a new one.
+
+Verified
+
+- The generated SQL has the 5 types, 3 tables, 3 unique indexes, 5 indexes and 5 foreign keys
+  as planned, and `prisma migrate diff` finds nothing left between the schema and the database.
+- Through the generated client: a trip, a booking and its CREATED event written in one nested
+  create and read back with the class and the places; a second OUTBOUND on the trip refused
+  (P2002); the same quote booked twice refused (P2002); deleting a trip with a booking refused
+  (P2003); deleting the booking took its event with it; the tables were empty again afterwards.
+- Ten references matched the pattern. In 100,000 draws there were 10 repeats, which is what
+  the birthday maths predicts for 481 million codes.
+- Typecheck, lint and Prettier pass for the backend.
+
+Learning notes
+
+- Name a lifecycle whole, even when the first module sets two of its values: adding an enum
+  value later is a migration, and renaming one is a drop and an add. The DRIVER role was named
+  the same way before there were drivers.
+- A unique index is the simplest idempotency key: `trips.quote_id` makes "book this quote
+  twice" impossible in the database, whatever the code does.
+- A random reference reveals nothing (a counter would say how many bookings there are), but
+  it is not a secret either: it is printed and emailed, so every read must still check who
+  owns it.
+- Snapshot what the customer saw and will be charged (the class as shown, the price lines);
+  link what is only ever switched off (the class itself); never link what gets deleted (the
+  quote).
+
+Open items
+
+- The JSON columns (`places`, `vehicleTypeSnapshot`, `lines`) may only gain optional fields
+  from now on: bookings live for years, and old rows must stay readable.

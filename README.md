@@ -11,52 +11,67 @@ and runs on a local machine.
 
 ## Status
 
-**49 of 113 steps are done.** You can sign up with a code texted to your mobile, sign in (with
-"Remember me"), reset a forgotten password with a code sent by email, edit your profile, browse
-the vehicle types and get an exact price between two postcodes. An admin can manage vehicle types,
-the fleet and the prices.
+**59 of 113 steps are done. Module 6 (booking) is in progress.**
+
+What works today:
+
+- **Account:** sign up with a code texted to your mobile, sign in (with "Remember me"), and reset
+  a forgotten password with a code sent by email.
+- **Profile:** edit your name, change your mobile with a code, change your password.
+- **Quotes:** the "Book your journey" form on the home page takes addresses with suggestions
+  (airports first), up to 5 stops, a return journey, passengers and luggage. Get quote opens
+  `/booking` with the price of every car, cheapest first, and Meet & Greet for an airport
+  pick-up.
+- **Admin panel** (its own staff sign-in): vehicle types, the fleet, prices with a discount per
+  class, airports and system status.
+
+Booking itself (your details, a code for guests, bookings waiting for payment) is being built in
+Module 6. Payment follows in Modules 7 (wallet) and 8 (card).
 
 On 2026-10-16 the roadmap changed: UkRide now follows the customer flow of
 [ukride.uk](https://ukride.uk) in three apps (backend, customer website, admin panel). The focus
-is auth, booking, payment, wallet, journeys and reviews. Modules 0-5 are being reworked to that
-flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
+is auth, booking, payment, wallet, journeys and reviews. Modules 0-5 were reworked to that flow
+(tags `module-NN-v2`). The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 
-| #   | Module                       | Status   |
-| --- | ---------------------------- | -------- |
-| 0   | Foundation: three apps       | Complete |
-| 1   | Auth like ukride.uk          | Complete |
-| 2   | Profile                      | Next     |
-| 3   | Fleet classes                | Rework   |
-| 4   | Fleet vehicles               | Complete |
-| 5   | Pricing and quotes           | Rework   |
-| 6   | Booking                      | Planned  |
-| 7   | Wallet                       | Planned  |
-| 8   | Card payment (Stripe)        | Planned  |
-| 9   | Journeys                     | Planned  |
-| 10  | Edit and cancel              | Planned  |
-| 11  | Admin operations             | Planned  |
-| 12  | Reviews                      | Planned  |
-| 13  | Notifications                | Planned  |
-| 14  | Driver API and live status   | Planned  |
-| 15  | Admin dashboard and reports  | Planned  |
-| 16  | Hardening and tests          | Planned  |
-| 17  | Docker, CI/CD and deployment | Planned  |
+| #   | Module                       | Status      |
+| --- | ---------------------------- | ----------- |
+| 0   | Foundation: three apps       | Complete    |
+| 1   | Auth like ukride.uk          | Complete    |
+| 2   | Profile                      | Complete    |
+| 3   | Fleet classes                | Complete    |
+| 4   | Fleet vehicles               | Complete    |
+| 5   | Pricing and quotes           | Complete    |
+| 6   | Booking                      | In progress |
+| 7   | Wallet                       | Planned     |
+| 8   | Card payment (Stripe)        | Planned     |
+| 9   | Journeys                     | Planned     |
+| 10  | Edit and cancel              | Planned     |
+| 11  | Admin operations             | Planned     |
+| 12  | Reviews                      | Planned     |
+| 13  | Notifications                | Planned     |
+| 14  | Driver API and live status   | Planned     |
+| 15  | Admin dashboard and reports  | Planned     |
+| 16  | Hardening and tests          | Planned     |
+| 17  | Docker, CI/CD and deployment | Planned     |
 
 ## Tech stack
 
-| Area           | Technology                                                |
-| -------------- | --------------------------------------------------------- |
-| Backend        | Node.js 24, Express 5, TypeScript (ESM)                   |
-| Database       | PostgreSQL 16, Prisma 7                                   |
-| Validation     | Zod                                                       |
-| Logging        | Pino, with a request ID on every request                  |
-| Frontend       | Next.js 16 (App Router), React 19, TypeScript             |
-| Styling        | Tailwind CSS 4                                            |
-| Server state   | TanStack Query 5                                          |
-| Testing        | Vitest, Supertest                                         |
-| API testing    | Bruno, curl                                               |
-| Local services | Docker Compose: PostgreSQL 16, Redis 7, Mailpit           |
-| Planned        | JWT auth, BullMQ, Stripe test mode, Socket.IO, Playwright |
+| Area           | Technology                                                 |
+| -------------- | ---------------------------------------------------------- |
+| Backend        | Node.js 24, Express 5, TypeScript (ESM)                    |
+| Database       | PostgreSQL 16, Prisma 7                                    |
+| Validation     | Zod                                                        |
+| Auth           | JWT access tokens, httpOnly refresh cookies, 6-digit codes |
+| Cache, limits  | Redis 7 (codes sent per phone)                             |
+| Maps           | postcodes.io, Photon (OpenStreetMap), OSRM road routes     |
+| Logging        | Pino, with a request ID on every request                   |
+| Frontend       | Next.js 16 (App Router), React 19, TypeScript              |
+| Styling        | Tailwind CSS 4                                             |
+| Server state   | TanStack Query 5                                           |
+| Testing        | Vitest, Supertest                                          |
+| API testing    | Bruno, curl                                                |
+| Local services | Docker Compose: PostgreSQL 16, Redis 7, Mailpit            |
+| Planned        | BullMQ, Stripe test mode, Socket.IO, Playwright            |
 
 ## Project structure
 
@@ -69,11 +84,14 @@ flow. The full tracker is in [docs/PROGRESS.md](docs/PROGRESS.md).
 │   └── src/
 │       ├── app.ts           Middleware and routes (no listen, so tests can import it)
 │       ├── server.ts        Starts the HTTP server, graceful shutdown
-│       ├── config/          Environment validation, logger, database client
+│       ├── config/          Environment validation, logger, database, Redis, mailer
+│       ├── db/              Seed and one-off scripts (set a role)
+│       ├── docs/            OpenAPI document served by Swagger UI
 │       ├── generated/       Prisma client, generated and not committed
-│       ├── middleware/      Request ID, validation, auth, 404, error handler
-│       ├── modules/         One folder per feature (routes, controller, tests)
-│       └── shared/          AppError, response helpers
+│       ├── jobs/            Periodic clean-up of sessions, codes and quotes
+│       ├── middleware/      Request ID, validation, auth, rate limits, 404, errors
+│       ├── modules/         One folder per feature (routes, controller, service, schemas)
+│       └── shared/          AppError, response and password helpers
 ├── customer/                Next.js customer website (port 3000)
 │   └── src/
 │       ├── app/             Routes and layouts
@@ -160,6 +178,10 @@ npm run dev
 `npm run dev` starts all three. Each can also run alone: `npm run dev:api`,
 `npm run dev:customer`, `npm run dev:admin`.
 
+If the customer site says it cannot reach the server, check that the API is listening on
+port 4000 (http://localhost:4000/api/v1/health). Once, under `npm run dev`, the API sat silent
+and never started; stopping it and running `npm run dev:api` in its own terminal worked.
+
 On the customer site, create an account at http://localhost:3000/signup, sign in at
 http://localhost:3000/login and see your profile at http://localhost:3000/profile. Phone and
 email codes arrive in Mailpit at http://localhost:8025 (a "text message" is an email to
@@ -195,16 +217,16 @@ Run these from the repository root.
 
 Database commands belong to the backend workspace.
 
-| Command                                           | What it does                                       |
-| ------------------------------------------------- | -------------------------------------------------- |
-| `npm run db:migrate -w backend`                   | Apply migrations to the local database             |
-| `npm run db:migrate -w backend -- --name <why>`   | Create a migration after a schema change, apply it |
-| `npm run db:generate -w backend`                  | Regenerate the typed Prisma client                 |
-| `npm run db:studio -w backend`                    | Browse the data in Prisma Studio                   |
-| `npm run db:seed -w backend`                      | Add the starting vehicle types (safe to repeat)    |
-| `npm run db:set-role -w backend -- <email> ADMIN` | Give an account a role                             |
-| `npm run db:cleanup -w backend`                   | Delete expired refresh tokens now                  |
-| `npm test -w backend`                             | Run the unit tests of the quote calculation        |
+| Command                                           | What it does                                        |
+| ------------------------------------------------- | --------------------------------------------------- |
+| `npm run db:migrate -w backend`                   | Apply migrations to the local database              |
+| `npm run db:migrate -w backend -- --name <why>`   | Create a migration after a schema change, apply it  |
+| `npm run db:generate -w backend`                  | Regenerate the typed Prisma client                  |
+| `npm run db:studio -w backend`                    | Browse the data in Prisma Studio                    |
+| `npm run db:seed -w backend`                      | Add the vehicle types and airports (safe to repeat) |
+| `npm run db:set-role -w backend -- <email> ADMIN` | Give an account a role                              |
+| `npm run db:cleanup -w backend`                   | Delete expired sessions, old codes and quotes now   |
+| `npm test -w backend`                             | Run the unit tests of the quote calculation         |
 
 ## Environment variables
 
@@ -229,6 +251,7 @@ Database commands belong to the backend workspace.
 | `CUSTOMER_APP_URL`       | `http://localhost:3000`                       | The customer site; links in customer emails                |
 | `ADMIN_APP_URL`          | `http://localhost:3001`                       | The admin panel; links in staff emails                     |
 | `POSTCODES_API_URL`      | `https://api.postcodes.io`                    | Finds UK postcodes on the map; free, no key                |
+| `PLACES_API_URL`         | `https://photon.komoot.io`                    | Address search (Photon); free, for fair use only           |
 | `ROUTING_API_URL`        | `https://router.project-osrm.org`             | Road distance (OSRM); the default is a free demo           |
 
 The API refuses to start if a value is invalid.
@@ -250,7 +273,7 @@ Base URL: `http://localhost:4000/api/v1`
 | ------ | ------------------------------- | --------------------------------------------------------- |
 | GET    | `/health`                       | Service name, version, environment, uptime                |
 | GET    | `/health/live`                  | The process is alive                                      |
-| GET    | `/health/ready`                 | The database answers; `503` when it cannot be reached     |
+| GET    | `/health/ready`                 | The database answers (`503` if not); Redis is reported    |
 | POST   | `/auth/check-email`             | Is this email free? (first step of sign-up)               |
 | POST   | `/auth/register`                | Create an account with a code-checked mobile; signs in    |
 | POST   | `/auth/otp/send`                | Send a 6-digit code to a mobile (sign-up, guest booking)  |
@@ -330,13 +353,14 @@ npm run docker:up
 | Service    | Address                                                  | Used from |
 | ---------- | -------------------------------------------------------- | --------- |
 | PostgreSQL | `localhost:5432` (user, password and database: `ukride`) | Now       |
-| Redis      | `localhost:6379`                                         | Module 11 |
+| Redis      | `localhost:6379`                                         | Now       |
 | Mailpit    | http://localhost:8025 (SMTP on 1025)                     | Now       |
 
 These credentials are for local development only.
 
-Emails the API sends (confirm your address, reset your password) are caught by Mailpit and
-never delivered. Open http://localhost:8025 to read them and click their links.
+Every code the API sends (sign-up and guest booking codes by text, password reset codes by
+email) is caught by Mailpit and never delivered. A text message shows as an email to
+`<number>@sms.ukride.local`. Open http://localhost:8025 to read them.
 
 ## How each module is built
 
@@ -350,6 +374,10 @@ never delivered. Open http://localhost:8025 to read them and click their links.
 7. **Tracker, commit, tag** (`module-NN`).
 
 A module is complete only when all seven steps are done.
+
+Each module is built on its own branch (`module-NN-<topic>`) with one commit per step. When it is
+complete it is merged into `main` with `git merge --no-ff` and tagged: `module-NN`, or
+`module-NN-v2` for a module reworked to the ukride.uk flow.
 
 ## Documentation
 
